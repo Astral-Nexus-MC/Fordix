@@ -1,13 +1,18 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.client.gui.layout.Layout;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Base class for Fordix screens: adds simple layout helpers on top of vanilla
- * {@link Screen} instead of a full flex/constraint engine, since the demo/widget
- * set is still small. Extend this as more layout needs show up.
+ * {@link Screen}. The actual position math lives in {@link Layout}, which has no
+ * Minecraft dependency and is unit tested on its own - these methods are just the
+ * thin glue that applies it to real widgets.
  */
 public abstract class FordixScreen extends Screen {
 
@@ -17,32 +22,39 @@ public abstract class FordixScreen extends Screen {
 
     /** Positions widgets one below another starting at (x, y), separated by gap. Returns the next free y. */
     protected int stackVertical(int x, int y, int gap, AbstractWidget... widgets) {
-        int currentY = y;
-        for (AbstractWidget widget : widgets) {
-            widget.setX(x);
-            widget.setY(currentY);
-            currentY += widget.getHeight() + gap;
-        }
-        return currentY;
+        Layout.Result result = Layout.stackVertical(x, y, gap, sizesOf(widgets));
+        applyPositions(widgets, result.positions());
+        return result.nextY();
     }
 
     /** Positions widgets side by side starting at (x, y), separated by gap. Returns the next free x. */
     protected int stackHorizontal(int x, int y, int gap, AbstractWidget... widgets) {
-        int currentX = x;
-        for (AbstractWidget widget : widgets) {
-            widget.setX(currentX);
-            widget.setY(y);
-            currentX += widget.getWidth() + gap;
-        }
-        return currentX;
+        Layout.Result result = Layout.stackHorizontal(x, y, gap, sizesOf(widgets));
+        applyPositions(widgets, result.positions());
+        return result.nextX();
     }
 
     protected int centerX(int width) {
-        return (this.width - width) / 2;
+        return Layout.center(this.width, width);
     }
 
     protected int centerY(int height) {
-        return (this.height - height) / 2;
+        return Layout.center(this.height, height);
+    }
+
+    private static List<Layout.Size> sizesOf(AbstractWidget[] widgets) {
+        List<Layout.Size> sizes = new ArrayList<>(widgets.length);
+        for (AbstractWidget widget : widgets) {
+            sizes.add(new Layout.Size(widget.getWidth(), widget.getHeight()));
+        }
+        return sizes;
+    }
+
+    private static void applyPositions(AbstractWidget[] widgets, List<Layout.Position> positions) {
+        for (int i = 0; i < widgets.length; i++) {
+            widgets[i].setX(positions.get(i).x());
+            widgets[i].setY(positions.get(i).y());
+        }
     }
 
     @Override
