@@ -1,22 +1,24 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 
 /**
- * Proves out the Panel + layout helpers: a small floating panel with two buttons.
- * Opened with the "Toggle Fordix Demo" keybind (right bracket by default).
+ * Proves out Panel + FordixButton with the Voidframe palette: a small floating
+ * panel with a description line and two buttons. Opened with the "Toggle Fordix
+ * Demo" keybind (right bracket by default).
  */
 public class FordixDemoScreen extends FordixScreen {
     private static final int PANEL_WIDTH = 176;
     private static final int PANEL_HEIGHT = 90;
+    private static final Component DESCRIPTION = Component.literal("3 processus en attente de validation.");
 
     private Panel panel;
 
     public FordixDemoScreen() {
-        super(Component.literal("Fordix Demo"));
+        super(Component.literal("SYS // TERMINAL_04"));
     }
 
     @Override
@@ -25,24 +27,21 @@ public class FordixDemoScreen extends FordixScreen {
         int panelY = centerY(PANEL_HEIGHT);
         this.panel = new Panel(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT);
 
-        Button pingButton = Button.builder(Component.literal("Ping"), button ->
-                this.minecraft.player.displayClientMessage(Component.literal("Fordix says hi"), true))
-                .bounds(0, 0, 156, 20)
-                .build();
-        Button closeButton = Button.builder(Component.literal("Close"), button -> this.onClose())
-                .bounds(0, 0, 156, 20)
-                .build();
+        FordixButton runButton = new FordixButton(0, 0, 156, 20, Component.literal("Exécuter"), () ->
+                this.minecraft.player.displayClientMessage(Component.literal("Fordix says hi"), true));
+        FordixButton cancelButton = new FordixButton(0, 0, 156, 20, Component.literal("Annuler"), this::onClose);
 
-        stackVertical(panelX + 10, panelY + 10, 6, pingButton, closeButton);
+        stackVertical(panelX + 10, panelY + 34, 6, runButton, cancelButton);
 
-        addRenderableWidget(pingButton);
-        addRenderableWidget(closeButton);
+        addRenderableWidget(runButton);
+        addRenderableWidget(cancelButton);
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, panel.getY() - 14, 0xFFFFFF);
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, panel.getY() - 14, FordixPalette.ACCENT);
+        guiGraphics.drawCenteredString(this.font, DESCRIPTION, this.width / 2, panel.getY() + 12, FordixPalette.TEXT);
     }
 }
