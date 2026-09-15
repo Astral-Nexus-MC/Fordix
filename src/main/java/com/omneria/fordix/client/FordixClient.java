@@ -5,17 +5,19 @@ import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
-// This class will not load on dedicated servers - safe to touch client-only rendering code here.
-@Mod(value = Fordix.MODID, dist = Dist.CLIENT)
-public class FordixClient {
+/**
+ * Split into two @EventBusSubscriber classes because a class-level subscriber
+ * annotation only targets one bus (MOD or FORGE) at a time - key mapping
+ * registration fires on the mod bus, tick events on the game (forge) bus.
+ */
+public final class FordixClient {
     public static final KeyMapping TOGGLE_DEMO = new KeyMapping(
             "key.fordix.toggle_demo",
             InputConstants.Type.KEYSYM,
@@ -23,20 +25,35 @@ public class FordixClient {
             "key.categories.fordix"
     );
 
-    public FordixClient(IEventBus modEventBus) {
-        modEventBus.addListener(this::onRegisterKeyMappings);
-        NeoForge.EVENT_BUS.addListener(this::onClientTick);
+    private FordixClient() {
     }
 
-    private void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
-        event.register(TOGGLE_DEMO);
+    @Mod.EventBusSubscriber(modid = Fordix.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public static final class ModBusEvents {
+        private ModBusEvents() {
+        }
+
+        @SubscribeEvent
+        static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+            event.register(TOGGLE_DEMO);
+        }
     }
 
-    private void onClientTick(ClientTickEvent.Post event) {
-        Minecraft minecraft = Minecraft.getInstance();
-        while (TOGGLE_DEMO.consumeClick()) {
-            if (minecraft.screen == null) {
-                minecraft.setScreen(new FordixDemoScreen());
+    @Mod.EventBusSubscriber(modid = Fordix.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+    public static final class ForgeBusEvents {
+        private ForgeBusEvents() {
+        }
+
+        @SubscribeEvent
+        static void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase != TickEvent.Phase.END) {
+                return;
+            }
+            Minecraft minecraft = Minecraft.getInstance();
+            while (TOGGLE_DEMO.consumeClick()) {
+                if (minecraft.screen == null) {
+                    minecraft.setScreen(new FordixDemoScreen());
+                }
             }
         }
     }

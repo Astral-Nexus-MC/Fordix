@@ -5,9 +5,10 @@ import com.omneria.fordix.panel.network.ServerboundPanelActionPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Runs a clicked button's command. The command runs with the same permission level
@@ -20,9 +21,10 @@ public final class ServerPanelPayloadHandler {
     private ServerPanelPayloadHandler() {
     }
 
-    public static void handle(ServerboundPanelActionPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (!(context.player() instanceof ServerPlayer serverPlayer)) {
+    public static void handle(ServerboundPanelActionPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            ServerPlayer serverPlayer = ctx.get().getSender();
+            if (serverPlayer == null) {
                 return;
             }
 
@@ -46,5 +48,6 @@ public final class ServerPanelPayloadHandler {
 
             serverPlayer.getServer().getCommands().performPrefixedCommand(source, command);
         });
+        ctx.get().setPacketHandled(true);
     }
 }

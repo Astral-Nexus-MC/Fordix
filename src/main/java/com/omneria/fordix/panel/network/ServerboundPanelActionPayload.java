@@ -1,26 +1,16 @@
 package com.omneria.fordix.panel.network;
 
-import com.omneria.fordix.Fordix;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 
 /** Client to server: a player clicked button buttonIndex on the panel panelId. */
-public record ServerboundPanelActionPayload(String panelId, int buttonIndex) implements CustomPacketPayload {
+public record ServerboundPanelActionPayload(String panelId, int buttonIndex) {
 
-    public static final Type<ServerboundPanelActionPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(Fordix.MODID, "panel_action"));
+    public static void encode(ServerboundPanelActionPayload payload, FriendlyByteBuf buf) {
+        buf.writeUtf(payload.panelId());
+        buf.writeVarInt(payload.buttonIndex());
+    }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ServerboundPanelActionPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8, ServerboundPanelActionPayload::panelId,
-            ByteBufCodecs.VAR_INT, ServerboundPanelActionPayload::buttonIndex,
-            ServerboundPanelActionPayload::new
-    );
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public static ServerboundPanelActionPayload decode(FriendlyByteBuf buf) {
+        return new ServerboundPanelActionPayload(buf.readUtf(), buf.readVarInt());
     }
 }

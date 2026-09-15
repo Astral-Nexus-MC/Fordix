@@ -1,31 +1,32 @@
 package com.omneria.fordix.panel.network;
 
-import com.omneria.fordix.Fordix;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.FriendlyByteBuf;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Server to client: open a panel built from an admin's /fordix panel draft. */
-public record ClientboundOpenPanelPayload(String panelId, String title, String description, List<String> buttonLabels)
-        implements CustomPacketPayload {
+public record ClientboundOpenPanelPayload(String panelId, String title, String description, List<String> buttonLabels) {
 
-    public static final Type<ClientboundOpenPanelPayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(Fordix.MODID, "open_panel"));
+    public static void encode(ClientboundOpenPanelPayload payload, FriendlyByteBuf buf) {
+        buf.writeUtf(payload.panelId());
+        buf.writeUtf(payload.title());
+        buf.writeUtf(payload.description());
+        buf.writeVarInt(payload.buttonLabels().size());
+        for (String label : payload.buttonLabels()) {
+            buf.writeUtf(label);
+        }
+    }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundOpenPanelPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8, ClientboundOpenPanelPayload::panelId,
-            ByteBufCodecs.STRING_UTF8, ClientboundOpenPanelPayload::title,
-            ByteBufCodecs.STRING_UTF8, ClientboundOpenPanelPayload::description,
-            ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list(16)), ClientboundOpenPanelPayload::buttonLabels,
-            ClientboundOpenPanelPayload::new
-    );
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public static ClientboundOpenPanelPayload decode(FriendlyByteBuf buf) {
+        String panelId = buf.readUtf();
+        String title = buf.readUtf();
+        String description = buf.readUtf();
+        int count = buf.readVarInt();
+        List<String> buttonLabels = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            buttonLabels.add(buf.readUtf());
+        }
+        return new ClientboundOpenPanelPayload(panelId, title, description, buttonLabels);
     }
 }

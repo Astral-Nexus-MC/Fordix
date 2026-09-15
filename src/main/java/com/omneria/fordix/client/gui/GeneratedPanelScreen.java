@@ -2,10 +2,10 @@ package com.omneria.fordix.client.gui;
 
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
+import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.network.ServerboundPanelActionPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class GeneratedPanelScreen extends FordixScreen {
         for (int i = 0; i < buttonLabels.size(); i++) {
             int buttonIndex = i;
             buttons[i] = new FordixButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.literal(buttonLabels.get(i)), () ->
-                    PacketDistributor.sendToServer(new ServerboundPanelActionPayload(panelId, buttonIndex)));
+                    PanelNetwork.CHANNEL.sendToServer(new ServerboundPanelActionPayload(panelId, buttonIndex)));
         }
 
         stackVertical(panelX + 10, panelY + TOP_PADDING, BUTTON_GAP, buttons);

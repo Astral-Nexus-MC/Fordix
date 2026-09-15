@@ -6,12 +6,13 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.omneria.fordix.panel.PanelSpec;
 import com.omneria.fordix.panel.network.ClientboundOpenPanelPayload;
+import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collection;
 import java.util.List;
@@ -84,7 +85,7 @@ public final class PanelCommand {
         List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
         ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);
         for (ServerPlayer player : targets) {
-            PacketDistributor.sendToPlayer(player, payload);
+            PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(player), payload);
         }
 
         int count = targets.size();
