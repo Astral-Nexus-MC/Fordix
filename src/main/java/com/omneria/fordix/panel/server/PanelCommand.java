@@ -85,7 +85,7 @@ public final class PanelCommand {
         List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
         ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);
         for (ServerPlayer player : targets) {
-            PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(player), payload);
+            PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
         }
 
         int count = targets.size();
