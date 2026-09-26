@@ -13,7 +13,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.function.Supplier;
 
 /**
- * SimpleChannel setup - NeoForge 1.20.1 predates the CustomPacketPayload/StreamCodec
+ * SimpleChannel setup - Forge 1.20.1 predates the CustomPacketPayload/StreamCodec
  * API used from 1.20.5 onward, so panel packets are hand-encoded FriendlyByteBuf
  * messages instead.
  */
