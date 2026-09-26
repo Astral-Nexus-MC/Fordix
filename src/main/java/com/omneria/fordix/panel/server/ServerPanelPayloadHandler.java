@@ -14,7 +14,8 @@ import java.util.function.Supplier;
  * Runs a clicked button's command. The command runs with the same permission level
  * required to author the panel (2, not the clicking player's own level) so a
  * regular player clicking a button can trigger only the finite, admin-authored
- * commands attached to it - never arbitrary commands of their own.
+ * commands attached to it - never arbitrary commands of their own - and only for
+ * a panel that was actually sent to them.
  */
 public final class ServerPanelPayloadHandler {
 
@@ -28,7 +29,7 @@ public final class ServerPanelPayloadHandler {
                 return;
             }
 
-            PanelSpec spec = PanelRegistry.getSent(payload.panelId());
+            PanelSpec spec = PanelRegistry.getSent(serverPlayer.getUUID(), payload.panelId());
             if (spec == null) {
                 return;
             }

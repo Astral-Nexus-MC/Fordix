@@ -80,11 +80,11 @@ public final class PanelCommand {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
 
         PanelSpec spec = PanelRegistry.draft(id).toSpec();
-        PanelRegistry.markSent(spec);
 
         List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
         ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);
         for (ServerPlayer player : targets) {
+            PanelRegistry.markSent(player.getUUID(), spec);
             PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
         }
 

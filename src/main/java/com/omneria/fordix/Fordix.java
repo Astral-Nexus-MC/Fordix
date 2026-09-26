@@ -3,8 +3,10 @@ package com.omneria.fordix;
 import com.mojang.logging.LogUtils;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.server.PanelCommand;
+import com.omneria.fordix.panel.server.PanelRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 
@@ -18,9 +20,14 @@ public class Fordix {
         LOGGER.info("Fordix UI library loaded");
         PanelNetwork.register();
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        MinecraftForge.EVENT_BUS.addListener(this::onPlayerLoggedOut);
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
         PanelCommand.register(event.getDispatcher());
+    }
+
+    private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        PanelRegistry.forgetPlayer(event.getEntity().getUUID());
     }
 }
