@@ -9,6 +9,7 @@ import com.omneria.fordix.panel.network.ClientboundOpenPanelPayload;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,7 +19,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * /fordix panel create|describe|button|send - lets an admin build and broadcast a
+ * /fordix panel create|describe|button|send|list|delete - lets an admin build and broadcast a
  * panel entirely from chat, no mod code required. Gated to permission level 2
  * (same as /gamemode, /give) so only ops can author or send panels.
  */
@@ -47,7 +48,14 @@ public final class PanelCommand {
                         .then(Commands.literal("send")
                                 .then(Commands.argument("id", StringArgumentType.word())
                                         .then(Commands.argument("targets", EntityArgument.players())
-                                                .executes(PanelCommand::send))))));
+                                                .executes(PanelCommand::send))))
+                        .then(Commands.literal("list")
+                                .executes(PanelCommand::list))
+                        .then(Commands.literal("delete")
+                                .then(Commands.argument("id", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                PanelRegistry.ids(ctx.getSource().getServer()), builder))
+                                        .executes(PanelCommand::delete)))));
     }
 
     private static int create(CommandContext<CommandSourceStack> ctx) {
@@ -91,5 +99,25 @@ public final class PanelCommand {
         int count = targets.size();
         ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' envoye a " + count + " joueur(s)."), false);
         return count;
+    }
+
+    private static int list(CommandContext<CommandSourceStack> ctx) {
+        List<String> ids = PanelRegistry.ids(ctx.getSource().getServer());
+        if (ids.isEmpty()) {
+            ctx.getSource().sendSuccess(() -> Component.literal("Aucun panel enregistre."), false);
+        } else {
+            ctx.getSource().sendSuccess(() -> Component.literal(ids.size() + " panel(s) : " + String.join(", ", ids)), false);
+        }
+        return ids.size();
+    }
+
+    private static int delete(CommandContext<CommandSourceStack> ctx) {
+        String id = StringArgumentType.getString(ctx, "id");
+        if (!PanelRegistry.delete(ctx.getSource().getServer(), id)) {
+            ctx.getSource().sendFailure(Component.literal("Panel '" + id + "' introuvable."));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' supprime."), false);
+        return 1;
     }
 }

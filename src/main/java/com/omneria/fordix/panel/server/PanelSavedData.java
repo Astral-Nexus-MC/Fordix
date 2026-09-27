@@ -5,6 +5,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The panels admins have authored with /fordix panel, saved with the world
@@ -19,6 +20,15 @@ public final class PanelSavedData extends SavedData {
 
     public PanelDraft draft(String id) {
         return drafts.computeIfAbsent(id, PanelDraft::new);
+    }
+
+    public Set<String> ids() {
+        return drafts.keySet();
+    }
+
+    /** Returns whether a panel with this id existed. */
+    public boolean delete(String id) {
+        return drafts.remove(id) != null;
     }
 
     @Override

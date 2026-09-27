@@ -4,6 +4,7 @@ import com.omneria.fordix.panel.PanelSpec;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,10 +27,33 @@ public final class PanelRegistry {
 
     /** The draft for {@code id}, created if missing. Marks the saved data dirty, as callers edit it. */
     public static PanelDraft draft(MinecraftServer server, String id) {
-        PanelSavedData data = server.overworld().getDataStorage()
-                .computeIfAbsent(PanelSavedData::load, PanelSavedData::new, PanelSavedData.FILE_ID);
+        PanelSavedData data = data(server);
         data.setDirty();
         return data.draft(id);
+    }
+
+    /** Ids of every saved panel, sorted alphabetically. */
+    public static List<String> ids(MinecraftServer server) {
+        return data(server).ids().stream().sorted().toList();
+    }
+
+    /**
+     * Removes the saved panel and revokes it from every player it was sent to, so
+     * buttons on an already-open copy stop working. Returns whether it existed.
+     */
+    public static boolean delete(MinecraftServer server, String id) {
+        PanelSavedData data = data(server);
+        boolean existed = data.delete(id);
+        if (existed) {
+            data.setDirty();
+        }
+        SENT.values().forEach(panels -> panels.remove(id));
+        return existed;
+    }
+
+    private static PanelSavedData data(MinecraftServer server) {
+        return server.overworld().getDataStorage()
+                .computeIfAbsent(PanelSavedData::load, PanelSavedData::new, PanelSavedData.FILE_ID);
     }
 
     public static void markSent(UUID player, PanelSpec spec) {
