@@ -53,7 +53,7 @@ public final class PanelCommand {
     private static int create(CommandContext<CommandSourceStack> ctx) {
         String id = StringArgumentType.getString(ctx, "id");
         String title = StringArgumentType.getString(ctx, "title");
-        PanelRegistry.draft(id).setTitle(title);
+        PanelRegistry.draft(ctx.getSource().getServer(), id).setTitle(title);
         ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : titre mis a jour."), false);
         return 1;
     }
@@ -61,7 +61,7 @@ public final class PanelCommand {
     private static int describe(CommandContext<CommandSourceStack> ctx) {
         String id = StringArgumentType.getString(ctx, "id");
         String description = StringArgumentType.getString(ctx, "description");
-        PanelRegistry.draft(id).setDescription(description);
+        PanelRegistry.draft(ctx.getSource().getServer(), id).setDescription(description);
         ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : description mise a jour."), false);
         return 1;
     }
@@ -70,7 +70,7 @@ public final class PanelCommand {
         String id = StringArgumentType.getString(ctx, "id");
         String label = StringArgumentType.getString(ctx, "label");
         String command = StringArgumentType.getString(ctx, "command");
-        PanelRegistry.draft(id).addButton(label, command);
+        PanelRegistry.draft(ctx.getSource().getServer(), id).addButton(label, command);
         ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : bouton '" + label + "' ajoute."), false);
         return 1;
     }
@@ -79,7 +79,7 @@ public final class PanelCommand {
         String id = StringArgumentType.getString(ctx, "id");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
 
-        PanelSpec spec = PanelRegistry.draft(id).toSpec();
+        PanelSpec spec = PanelRegistry.draft(ctx.getSource().getServer(), id).toSpec();
 
         List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
         ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);
