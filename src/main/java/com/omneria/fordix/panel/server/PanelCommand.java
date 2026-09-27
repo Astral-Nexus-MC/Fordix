@@ -4,6 +4,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.omneria.fordix.panel.PanelSpec;
 import com.omneria.fordix.panel.network.ClientboundOpenPanelPayload;
 import com.omneria.fordix.panel.network.PanelNetwork;
@@ -17,6 +19,7 @@ import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * /fordix panel create|describe|button|send|list|delete - lets an admin build and broadcast a
@@ -47,15 +50,19 @@ public final class PanelCommand {
                                                         .executes(PanelCommand::addButton)))))
                         .then(Commands.literal("send")
                                 .then(Commands.argument("id", StringArgumentType.word())
+                                        .suggests(PanelCommand::suggestPanelIds)
                                         .then(Commands.argument("targets", EntityArgument.players())
                                                 .executes(PanelCommand::send))))
                         .then(Commands.literal("list")
                                 .executes(PanelCommand::list))
                         .then(Commands.literal("delete")
                                 .then(Commands.argument("id", StringArgumentType.word())
-                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
-                                                PanelRegistry.ids(ctx.getSource().getServer()), builder))
+                                        .suggests(PanelCommand::suggestPanelIds)
                                         .executes(PanelCommand::delete)))));
+    }
+
+    private static CompletableFuture<Suggestions> suggestPanelIds(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        return SharedSuggestionProvider.suggest(PanelRegistry.ids(ctx.getSource().getServer()), builder);
     }
 
     private static int create(CommandContext<CommandSourceStack> ctx) {
@@ -87,7 +94,12 @@ public final class PanelCommand {
         String id = StringArgumentType.getString(ctx, "id");
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
 
-        PanelSpec spec = PanelRegistry.draft(ctx.getSource().getServer(), id).toSpec();
+        PanelDraft draft = PanelRegistry.find(ctx.getSource().getServer(), id);
+        if (draft == null) {
+            ctx.getSource().sendFailure(Component.literal("Panel '" + id + "' introuvable."));
+            return 0;
+        }
+        PanelSpec spec = draft.toSpec();
 
         List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
         ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);

@@ -22,6 +22,11 @@ public final class PanelSavedData extends SavedData {
         return drafts.computeIfAbsent(id, PanelDraft::new);
     }
 
+    /** The panel with this id, or null if none was created. */
+    public PanelDraft find(String id) {
+        return drafts.get(id);
+    }
+
     public Set<String> ids() {
         return drafts.keySet();
     }

@@ -32,6 +32,11 @@ public final class PanelRegistry {
         return data.draft(id);
     }
 
+    /** The saved panel with this id, or null if it doesn't exist. Read-only lookup: doesn't create it. */
+    public static PanelDraft find(MinecraftServer server, String id) {
+        return data(server).find(id);
+    }
+
     /** Ids of every saved panel, sorted alphabetically. */
     public static List<String> ids(MinecraftServer server) {
         return data(server).ids().stream().sorted().toList();
