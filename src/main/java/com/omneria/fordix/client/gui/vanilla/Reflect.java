@@ -6,18 +6,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 /**
- * Reads private state off vanilla screens by field type rather than by name: in a
- * production (obfuscated) game the names differ from the dev environment, but a
- * field like "the only int on StonecutterScreen" is the same field either way.
+ * Reads private state off vanilla classes (screens, the toast list) by field type
+ * rather than by name: in a production (obfuscated) game the names differ from the
+ * dev environment, but a field like "the only int on StonecutterScreen" is the same
+ * field either way.
  * Only used where the type is unique on that class, and every caller has a fallback.
  */
-final class Reflect {
+public final class Reflect {
 
     private Reflect() {
     }
 
     /** The only non-static field of {@code type} declared on {@code owner}, made accessible; null if not exactly one. */
-    static Field uniqueField(Class<?> owner, Class<?> type) {
+    public static Field uniqueField(Class<?> owner, Class<?> type) {
         Field found = null;
         for (Field field : owner.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers()) || field.getType() != type) {
@@ -42,7 +43,7 @@ final class Reflect {
         }
     }
 
-    static Object get(Field field, Object instance) {
+    public static Object get(Field field, Object instance) {
         if (field == null) {
             return null;
         }

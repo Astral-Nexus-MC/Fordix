@@ -2,12 +2,14 @@ package com.omneria.fordix.client.notification;
 
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.anim.Easing;
+import com.omneria.fordix.client.gui.vanilla.Reflect;
 import com.omneria.fordix.client.gui.widget.Panel;
 import com.omneria.fordix.notification.NotificationStyle;
 import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -16,11 +18,13 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 
+import java.lang.reflect.Field;
+import java.util.BitSet;
 import java.util.List;
 
 /**
  * Draws server notifications in the top-right corner, on the HUD and on top of
- * any open screen - below the status effect icons when the HUD shows some. Layout and timing live in {@link NotificationStack}; this class
+ * any open screen - below vanilla toasts and, on the HUD, the status effect icons. Layout and timing live in {@link NotificationStack}; this class
  * measures, draws and plays the arrival sound. Only called on the client, through
  * PanelNetwork's DistExecutor guard.
  */
@@ -32,6 +36,8 @@ public final class NotificationOverlay {
     private static final int ICON_SIZE = 10;
     private static final int LINE_HEIGHT = 9;
     private static final int SUCCESS_GREEN = 0xFF5ED68A;
+    private static final Field TOAST_SLOTS = Reflect.uniqueField(ToastComponent.class, BitSet.class);
+    private static final int TOAST_SLOT_HEIGHT = 32;
     /** Vanilla draws status effect icons in 24px frames, a row every 26px from the top. */
     private static final int EFFECT_ROW_HEIGHT = 26;
 
@@ -73,7 +79,9 @@ public final class NotificationOverlay {
         }
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int top = MARGIN + (minecraft.screen == null ? effectRowsHeight(minecraft) : 0);
+        // Vanilla toasts are drawn over screens too; status effect icons only on the HUD.
+        int effects = minecraft.screen == null ? effectRowsHeight(minecraft) : 0;
+        int top = MARGIN + Math.max(effects, toastsHeight(minecraft));
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
         for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), top, NotificationStack.Anchor.TOP)) {
@@ -106,6 +114,18 @@ public final class NotificationOverlay {
         // Time left, as a thin bar along the bottom edge.
         int barWidth = Math.round((WIDTH - STRIPE - 4) * placed.remaining());
         guiGraphics.fill(x + STRIPE + 2, y + height - 3, x + STRIPE + 2 + barWidth, y + height - 2, Easing.withAlpha(color, 0.6F));
+    }
+
+    /**
+     * Height taken by vanilla toasts (advancements, recipes, tutorials) in the same
+     * corner. ToastComponent keeps a BitSet of occupied 32px slots in a private field;
+     * it's its only BitSet, so it's read by type. Without it, toasts are ignored.
+     */
+    private static int toastsHeight(Minecraft minecraft) {
+        if (Reflect.get(TOAST_SLOTS, minecraft.getToasts()) instanceof BitSet occupied) {
+            return occupied.length() * TOAST_SLOT_HEIGHT;
+        }
+        return 0;
     }
 
     /**
