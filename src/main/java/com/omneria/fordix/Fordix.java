@@ -7,7 +7,9 @@ import com.omneria.fordix.panel.server.PanelRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import org.slf4j.Logger;
 
 // The value here must match an entry in the META-INF/mods.toml file.
@@ -19,6 +21,7 @@ public class Fordix {
     public Fordix() {
         LOGGER.info("Fordix UI library loaded");
         PanelNetwork.register();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FordixConfig.CLIENT_SPEC);
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLoggedOut);
     }

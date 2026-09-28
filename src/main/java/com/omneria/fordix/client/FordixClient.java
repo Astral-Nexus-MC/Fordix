@@ -3,10 +3,12 @@ package com.omneria.fordix.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
+import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -55,6 +57,11 @@ public final class FordixClient {
                     minecraft.setScreen(new FordixDemoScreen());
                 }
             }
+        }
+
+        @SubscribeEvent
+        static void onScreenOpening(ScreenEvent.Opening event) {
+            VanillaScreens.onScreenOpening(event);
         }
     }
 }

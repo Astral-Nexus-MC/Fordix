@@ -48,6 +48,11 @@ public class Panel implements Renderable {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        draw(guiGraphics, x, y, width, height);
+    }
+
+    /** Draws the panel background at an arbitrary rectangle, for screens that lay out their own frame. */
+    public static void draw(GuiGraphics guiGraphics, int x, int y, int width, int height) {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PANEL_FILL);
         // Raised bevel: light along top/left, dark along bottom/right.
         guiGraphics.fill(x, y, x + width, y + BEVEL_WIDTH, FordixPalette.BEVEL_HIGHLIGHT);

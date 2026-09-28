@@ -1,0 +1,85 @@
+package com.omneria.fordix.client.gui.vanilla;
+
+import com.omneria.fordix.FordixConfig;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CraftingScreen;
+import net.minecraft.client.gui.screens.inventory.DispenserScreen;
+import net.minecraft.client.gui.screens.inventory.FurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.HopperScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+import net.minecraft.client.gui.screens.inventory.SmokerScreen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraftforge.client.event.ScreenEvent;
+
+/**
+ * Swaps vanilla container screens for their Voidframe versions as they open. The
+ * replacement reuses the menu the vanilla screen was built with, so the server-side
+ * container is untouched. Classes are matched exactly: a subclass means another mod
+ * customised that screen, and it's left alone - which also keeps our own screens,
+ * themselves vanilla subclasses, from being replaced again.
+ */
+public final class VanillaScreens {
+
+    private VanillaScreens() {
+    }
+
+    public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+            return;
+        }
+        Screen replacement = replacementFor(event.getNewScreen());
+        if (replacement != null) {
+            event.setNewScreen(replacement);
+        }
+    }
+
+    private static Screen replacementFor(Screen screen) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (screen == null || player == null) {
+            return null;
+        }
+        Inventory inventory = player.getInventory();
+        Class<?> type = screen.getClass();
+        if (type == ContainerScreen.class) {
+            ContainerScreen vanilla = (ContainerScreen) screen;
+            return new VoidframeScreens.Chest(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == HopperScreen.class) {
+            HopperScreen vanilla = (HopperScreen) screen;
+            return new VoidframeScreens.Hopper(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == DispenserScreen.class) {
+            DispenserScreen vanilla = (DispenserScreen) screen;
+            return new VoidframeScreens.Dispenser(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == ShulkerBoxScreen.class) {
+            ShulkerBoxScreen vanilla = (ShulkerBoxScreen) screen;
+            return new VoidframeScreens.ShulkerBox(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == CraftingScreen.class) {
+            CraftingScreen vanilla = (CraftingScreen) screen;
+            return new VoidframeScreens.Crafting(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == FurnaceScreen.class) {
+            FurnaceScreen vanilla = (FurnaceScreen) screen;
+            return new VoidframeScreens.Furnace(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == BlastFurnaceScreen.class) {
+            BlastFurnaceScreen vanilla = (BlastFurnaceScreen) screen;
+            return new VoidframeScreens.BlastFurnace(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == SmokerScreen.class) {
+            SmokerScreen vanilla = (SmokerScreen) screen;
+            return new VoidframeScreens.Smoker(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == InventoryScreen.class) {
+            return new VoidframeScreens.PlayerInventory(player);
+        }
+        return null;
+    }
+}

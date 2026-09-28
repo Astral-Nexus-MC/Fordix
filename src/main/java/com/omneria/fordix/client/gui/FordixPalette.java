@@ -19,4 +19,9 @@ public final class FordixPalette {
     public static final int ACCENT = 0xFF3FD1C7;
     public static final int TEXT = 0xFF9FB3C0;
     public static final int TEXT_BRIGHT = 0xFFC9E9E5;
+
+    /** Recessed wells: item slots, progress tracks, the player preview. */
+    public static final int SLOT_FILL = 0xFF0B1016;
+    public static final int PROGRESS_TRACK = 0xFF1E2A35;
+    public static final int FLAME = 0xFFE39B45;
 }
