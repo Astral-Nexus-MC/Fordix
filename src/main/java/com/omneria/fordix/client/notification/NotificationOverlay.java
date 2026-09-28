@@ -31,6 +31,9 @@ public final class NotificationOverlay {
     private static final int ICON_SIZE = 10;
     private static final int LINE_HEIGHT = 9;
     private static final int SUCCESS_GREEN = 0xFF5ED68A;
+    private static final int HOTBAR_HALF_WIDTH = 91;
+    /** Hotbar plus the health/food rows above it. */
+    private static final int HUD_CLEARANCE = 52;
 
     private static final NotificationStack<Shown> STACK = new NotificationStack<>();
 
@@ -71,9 +74,15 @@ public final class NotificationOverlay {
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        int bottom = screenHeight - MARGIN;
+        // On a narrow HUD (small window or large GUI scale) the hotbar reaches under the stack: rise above it and the status bars.
+        boolean hotbarUnderneath = screenWidth / 2 + HOTBAR_HALF_WIDTH > screenWidth - MARGIN - WIDTH;
+        if (minecraft.screen == null && hotbarUnderneath) {
+            bottom = screenHeight - HUD_CLEARANCE;
+        }
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
-        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), screenHeight - MARGIN)) {
+        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), bottom)) {
             int x = Math.round(screenWidth - MARGIN - WIDTH + (1.0F - placed.shown()) * (WIDTH + MARGIN));
             drawOne(guiGraphics, minecraft.font, placed, x, Math.round(placed.y()));
         }
