@@ -17,7 +17,7 @@ import net.minecraft.world.inventory.Slot;
  */
 public final class VoidframeDraw {
     private static final int SLOT_SIZE = 18;
-    private static final int RESULT_SLOT_SIZE = 26;
+    private static final int RESULT_SLOT_SIZE = 24;
 
     private VoidframeDraw() {
     }
