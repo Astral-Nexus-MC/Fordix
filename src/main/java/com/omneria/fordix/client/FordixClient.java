@@ -9,14 +9,17 @@ import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
+import com.omneria.fordix.client.notification.NotificationOverlay;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
@@ -101,9 +104,20 @@ public final class FordixClient {
             VoidframeChrome.onBackgroundRendered(event);
         }
 
-        @SubscribeEvent
+        /** Highest priority: the opening "pop" scale must be undone before anything else draws after the screen. */
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onScreenRenderPost(ScreenEvent.Render.Post event) {
             VoidframeChrome.onRenderPost(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        static void onScreenRenderPostNotifications(ScreenEvent.Render.Post event) {
+            NotificationOverlay.onScreenRenderPost(event);
+        }
+
+        @SubscribeEvent
+        static void onRenderGui(RenderGuiEvent.Post event) {
+            NotificationOverlay.onRenderGui(event);
         }
 
         @SubscribeEvent

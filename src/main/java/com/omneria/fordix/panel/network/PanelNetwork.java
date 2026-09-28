@@ -1,7 +1,9 @@
 package com.omneria.fordix.panel.network;
 
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.panel.ClientPanelPayloadHandler;
+import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
 import com.omneria.fordix.panel.server.ServerPanelPayloadHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -13,12 +15,12 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.function.Supplier;
 
 /**
- * SimpleChannel setup - Forge 1.20.1 predates the CustomPacketPayload/StreamCodec
+ * Fordix's network channel (panels and notifications). SimpleChannel setup - Forge 1.20.1 predates the CustomPacketPayload/StreamCodec
  * API used from 1.20.5 onward, so panel packets are hand-encoded FriendlyByteBuf
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -40,11 +42,22 @@ public final class PanelNetwork {
                 ServerboundPanelActionPayload::encode,
                 ServerboundPanelActionPayload::decode,
                 ServerPanelPayloadHandler::handle);
+        CHANNEL.registerMessage(id++, ClientboundNotificationPayload.class,
+                ClientboundNotificationPayload::encode,
+                ClientboundNotificationPayload::decode,
+                PanelNetwork::handleNotification);
     }
 
     private static void handleOpenPanel(ClientboundOpenPanelPayload payload, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() ->
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientPanelPayloadHandler.handle(payload))
+        );
+        ctx.get().setPacketHandled(true);
+    }
+
+    private static void handleNotification(ClientboundNotificationPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> NotificationOverlay.receive(payload))
         );
         ctx.get().setPacketHandled(true);
     }

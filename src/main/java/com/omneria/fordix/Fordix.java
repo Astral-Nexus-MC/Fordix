@@ -1,6 +1,7 @@
 package com.omneria.fordix;
 
 import com.mojang.logging.LogUtils;
+import com.omneria.fordix.notification.server.NotifyCommand;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.server.PanelCommand;
 import com.omneria.fordix.panel.server.PanelRegistry;
@@ -28,6 +29,7 @@ public class Fordix {
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
         PanelCommand.register(event.getDispatcher());
+        NotifyCommand.register(event.getDispatcher());
     }
 
     private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
