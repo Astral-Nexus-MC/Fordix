@@ -2,6 +2,9 @@ package com.omneria.fordix.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.FordixConfig;
+import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
@@ -16,6 +19,7 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -42,6 +46,25 @@ public final class FordixClient {
         @SubscribeEvent
         static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
             event.register(TOGGLE_DEMO);
+        }
+
+        @SubscribeEvent
+        static void onConfigLoading(ModConfigEvent.Loading event) {
+            applyTheme(event);
+        }
+
+        @SubscribeEvent
+        static void onConfigReloading(ModConfigEvent.Reloading event) {
+            applyTheme(event);
+        }
+
+        private static void applyTheme(ModConfigEvent event) {
+            if (event.getConfig().getSpec() != FordixConfig.CLIENT_SPEC) {
+                return;
+            }
+            Theme theme = Theme.byName(FordixConfig.THEME.get());
+            Integer accent = Theme.parseHex(FordixConfig.ACCENT_COLOR.get());
+            FordixPalette.apply(accent != null ? theme.withAccent(accent) : theme);
         }
     }
 
