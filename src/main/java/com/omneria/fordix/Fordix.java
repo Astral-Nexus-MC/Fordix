@@ -1,6 +1,7 @@
 package com.omneria.fordix;
 
 import com.mojang.logging.LogUtils;
+import com.omneria.fordix.notification.server.AutoNotifications;
 import com.omneria.fordix.notification.server.NotifyCommand;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.server.PanelCommand;
@@ -23,8 +24,12 @@ public class Fordix {
         LOGGER.info("Fordix UI library loaded");
         PanelNetwork.register();
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, FordixConfig.CLIENT_SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FordixServerConfig.SPEC);
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onPlayerLoggedOut);
+        MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedIn);
+        MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedOut);
+        MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onServerTick);
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
