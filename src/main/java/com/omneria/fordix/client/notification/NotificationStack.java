@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * Layout and timing of stacked notifications, independent of rendering: each one
- * slides in, stays for its duration, then slides out; the newest sits at the bottom
- * and older ones are pushed up, easing into place when a neighbour leaves. Past
+ * slides in, stays for its duration, then slides out; the newest sits against the
+ * anchor edge and older ones are pushed away from it (down from a top anchor, up
+ * from a bottom one), easing into place when a neighbour leaves. Past
  * {@link #MAX_VISIBLE}, the oldest are sent out early. Driven by explicit timestamps,
  * so it's unit tested without a game loop.
  */
@@ -54,11 +55,19 @@ public final class NotificationStack<T> {
         return entries.isEmpty();
     }
 
+    /** Which screen edge the stack grows from. */
+    public enum Anchor {
+        TOP,
+        BOTTOM
+    }
+
     /**
      * Advances to {@code now} and returns every notification still on screen, newest
-     * first. {@code bottom} is the y the lowest one rests on; y values grow downward.
+     * first, with {@code y} the top edge of each (y grows downward). The newest one
+     * touches {@code edge}: its top edge for {@link Anchor#TOP}, its bottom edge for
+     * {@link Anchor#BOTTOM}.
      */
-    public List<Placed<T>> layout(long now, float bottom) {
+    public List<Placed<T>> layout(long now, float edge, Anchor anchor) {
         entries.removeIf(entry -> now >= entry.leaveAt + EXIT_MS);
         sendOverflowAway(now);
 
@@ -66,10 +75,11 @@ public final class NotificationStack<T> {
         lastLayoutAt = now;
 
         List<Placed<T>> placed = new ArrayList<>(entries.size());
-        float target = bottom;
+        float cursor = edge;
         for (int i = entries.size() - 1; i >= 0; i--) {
             Entry<T> entry = entries.get(i);
-            target -= entry.height;
+            float target = anchor == Anchor.TOP ? cursor : cursor - entry.height;
+            cursor = anchor == Anchor.TOP ? cursor + entry.height + GAP : target - GAP;
             entry.y = Float.isNaN(entry.y) ? target : Easing.lerp(entry.y, target, settle);
 
             float enter = Easing.easeOutCubic(Easing.progress(now - entry.createdAt, ENTER_MS));
@@ -77,7 +87,6 @@ public final class NotificationStack<T> {
             float shown = enter * (1.0F - exit);
             float remaining = 1.0F - Easing.progress(now - entry.createdAt, entry.lifetime());
             placed.add(new Placed<>(entry.payload, entry.height, shown, entry.y, remaining));
-            target -= GAP;
         }
         return placed;
     }

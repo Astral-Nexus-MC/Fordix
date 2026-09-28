@@ -12,14 +12,15 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 
 import java.util.List;
 
 /**
- * Draws server notifications in the bottom-right corner, on the HUD and on top of
- * any open screen. Layout and timing live in {@link NotificationStack}; this class
+ * Draws server notifications in the top-right corner, on the HUD and on top of
+ * any open screen - below the status effect icons when the HUD shows some. Layout and timing live in {@link NotificationStack}; this class
  * measures, draws and plays the arrival sound. Only called on the client, through
  * PanelNetwork's DistExecutor guard.
  */
@@ -31,9 +32,8 @@ public final class NotificationOverlay {
     private static final int ICON_SIZE = 10;
     private static final int LINE_HEIGHT = 9;
     private static final int SUCCESS_GREEN = 0xFF5ED68A;
-    private static final int HOTBAR_HALF_WIDTH = 91;
-    /** Hotbar plus the health/food rows above it. */
-    private static final int HUD_CLEARANCE = 52;
+    /** Vanilla draws status effect icons in 24px frames, a row every 26px from the top. */
+    private static final int EFFECT_ROW_HEIGHT = 26;
 
     private static final NotificationStack<Shown> STACK = new NotificationStack<>();
 
@@ -73,16 +73,10 @@ public final class NotificationOverlay {
         }
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        int bottom = screenHeight - MARGIN;
-        // On a narrow HUD (small window or large GUI scale) the hotbar reaches under the stack: rise above it and the status bars.
-        boolean hotbarUnderneath = screenWidth / 2 + HOTBAR_HALF_WIDTH > screenWidth - MARGIN - WIDTH;
-        if (minecraft.screen == null && hotbarUnderneath) {
-            bottom = screenHeight - HUD_CLEARANCE;
-        }
+        int top = MARGIN + (minecraft.screen == null ? effectRowsHeight(minecraft) : 0);
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
-        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), bottom)) {
+        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), top, NotificationStack.Anchor.TOP)) {
             int x = Math.round(screenWidth - MARGIN - WIDTH + (1.0F - placed.shown()) * (WIDTH + MARGIN));
             drawOne(guiGraphics, minecraft.font, placed, x, Math.round(placed.y()));
         }
@@ -112,6 +106,30 @@ public final class NotificationOverlay {
         // Time left, as a thin bar along the bottom edge.
         int barWidth = Math.round((WIDTH - STRIPE - 4) * placed.remaining());
         guiGraphics.fill(x + STRIPE + 2, y + height - 3, x + STRIPE + 2 + barWidth, y + height - 2, Easing.withAlpha(color, 0.6F));
+    }
+
+    /**
+     * Height taken by the status effect icons the HUD draws in the top-right corner.
+     * Vanilla puts beneficial effects on the first row and harmful ones always on the
+     * second, even when the first is empty.
+     */
+    private static int effectRowsHeight(Minecraft minecraft) {
+        if (minecraft.player == null) {
+            return 0;
+        }
+        boolean beneficial = false;
+        boolean harmful = false;
+        for (MobEffectInstance effect : minecraft.player.getActiveEffects()) {
+            if (!effect.showIcon()) {
+                continue;
+            }
+            if (effect.getEffect().isBeneficial()) {
+                beneficial = true;
+            } else {
+                harmful = true;
+            }
+        }
+        return harmful ? 2 * EFFECT_ROW_HEIGHT : beneficial ? EFFECT_ROW_HEIGHT : 0;
     }
 
     private static int colorOf(NotificationStyle style) {
