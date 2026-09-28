@@ -27,6 +27,9 @@ public final class VoidframeDraw {
                                            int left, int top, int width, int height) {
         Panel.draw(guiGraphics, left, top, width, height);
         for (Slot slot : menu.slots) {
+            if (!slot.isActive()) {
+                continue;
+            }
             if (slot instanceof ResultSlot || slot instanceof FurnaceResultSlot) {
                 int offset = (RESULT_SLOT_SIZE - 16) / 2;
                 well(guiGraphics, left + slot.x - offset, top + slot.y - offset, RESULT_SLOT_SIZE, RESULT_SLOT_SIZE);
@@ -66,6 +69,35 @@ public final class VoidframeDraw {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
         int clamped = Math.max(0, Math.min(filled, height));
         guiGraphics.fill(x, y + height - clamped, x + width, y + height, FordixPalette.FLAME);
+    }
+
+    /** A horizontal gauge filling from the left by {@code filled} pixels. */
+    public static void gauge(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled, int color) {
+        guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
+        int clamped = Math.max(0, Math.min(filled, width));
+        guiGraphics.fill(x, y, x + clamped, y + height, color);
+    }
+
+    /** A vertical gauge filling downward from the top by {@code filled} pixels. */
+    public static void gaugeDown(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled, int color) {
+        guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
+        int clamped = Math.max(0, Math.min(filled, height));
+        guiGraphics.fill(x, y, x + width, y + clamped, color);
+    }
+
+    /** A 2px-thick diagonal cross, used where vanilla shows its red "can't do that" X. */
+    public static void cross(GuiGraphics guiGraphics, int x, int y, int size, int color) {
+        for (int i = 0; i < size - 1; i++) {
+            guiGraphics.fill(x + i, y + i, x + i + 2, y + i + 2, color);
+            guiGraphics.fill(x + size - 2 - i, y + i, x + size - i, y + i + 2, color);
+        }
+    }
+
+    /** A plus sign, as between the two inputs of an anvil. */
+    public static void plus(GuiGraphics guiGraphics, int centerX, int centerY, int size, int color) {
+        int half = size / 2;
+        guiGraphics.fill(centerX - half, centerY - 1, centerX + half, centerY + 1, color);
+        guiGraphics.fill(centerX - 1, centerY - half, centerX + 1, centerY + half, color);
     }
 
     public static void label(GuiGraphics guiGraphics, Font font, Component text, int x, int y) {

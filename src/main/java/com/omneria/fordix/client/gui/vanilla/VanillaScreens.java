@@ -3,16 +3,26 @@ package com.omneria.fordix.client.gui.vanilla;
 import com.omneria.fordix.FordixConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AnvilScreen;
+import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.BrewingStandScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CraftingScreen;
 import net.minecraft.client.gui.screens.inventory.DispenserScreen;
+import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
 import net.minecraft.client.gui.screens.inventory.FurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.GrindstoneScreen;
 import net.minecraft.client.gui.screens.inventory.HopperScreen;
+import net.minecraft.client.gui.screens.inventory.HorseInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+import net.minecraft.client.gui.screens.inventory.SmithingScreen;
 import net.minecraft.client.gui.screens.inventory.SmokerScreen;
+import net.minecraft.client.gui.screens.inventory.StonecutterScreen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.client.event.ScreenEvent;
 
@@ -79,6 +89,45 @@ public final class VanillaScreens {
         }
         if (type == InventoryScreen.class) {
             return new VoidframeScreens.PlayerInventory(player);
+        }
+        if (type == GrindstoneScreen.class) {
+            GrindstoneScreen vanilla = (GrindstoneScreen) screen;
+            return new VoidframeStations.Grindstone(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == AnvilScreen.class) {
+            AnvilScreen vanilla = (AnvilScreen) screen;
+            return new VoidframeStations.Anvil(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == BrewingStandScreen.class) {
+            BrewingStandScreen vanilla = (BrewingStandScreen) screen;
+            return new VoidframeStations.BrewingStand(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == BeaconScreen.class) {
+            BeaconScreen vanilla = (BeaconScreen) screen;
+            return new VoidframeStations.Beacon(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == EnchantmentScreen.class) {
+            EnchantmentScreen vanilla = (EnchantmentScreen) screen;
+            return new VoidframeStations.Enchanting(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == MerchantScreen.class) {
+            MerchantScreen vanilla = (MerchantScreen) screen;
+            return new VoidframeStations.Merchant(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == StonecutterScreen.class) {
+            StonecutterScreen vanilla = (StonecutterScreen) screen;
+            return new VoidframeStations.Stonecutter(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == SmithingScreen.class) {
+            SmithingScreen vanilla = (SmithingScreen) screen;
+            return new VoidframeStations.Smithing(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == HorseInventoryScreen.class) {
+            HorseInventoryScreen vanilla = (HorseInventoryScreen) screen;
+            // The horse only lives in a private field; without it, leave the vanilla screen in place.
+            if (Reflect.get(VoidframeStations.Horse.HORSE, vanilla) instanceof AbstractHorse horse) {
+                return new VoidframeStations.Horse(vanilla.getMenu(), inventory, horse);
+            }
         }
         return null;
     }

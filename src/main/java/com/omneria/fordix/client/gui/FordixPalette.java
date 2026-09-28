@@ -24,6 +24,7 @@ public final class FordixPalette {
     public static final int SLOT_FILL = 0xFF0B1016;
     public static final int PROGRESS_TRACK = 0xFF1E2A35;
     public static final int FLAME = 0xFFE39B45;
+    public static final int ERROR = 0xFFE0524A;
 
     /** Title strip across the top of container screens, with a faint accent rule under it. */
     public static final int TITLE_BAND = 0xFF1A2530;
