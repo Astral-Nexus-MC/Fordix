@@ -4,10 +4,13 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
+import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -62,6 +65,26 @@ public final class FordixClient {
         @SubscribeEvent
         static void onScreenOpening(ScreenEvent.Opening event) {
             VanillaScreens.onScreenOpening(event);
+        }
+
+        @SubscribeEvent
+        static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
+            VoidframeChrome.onBackgroundRendered(event);
+        }
+
+        @SubscribeEvent
+        static void onScreenRenderPost(ScreenEvent.Render.Post event) {
+            VoidframeChrome.onRenderPost(event);
+        }
+
+        @SubscribeEvent
+        static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
+            VoidframeChrome.onContainerForeground(event);
+        }
+
+        @SubscribeEvent
+        static void onTooltipColor(RenderTooltipEvent.Color event) {
+            VoidframeChrome.onTooltipColor(event);
         }
     }
 }

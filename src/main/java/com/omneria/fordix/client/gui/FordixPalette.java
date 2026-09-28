@@ -24,4 +24,15 @@ public final class FordixPalette {
     public static final int SLOT_FILL = 0xFF0B1016;
     public static final int PROGRESS_TRACK = 0xFF1E2A35;
     public static final int FLAME = 0xFFE39B45;
+
+    /** Title strip across the top of container screens, with a faint accent rule under it. */
+    public static final int TITLE_BAND = 0xFF1A2530;
+    public static final int TITLE_RULE = 0x603FD1C7;
+
+    /** Hovered slot fill, under the item - the accent outline is drawn over it. */
+    public static final int SLOT_HOVER = 0x303FD1C7;
+
+    public static final int TOOLTIP_FILL = 0xF0131A22;
+    public static final int TOOLTIP_BORDER_TOP = 0xA03FD1C7;
+    public static final int TOOLTIP_BORDER_BOTTOM = 0xA024313D;
 }

@@ -36,6 +36,12 @@ public final class VoidframeDraw {
         }
     }
 
+    /** Lighter strip behind the title row, ending just above the first row of slots. */
+    public static void titleBand(GuiGraphics guiGraphics, int left, int top, int width) {
+        guiGraphics.fill(left + 2, top + 2, left + width - 2, top + 16, FordixPalette.TITLE_BAND);
+        guiGraphics.fill(left + 2, top + 15, left + width - 2, top + 16, FordixPalette.TITLE_RULE);
+    }
+
     /** A recessed rectangle: dark along top/left, light along bottom/right - the inverse of a panel's bevel. */
     public static void well(GuiGraphics guiGraphics, int x, int y, int width, int height) {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.SLOT_FILL);
