@@ -8,6 +8,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.client.event.ContainerScreenEvent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 
@@ -102,5 +104,12 @@ public final class VoidframeChrome {
         event.setBackground(FordixPalette.TOOLTIP_FILL);
         event.setBorderStart(FordixPalette.TOOLTIP_BORDER_TOP);
         event.setBorderEnd(FordixPalette.TOOLTIP_BORDER_BOTTOM);
+        // Rare, epic... items get a border in their name's color, like the tooltip title.
+        ItemStack stack = event.getItemStack();
+        if (!stack.isEmpty() && stack.getRarity() != Rarity.COMMON && stack.getRarity().color.getColor() != null) {
+            int color = 0xFF000000 | stack.getRarity().color.getColor();
+            event.setBorderStart(color);
+            event.setBorderEnd(0xFF000000 | ((color & 0xFEFEFE) >> 1));
+        }
     }
 }

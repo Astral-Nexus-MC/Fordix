@@ -15,12 +15,15 @@ import com.omneria.fordix.client.gui.vanilla.VoidframeHud;
 import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.notification.NotificationOverlay;
+import com.omneria.fordix.client.tooltip.AnalysisCommand;
+import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
@@ -28,6 +31,7 @@ import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -185,6 +189,16 @@ public final class FordixClient {
         @SubscribeEvent
         static void onScreenRenderPostChat(ScreenEvent.Render.Post event) {
             VoidframeHud.onScreenRenderPost(event);
+        }
+
+        @SubscribeEvent
+        static void onItemTooltip(ItemTooltipEvent event) {
+            TooltipStyle.onItemTooltip(event);
+        }
+
+        @SubscribeEvent
+        static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+            AnalysisCommand.onRegister(event);
         }
 
         @SubscribeEvent
