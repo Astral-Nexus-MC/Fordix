@@ -11,11 +11,13 @@ import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
+import com.omneria.fordix.client.gui.vanilla.VoidframeDurability;
 import com.omneria.fordix.client.gui.vanilla.VoidframeHud;
 import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.AnalysisCommand;
+import com.omneria.fordix.client.tooltip.ItemTooltipRenderer;
 import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -25,6 +27,7 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.client.event.RegisterItemDecorationsEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -87,6 +90,12 @@ public final class FordixClient {
         @SubscribeEvent
         static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
             event.registerReloadListener(TextureRecolor.RELOAD_LISTENER);
+        }
+
+        /** Durability bars under damaged items, for every item that has durability. */
+        @SubscribeEvent
+        static void onRegisterItemDecorations(RegisterItemDecorationsEvent event) {
+            VoidframeDurability.onRegister(event);
         }
 
         /** The "Config" button of the Mods list opens Fordix's settings screen. */
@@ -189,6 +198,11 @@ public final class FordixClient {
         @SubscribeEvent
         static void onScreenRenderPostChat(ScreenEvent.Render.Post event) {
             VoidframeHud.onScreenRenderPost(event);
+        }
+
+        @SubscribeEvent
+        static void onTooltipPre(RenderTooltipEvent.Pre event) {
+            ItemTooltipRenderer.onPre(event);
         }
 
         @SubscribeEvent

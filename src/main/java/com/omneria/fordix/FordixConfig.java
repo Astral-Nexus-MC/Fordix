@@ -17,6 +17,7 @@ public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
+    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -30,6 +31,9 @@ public final class FordixConfig {
         VOIDFRAME_HUD = builder
                 .comment("Replace the health hearts with a Voidframe bar showing the exact value.")
                 .define("voidframeHud", true);
+        VOIDFRAME_TOOLTIPS = builder
+                .comment("Draw item tooltips with a header, attribute bars and rarity colors.")
+                .define("voidframeTooltips", true);
         THEME = builder
                 .comment("Color theme for Fordix screens: " + String.join(", ", Theme.NAMES) + ".")
                 .defineInList("theme", Theme.DEFAULT, Theme.NAMES);

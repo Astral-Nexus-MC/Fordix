@@ -4,6 +4,7 @@ import com.omneria.fordix.FordixConfig;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -54,6 +55,9 @@ public final class TooltipStyle {
         }
         ItemStack stack = event.getItemStack();
         List<Component> lines = event.getToolTip();
+        if (FordixConfig.VOIDFRAME_TOOLTIPS.get()) {
+            removeVanillaModifierLines(stack, lines);
+        }
         for (Map.Entry<Enchantment, Integer> entry : enchantmentsOf(stack).entrySet()) {
             Enchantment enchantment = entry.getKey();
             int level = entry.getValue();
@@ -61,6 +65,28 @@ public final class TooltipStyle {
             for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).getString().equals(vanillaLine)) {
                     lines.set(i, styled(enchantment, level));
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Drops the "When in main hand: +7 Attack Damage" block the game writes, since the tooltip
+     * draws attributes as bars. Each slot's block is a blank line, its title, then one line per modifier.
+     */
+    private static void removeVanillaModifierLines(ItemStack stack, List<Component> lines) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            int count = stack.getAttributeModifiers(slot).size();
+            if (count == 0) {
+                continue;
+            }
+            String title = Component.translatable("item.modifiers." + slot.getName()).getString();
+            for (int i = 0; i < lines.size(); i++) {
+                if (lines.get(i).getString().equals(title)) {
+                    int from = i > 0 && lines.get(i - 1).getString().isEmpty() ? i - 1 : i;
+                    int to = Math.min(lines.size(), i + 1 + count);
+                    lines.subList(from, to).clear();
                     break;
                 }
             }

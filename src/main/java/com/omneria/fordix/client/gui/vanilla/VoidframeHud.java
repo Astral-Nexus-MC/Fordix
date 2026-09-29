@@ -46,6 +46,7 @@ public final class VoidframeHud {
 
     /** Replaces the hearts and the drumsticks. Each bar sits where vanilla's row was and pushes what stacks above it. */
     public static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
+        VoidframeGauges.onOverlayPre(event);
         boolean health = event.getOverlay() == VanillaGuiOverlay.PLAYER_HEALTH.type();
         boolean food = event.getOverlay() == VanillaGuiOverlay.FOOD_LEVEL.type();
         if ((!health && !food) || !FordixConfig.VOIDFRAME_HUD.get()) {

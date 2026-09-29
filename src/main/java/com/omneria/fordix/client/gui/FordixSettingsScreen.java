@@ -39,7 +39,7 @@ public class FordixSettingsScreen extends FordixScreen {
     @Override
     protected void init() {
         int innerWidth = PANEL_WIDTH - PADDING * 2;
-        int panelHeight = 28 + ROW * 5 + 12 + ROW + 4 + BUTTON_HEIGHT + PADDING;
+        int panelHeight = 28 + ROW * 6 + 12 + ROW + 4 + BUTTON_HEIGHT + PADDING;
         int panelX = centerX(PANEL_WIDTH);
         int panelY = centerY(panelHeight);
         this.panel = new Panel(panelX, panelY, PANEL_WIDTH, panelHeight);
@@ -50,6 +50,9 @@ public class FordixSettingsScreen extends FordixScreen {
         y += ROW;
 
         addRenderableWidget(toggle(x, y, innerWidth, "Barre de vie Voidframe", FordixConfig.VOIDFRAME_HUD));
+        y += ROW;
+
+        addRenderableWidget(toggle(x, y, innerWidth, "Infobulles Voidframe", FordixConfig.VOIDFRAME_TOOLTIPS));
         y += ROW;
 
         addRenderableWidget(choice(x, y, innerWidth, "Theme", Theme.NAMES,
@@ -122,7 +125,7 @@ public class FordixSettingsScreen extends FordixScreen {
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, panel.getY() + 10, FordixPalette.ACCENT);
-        int accentLabelY = panel.getY() + 28 + ROW * 5;
+        int accentLabelY = panel.getY() + 28 + ROW * 6;
         guiGraphics.drawString(this.font, "Couleur d'accent", panel.getX() + PADDING, accentLabelY, FordixPalette.TEXT, false);
     }
 
