@@ -30,6 +30,8 @@ public final class VoidframeHud {
     /** Rows inside the outline. */
     private static final int INNER_ROWS = BAR_HEIGHT - 2;
     private static final int HUNGRY = 0xFF7A8F3A;
+    /** Light gold, so the saturation line reads over the orange hunger bar in any theme. */
+    private static final int SATURATION = 0xFFFFE9B0;
     private static final int POISON = 0xFF8FA82E;
     private static final int WITHER = 0xFF4A4A4A;
     private static final int FREEZING = 0xFF7FD4FF;
@@ -118,7 +120,7 @@ public final class VoidframeHud {
         fillRange(guiGraphics, x, y, false, inner - filled, inner, 0, 1, brighten(color));
         // Saturation: a thin light line, the reserve that's burned before hunger drops.
         int reserve = Math.round(inner * Mth.clamp(food.getSaturationLevel(), 0.0F, 20.0F) / 20.0F);
-        fillRange(guiGraphics, x, y, false, inner - reserve, inner, INNER_ROWS - 1, INNER_ROWS, FordixPalette.TEXT_BRIGHT);
+        fillRange(guiGraphics, x, y, false, inner - reserve, inner, INNER_ROWS - 1, INNER_ROWS, SATURATION);
         String text = String.valueOf((int) level);
         guiGraphics.drawString(font, text, x + BAR_WIDTH - 5 - font.width(text), y + 1, FordixPalette.TEXT_BRIGHT, true);
     }
