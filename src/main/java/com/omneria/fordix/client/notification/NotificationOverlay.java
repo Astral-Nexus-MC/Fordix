@@ -12,13 +12,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.fml.ModList;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
@@ -33,7 +31,8 @@ import java.util.List;
  * PanelNetwork's DistExecutor guard.
  */
 public final class NotificationOverlay {
-    private static final int WIDTH = 160;
+    private static final int MIN_WIDTH = 160;
+    private static final int MAX_WIDTH = 260;
     private static final int MARGIN = 6;
     private static final int PADDING = 5;
     private static final int STRIPE = 2;
@@ -50,7 +49,8 @@ public final class NotificationOverlay {
 
     private static final NotificationStack<Shown> STACK = new NotificationStack<>();
 
-    private record Shown(NotificationStyle style, Component title, List<FormattedCharSequence> lines) {
+    private record Shown(NotificationStyle style, List<FormattedCharSequence> title, List<FormattedCharSequence> lines,
+                         int width) {
     }
 
     private NotificationOverlay() {
@@ -59,12 +59,22 @@ public final class NotificationOverlay {
     public static void receive(ClientboundNotificationPayload payload) {
         Minecraft minecraft = Minecraft.getInstance();
         Font font = minecraft.font;
-        int textWidth = WIDTH - STRIPE - PADDING * 3 - ICON_SIZE;
+        int overhead = STRIPE + PADDING * 3 + ICON_SIZE;
+        int maxTextWidth = MAX_WIDTH - overhead;
+        List<FormattedCharSequence> title = font.split(payload.title(), maxTextWidth);
         List<FormattedCharSequence> lines = payload.message().getString().isEmpty()
                 ? List.of()
-                : font.split(payload.message(), textWidth);
-        int height = PADDING * 2 + LINE_HEIGHT + lines.size() * LINE_HEIGHT + 3;
-        STACK.add(new Shown(payload.style(), payload.title(), lines), height,
+                : font.split(payload.message(), maxTextWidth);
+        int textWidth = 0;
+        for (FormattedCharSequence line : title) {
+            textWidth = Math.max(textWidth, font.width(line));
+        }
+        for (FormattedCharSequence line : lines) {
+            textWidth = Math.max(textWidth, font.width(line));
+        }
+        int width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, textWidth + overhead));
+        int height = PADDING * 2 + (title.size() + lines.size()) * LINE_HEIGHT + 4;
+        STACK.add(new Shown(payload.style(), title, lines, width), height,
                 System.currentTimeMillis(), payload.durationTicks() * 50L);
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.value(), 1.6F, 0.35F));
     }
@@ -87,8 +97,7 @@ public final class NotificationOverlay {
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        NotificationCorner corner = NotificationCorner.resolve(FordixConfig.NOTIFICATION_POSITION.get(),
-                ModList.get().isLoaded("journeymap"));
+        NotificationCorner corner = NotificationCorner.resolve(FordixConfig.NOTIFICATION_POSITION.get());
         boolean hud = minecraft.screen == null;
         int edge;
         if (corner.isTop()) {
@@ -96,19 +105,20 @@ public final class NotificationOverlay {
             int effects = hud ? effectRowsHeight(minecraft) : 0;
             edge = MARGIN + (corner.isRight() ? Math.max(effects, toastsHeight(minecraft)) : 0);
         } else {
-            int left = corner.isRight() ? screenWidth - MARGIN - WIDTH : MARGIN;
+            int left = corner.isRight() ? screenWidth - MARGIN - MAX_WIDTH : MARGIN;
             boolean hotbarInTheWay = left < screenWidth / 2 + HOTBAR_HALF_WIDTH
-                    && left + WIDTH > screenWidth / 2 - HOTBAR_HALF_WIDTH;
+                    && left + MAX_WIDTH > screenWidth / 2 - HOTBAR_HALF_WIDTH;
             edge = screenHeight - MARGIN - (hud && hotbarInTheWay ? HOTBAR_CLEARANCE : 0);
         }
         NotificationStack.Anchor anchor = corner.isTop() ? NotificationStack.Anchor.TOP : NotificationStack.Anchor.BOTTOM;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
+        guiGraphics.pose().translate(0.0F, 0.0F, 5000.0F);
         for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), edge, anchor)) {
             // Slides in from the nearest side edge.
-            float hidden = (1.0F - placed.shown()) * (WIDTH + MARGIN);
+            int width = placed.payload().width();
+            float hidden = (1.0F - placed.shown()) * (width + MARGIN);
             int x = corner.isRight()
-                    ? Math.round(screenWidth - MARGIN - WIDTH + hidden)
+                    ? Math.round(screenWidth - MARGIN - width + hidden)
                     : Math.round(MARGIN - hidden);
             drawOne(guiGraphics, minecraft.font, placed, x, Math.round(placed.y()));
         }
@@ -118,8 +128,9 @@ public final class NotificationOverlay {
     private static void drawOne(GuiGraphics guiGraphics, Font font, NotificationStack.Placed<Shown> placed, int x, int y) {
         Shown shown = placed.payload();
         int height = placed.height();
+        int width = shown.width();
         int color = colorOf(shown.style());
-        Panel.draw(guiGraphics, x, y, WIDTH, height);
+        Panel.draw(guiGraphics, x, y, width, height);
         guiGraphics.fill(x, y, x + STRIPE, y + height, color);
 
         int iconX = x + STRIPE + PADDING;
@@ -128,15 +139,18 @@ public final class NotificationOverlay {
         guiGraphics.drawCenteredString(font, iconOf(shown.style()), iconX + ICON_SIZE / 2, iconY + 1, color);
 
         int textX = iconX + ICON_SIZE + PADDING;
-        guiGraphics.drawString(font, shown.title(), textX, y + PADDING + 1, FordixPalette.TEXT_BRIGHT, false);
-        int lineY = y + PADDING + 1 + LINE_HEIGHT;
+        int lineY = y + PADDING + 1;
+        for (FormattedCharSequence line : shown.title()) {
+            guiGraphics.drawString(font, line, textX, lineY, FordixPalette.TEXT_BRIGHT, false);
+            lineY += LINE_HEIGHT;
+        }
         for (FormattedCharSequence line : shown.lines()) {
             guiGraphics.drawString(font, line, textX, lineY, FordixPalette.TEXT, false);
             lineY += LINE_HEIGHT;
         }
 
         // Time left, as a thin bar along the bottom edge.
-        int barWidth = Math.round((WIDTH - STRIPE - 4) * placed.remaining());
+        int barWidth = Math.round((width - STRIPE - 4) * placed.remaining());
         guiGraphics.fill(x + STRIPE + 2, y + height - 3, x + STRIPE + 2 + barWidth, y + height - 2, Easing.withAlpha(color, 0.6F));
     }
 

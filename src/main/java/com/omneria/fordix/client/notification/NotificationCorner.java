@@ -5,8 +5,7 @@ import java.util.Locale;
 
 /**
  * Screen corner the notification stack hangs from, picked with the client option
- * "notificationPosition". "auto" avoids JourneyMap's minimap, which sits in the
- * top-right corner by default. Plain Java, unit tested.
+ * "notificationPosition". "auto" is the top-right corner. Plain Java, unit tested.
  */
 public enum NotificationCorner {
     TOP_RIGHT(true, true),
@@ -33,8 +32,8 @@ public enum NotificationCorner {
         return right;
     }
 
-    /** The configured corner; "auto" (or anything unknown) is top-left when JourneyMap is installed, top-right otherwise. */
-    public static NotificationCorner resolve(String option, boolean journeyMapLoaded) {
+    /** The configured corner; "auto" (or anything unknown) is top-right. */
+    public static NotificationCorner resolve(String option) {
         if (option != null && !option.equals(AUTO)) {
             for (NotificationCorner corner : values()) {
                 if (corner.name().toLowerCase(Locale.ROOT).equals(option)) {
@@ -42,6 +41,6 @@ public enum NotificationCorner {
                 }
             }
         }
-        return journeyMapLoaded ? TOP_LEFT : TOP_RIGHT;
+        return TOP_RIGHT;
     }
 }

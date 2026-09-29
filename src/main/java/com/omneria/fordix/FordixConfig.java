@@ -44,7 +44,7 @@ public final class FordixConfig {
                 ), value -> value instanceof String text && GuideEntry.parse(text) != null);
         NOTIFICATION_POSITION = builder
                 .comment("Screen corner for server notifications: " + String.join(", ", NotificationCorner.OPTIONS) + ".",
-                        "\"auto\" is top_left when JourneyMap is installed (its minimap takes the top-right corner), top_right otherwise.")
+                        "\"auto\" is top_right. Notifications are drawn over every HUD overlay, JourneyMap's minimap included.")
                 .defineInList("notificationPosition", NotificationCorner.AUTO, NotificationCorner.OPTIONS);
         CLIENT_SPEC = builder.build();
     }
