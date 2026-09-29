@@ -7,6 +7,7 @@ import com.omneria.fordix.client.gui.vanilla.Reflect;
 import com.omneria.fordix.client.gui.widget.Panel;
 import com.omneria.fordix.notification.NotificationStyle;
 import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,6 +18,8 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+
+import org.lwjgl.opengl.GL11;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
@@ -111,8 +114,12 @@ public final class NotificationOverlay {
             edge = screenHeight - MARGIN - (hud && hotbarInTheWay ? HOTBAR_CLEARANCE : 0);
         }
         NotificationStack.Anchor anchor = corner.isTop() ? NotificationStack.Anchor.TOP : NotificationStack.Anchor.BOTTOM;
+        // Whatever the HUD drew before (minimaps included) may have written depth at any z: wipe the
+        // depth buffer, as vanilla does before rendering a screen, so this always ends up on top.
+        guiGraphics.flush();
+        RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0F, 0.0F, 5000.0F);
+        guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
         for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), edge, anchor)) {
             // Slides in from the nearest side edge.
             int width = placed.payload().width();
