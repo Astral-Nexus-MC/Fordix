@@ -1,0 +1,99 @@
+package com.omneria.fordix.client.gui.vanilla;
+
+import com.mojang.blaze3d.platform.NativeImage;
+import com.omneria.fordix.Fordix;
+import com.omneria.fordix.FordixConfig;
+import com.omneria.fordix.client.gui.FordixPalette;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Vanilla screens that Fordix doesn't redraw (the recipe book, advancements) draw from
+ * texture atlases. Their grey pixels are recolored with the current theme and registered
+ * over the vanilla textures, so those screens follow the Voidframe look without being
+ * reimplemented. Redone after every resource reload and every theme change; switching
+ * "voidframeVanillaScreens" off puts the vanilla textures back.
+ */
+public final class TextureRecolor {
+    private static final List<ResourceLocation> TARGETS = List.of(
+            new ResourceLocation("textures/gui/recipe_book.png"),
+            new ResourceLocation("textures/gui/advancements/window.png"),
+            new ResourceLocation("textures/gui/advancements/tabs.png"),
+            new ResourceLocation("textures/gui/advancements/widgets.png"));
+
+    private static boolean ready;
+
+    /** Registered on the client reload event; the textures only exist once resources have loaded. */
+    public static final ResourceManagerReloadListener RELOAD_LISTENER = manager -> {
+        ready = true;
+        apply(Minecraft.getInstance());
+    };
+
+    private TextureRecolor() {
+    }
+
+    /** Re-applies the theme; safe from any thread and before the first resource load. */
+    public static void refresh() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft != null) {
+            minecraft.execute(() -> apply(minecraft));
+        }
+    }
+
+    private static void apply(Minecraft minecraft) {
+        if (!ready) {
+            return;
+        }
+        boolean voidframe;
+        try {
+            voidframe = FordixConfig.VOIDFRAME_VANILLA_SCREENS.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return;
+        }
+        ResourceManager resources = minecraft.getResourceManager();
+        TextureManager textures = minecraft.getTextureManager();
+        int[] ramp = {FordixPalette.BEVEL_SHADOW, FordixPalette.SLOT_FILL, FordixPalette.BUTTON_FILL,
+                FordixPalette.PANEL_FILL, FordixPalette.BEVEL_HIGHLIGHT};
+        for (ResourceLocation location : TARGETS) {
+            try {
+                if (voidframe) {
+                    Optional<Resource> resource = resources.getResource(location);
+                    if (resource.isEmpty()) {
+                        continue;
+                    }
+                    try (InputStream stream = resource.get().open()) {
+                        NativeImage image = NativeImage.read(stream);
+                        recolor(image, ramp);
+                        textures.register(location, new DynamicTexture(image));
+                    }
+                } else {
+                    textures.register(location, new SimpleTexture(location));
+                }
+            } catch (Exception e) {
+                Fordix.LOGGER.warn("Could not recolor {}", location, e);
+            }
+        }
+    }
+
+    private static void recolor(NativeImage image, int[] ramp) {
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int abgr = image.getPixelRGBA(x, y);
+                // NativeImage stores ABGR; Duotone works on ARGB.
+                int argb = (abgr & 0xFF00FF00) | ((abgr & 0xFF) << 16) | ((abgr >> 16) & 0xFF);
+                int out = Duotone.recolor(argb, ramp);
+                image.setPixelRGBA(x, y, (out & 0xFF00FF00) | ((out & 0xFF) << 16) | ((out >> 16) & 0xFF));
+            }
+        }
+    }
+}

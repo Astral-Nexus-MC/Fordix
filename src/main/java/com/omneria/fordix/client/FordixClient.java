@@ -7,6 +7,7 @@ import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.FordixSettingsScreen;
+import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
@@ -17,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ContainerScreenEvent;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
@@ -59,6 +61,7 @@ public final class FordixClient {
         Theme theme = Theme.byName(FordixConfig.THEME.get());
         Integer accent = Theme.parseHex(FordixConfig.ACCENT_COLOR.get());
         FordixPalette.apply(accent != null ? theme.withAccent(accent) : theme);
+        TextureRecolor.refresh();
     }
 
     @Mod.EventBusSubscriber(modid = Fordix.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -70,6 +73,12 @@ public final class FordixClient {
         static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
             event.register(TOGGLE_DEMO);
             event.register(OPEN_SETTINGS);
+        }
+
+        /** Recolors the recipe book and advancement textures once resources are loaded, and again after each reload. */
+        @SubscribeEvent
+        static void onRegisterReloadListeners(RegisterClientReloadListenersEvent event) {
+            event.registerReloadListener(TextureRecolor.RELOAD_LISTENER);
         }
 
         /** The "Config" button of the Mods list opens Fordix's settings screen. */
