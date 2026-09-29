@@ -1,6 +1,7 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.guide.GuideTabs;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
@@ -189,14 +190,27 @@ public final class VoidframeScreens {
 
     /** The survival inventory (E key). Creative mode uses its own screen, which stays vanilla. */
     public static class PlayerInventory extends InventoryScreen implements VoidframeScreen {
+        private final int panelWidth;
+
+        /**
+         * The declared width includes the guide tab column, so JEI (which lays out
+         * from it) keeps its item list clear of the tabs, and clicks on them don't
+         * count as clicks outside the inventory. The panel itself keeps vanilla's width.
+         */
         public PlayerInventory(Player player) {
             super(player);
             slotColor = FordixPalette.SLOT_HOVER;
+            panelWidth = imageWidth;
+            imageWidth += GuideTabs.stripWidth();
+        }
+
+        public int panelWidth() {
+            return panelWidth;
         }
 
         @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, panelWidth, imageHeight);
             VoidframeDraw.well(guiGraphics, leftPos + 26, topPos + 8, 50, 70);
             VoidframeDraw.arrow(guiGraphics, leftPos + 134, topPos + 31, 13, 11, 13);
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 51, topPos + 75, 30,

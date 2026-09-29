@@ -32,7 +32,7 @@ public final class FordixConfig {
                 .define("accentColor", "", value -> value instanceof String text
                         && (text.isEmpty() || Theme.parseHex(text) != null));
         GUIDES = builder
-                .comment("Guide tabs above the survival inventory, one per line: \"modid | Label | icon item | action\".",
+                .comment("Guide tabs along the right edge of the survival inventory, one per line: \"modid | Label | icon item | action\".",
                         "A tab only shows when its mod is installed (\"minecraft\" always is). Actions: ponder (Create's",
                         "Ponder index), patchouli:<book id>, url:<https link> (asks before opening), command:<command>.")
                 .defineList("guides", List.of(
