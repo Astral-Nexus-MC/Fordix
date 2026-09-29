@@ -6,6 +6,7 @@ import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
+import com.omneria.fordix.client.gui.FordixSettingsScreen;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
@@ -14,6 +15,7 @@ import com.omneria.fordix.client.notification.NotificationOverlay;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
@@ -22,8 +24,10 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -39,7 +43,22 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
+    /** No default key: settings are meant to be reached from the Mods list, this is a shortcut for those who want one. */
+    public static final KeyMapping OPEN_SETTINGS = new KeyMapping(
+            "key.fordix.open_settings",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_UNKNOWN,
+            "key.categories.fordix"
+    );
+
     private FordixClient() {
+    }
+
+    /** Pushes the client config's theme and accent color into {@link FordixPalette}. */
+    public static void applyConfig() {
+        Theme theme = Theme.byName(FordixConfig.THEME.get());
+        Integer accent = Theme.parseHex(FordixConfig.ACCENT_COLOR.get());
+        FordixPalette.apply(accent != null ? theme.withAccent(accent) : theme);
     }
 
     @Mod.EventBusSubscriber(modid = Fordix.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -50,6 +69,14 @@ public final class FordixClient {
         @SubscribeEvent
         static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
             event.register(TOGGLE_DEMO);
+            event.register(OPEN_SETTINGS);
+        }
+
+        /** The "Config" button of the Mods list opens Fordix's settings screen. */
+        @SubscribeEvent
+        static void onClientSetup(FMLClientSetupEvent event) {
+            ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+                    () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> new FordixSettingsScreen(parent)));
         }
 
         @SubscribeEvent
@@ -66,9 +93,7 @@ public final class FordixClient {
             if (event.getConfig().getSpec() != FordixConfig.CLIENT_SPEC) {
                 return;
             }
-            Theme theme = Theme.byName(FordixConfig.THEME.get());
-            Integer accent = Theme.parseHex(FordixConfig.ACCENT_COLOR.get());
-            FordixPalette.apply(accent != null ? theme.withAccent(accent) : theme);
+            applyConfig();
         }
     }
 
@@ -86,6 +111,11 @@ public final class FordixClient {
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixDemoScreen());
+                }
+            }
+            while (OPEN_SETTINGS.consumeClick()) {
+                if (minecraft.screen == null) {
+                    minecraft.setScreen(new FordixSettingsScreen(null));
                 }
             }
         }
