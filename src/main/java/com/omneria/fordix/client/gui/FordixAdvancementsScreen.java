@@ -13,7 +13,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.protocol.game.ServerboundSeenAdvancementsPacket;
 import net.minecraft.util.FormattedCharSequence;
 
@@ -364,7 +363,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
         if (progress != null && progress.isDone()) {
             lines.add(Component.literal("Obtenu").getVisualOrderText());
         } else if (progress != null && progress.getProgressText() != null) {
-            lines.add(progress.getProgressText().getVisualOrderText());
+            lines.add(Component.literal(progress.getProgressText()).getVisualOrderText());
         }
         guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
     }
