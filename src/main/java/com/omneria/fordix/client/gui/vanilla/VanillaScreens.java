@@ -1,8 +1,10 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.FordixConfig;
+import com.omneria.fordix.client.gui.FordixAdvancementsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
@@ -89,6 +91,9 @@ public final class VanillaScreens {
         }
         if (type == InventoryScreen.class) {
             return new VoidframeScreens.PlayerInventory(player);
+        }
+        if (type == AdvancementsScreen.class) {
+            return new FordixAdvancementsScreen(player.connection.getAdvancements());
         }
         if (type == GrindstoneScreen.class) {
             GrindstoneScreen vanilla = (GrindstoneScreen) screen;

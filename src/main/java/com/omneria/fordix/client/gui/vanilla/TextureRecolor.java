@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Vanilla screens that Fordix doesn't redraw (the recipe book, advancements) draw from
+ * Vanilla screens that Fordix doesn't redraw (the recipe book) draw from
  * texture atlases. Their grey pixels are recolored with the current theme and registered
  * over the vanilla textures, so those screens follow the Voidframe look without being
  * reimplemented. Redone after every resource reload and every theme change; switching
@@ -26,10 +26,7 @@ import java.util.Optional;
  */
 public final class TextureRecolor {
     private static final List<ResourceLocation> TARGETS = List.of(
-            new ResourceLocation("textures/gui/recipe_book.png"),
-            new ResourceLocation("textures/gui/advancements/window.png"),
-            new ResourceLocation("textures/gui/advancements/tabs.png"),
-            new ResourceLocation("textures/gui/advancements/widgets.png"));
+            new ResourceLocation("textures/gui/recipe_book.png"));
 
     private static boolean ready;
 
