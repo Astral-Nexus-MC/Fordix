@@ -117,7 +117,8 @@ public final class FordixClient {
             NotificationOverlay.onScreenRenderPost(event);
         }
 
-        @SubscribeEvent
+        /** Lowest priority: notifications go over every other HUD overlay, JourneyMap's minimap included. */
+        @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onRenderGui(RenderGuiEvent.Post event) {
             NotificationOverlay.onRenderGui(event);
         }

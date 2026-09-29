@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.notification;
 
+import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.anim.Easing;
 import com.omneria.fordix.client.gui.vanilla.Reflect;
@@ -17,14 +18,17 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.fml.ModList;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
 import java.util.List;
 
 /**
- * Draws server notifications in the top-right corner, on the HUD and on top of
- * any open screen - below vanilla toasts and, on the HUD, the status effect icons. Layout and timing live in {@link NotificationStack}; this class
+ * Draws server notifications in the configured {@link NotificationCorner}, on the HUD
+ * and on top of any open screen. In the top-right corner they sit below vanilla toasts
+ * and, on the HUD, the status effect icons; in a bottom corner, above the hotbar when
+ * it's in the way. Layout and timing live in {@link NotificationStack}; this class
  * measures, draws and plays the arrival sound. Only called on the client, through
  * PanelNetwork's DistExecutor guard.
  */
@@ -40,6 +44,9 @@ public final class NotificationOverlay {
     private static final int TOAST_SLOT_HEIGHT = 32;
     /** Vanilla draws status effect icons in 24px frames, a row every 26px from the top. */
     private static final int EFFECT_ROW_HEIGHT = 26;
+    /** Half the hotbar's width, and the height of hotbar, hearts and armor above the bottom edge. */
+    private static final int HOTBAR_HALF_WIDTH = 91;
+    private static final int HOTBAR_CLEARANCE = 52;
 
     private static final NotificationStack<Shown> STACK = new NotificationStack<>();
 
@@ -79,13 +86,30 @@ public final class NotificationOverlay {
         }
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        // Vanilla toasts are drawn over screens too; status effect icons only on the HUD.
-        int effects = minecraft.screen == null ? effectRowsHeight(minecraft) : 0;
-        int top = MARGIN + Math.max(effects, toastsHeight(minecraft));
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        NotificationCorner corner = NotificationCorner.resolve(FordixConfig.NOTIFICATION_POSITION.get(),
+                ModList.get().isLoaded("journeymap"));
+        boolean hud = minecraft.screen == null;
+        int edge;
+        if (corner.isTop()) {
+            // Vanilla toasts are drawn over screens too; status effect icons only on the HUD.
+            int effects = hud ? effectRowsHeight(minecraft) : 0;
+            edge = MARGIN + (corner.isRight() ? Math.max(effects, toastsHeight(minecraft)) : 0);
+        } else {
+            int left = corner.isRight() ? screenWidth - MARGIN - WIDTH : MARGIN;
+            boolean hotbarInTheWay = left < screenWidth / 2 + HOTBAR_HALF_WIDTH
+                    && left + WIDTH > screenWidth / 2 - HOTBAR_HALF_WIDTH;
+            edge = screenHeight - MARGIN - (hud && hotbarInTheWay ? HOTBAR_CLEARANCE : 0);
+        }
+        NotificationStack.Anchor anchor = corner.isTop() ? NotificationStack.Anchor.TOP : NotificationStack.Anchor.BOTTOM;
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
-        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), top, NotificationStack.Anchor.TOP)) {
-            int x = Math.round(screenWidth - MARGIN - WIDTH + (1.0F - placed.shown()) * (WIDTH + MARGIN));
+        for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), edge, anchor)) {
+            // Slides in from the nearest side edge.
+            float hidden = (1.0F - placed.shown()) * (WIDTH + MARGIN);
+            int x = corner.isRight()
+                    ? Math.round(screenWidth - MARGIN - WIDTH + hidden)
+                    : Math.round(MARGIN - hidden);
             drawOne(guiGraphics, minecraft.font, placed, x, Math.round(placed.y()));
         }
         guiGraphics.pose().popPose();
