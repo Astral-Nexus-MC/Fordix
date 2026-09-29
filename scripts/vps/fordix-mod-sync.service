@@ -1,0 +1,22 @@
+# Installe la dernière release de Fordix dans le modpack, avec le script du mod Astral Nexus
+# (sync-astralnexus-mod.py d'Omneria/ALlauncher, scripts/vps/) : même script, autres paramètres.
+# Déclenché toutes les 5 minutes par fordix-mod-sync.timer, ou à la main :
+#   systemctl start fordix-mod-sync.service
+[Unit]
+Description=Synchronise le mod Fordix depuis ses releases GitHub
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=GITHUB_REPO=Astral-Nexus-MC/Fordix
+# Seuls les fordix-*.jar sont remplacés ou supprimés, rien d'autre dans mods/.
+Environment=MOD_PREFIX=fordix-
+# Fichier d'état propre à Fordix, pour ne pas écraser celui du mod Astral Nexus.
+Environment=STATE_FILE=/var/lib/modpack-tools/fordix-mod.json
+# Même token que le mod Astral Nexus, s'il a aussi accès au dépôt Fordix (voir README).
+Environment=GITHUB_TOKEN_FILE=/etc/modpack-tools/github-token
+# Le modpack seulement : sync-server-mods.py recopie ensuite Fordix sur le serveur Minecraft
+# (il n'est pas dans clientOnlyMods, et il doit être des deux côtés : il ouvre un canal réseau).
+Environment=TARGET_DIRS=/var/www/html/modpack/mods
+ExecStart=/opt/modpack-tools/sync-astralnexus-mod.py

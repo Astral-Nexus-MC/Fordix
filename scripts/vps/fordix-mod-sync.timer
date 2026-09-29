@@ -1,0 +1,10 @@
+# Vérifie toutes les 5 minutes s'il existe une nouvelle release de Fordix.
+[Unit]
+Description=Vérifie régulièrement les releases du mod Fordix
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

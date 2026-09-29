@@ -1,8 +1,10 @@
 # Fordix
 
 Mod Minecraft **Forge 1.20.1** (Forge 47.x, Java 17) d'Omneria : bibliothèque d'interface
-(`client/gui`, identité visuelle « Voidframe ») et panneaux créés par les admins en jeu
-(`/fordix panel create|describe|button|send|list|delete`, code dans `panel/`).
+(`client/gui`, identité visuelle « Voidframe », écrans vanilla redessinés dans
+`client/gui/vanilla`), panneaux créés par les admins en jeu (`/fordix panel ...`, `panel/`),
+notifications serveur (`/fordix notify`, annonces automatiques, `notification/`) et onglets
+Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur (canal réseau).
 
 ## Branches
 
@@ -19,6 +21,17 @@ Mod Minecraft **Forge 1.20.1** (Forge 47.x, Java 17) d'Omneria : bibliothèque d
   artefact `fordix-jar`, à télécharger depuis le run GitHub Actions pour tester en jeu.
 - Dans un conteneur cloud Claude, les dépôts Maven de Forge sont souvent bloqués et seul
   Java 21 est installé : si le build local échoue pour ces raisons, s'appuyer sur la CI.
+
+## Publier une version
+
+1. Passer `mod_version` à la nouvelle version dans `gradle.properties`, committer, pousser.
+2. Tagger ce commit `vX.Y.Z` (identique à `mod_version`) et pousser le tag. Les versions
+   officielles se taggent sur `main`, après fusion de `dev`, à la demande de l'utilisateur.
+3. `.github/workflows/release.yml` publie `fordix-X.Y.Z.jar` + `.sha256` en release GitHub ; le
+   VPS l'installe dans le modpack puis sur le serveur (voir `scripts/vps/README.md`).
+
+Changer le protocole réseau (`PROTOCOL_VERSION` dans `PanelNetwork`) oblige joueurs et serveur à
+avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarrage.
 
 ## Conventions
 
