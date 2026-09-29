@@ -33,6 +33,16 @@ Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur 
 Changer le protocole réseau (`PROTOCOL_VERSION` dans `PanelNetwork`) oblige joueurs et serveur à
 avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarrage.
 
+## Interface Voidframe (client)
+
+- `client/gui/vanilla` : écrans de conteneurs redessinés (`VoidframeScreens`, `VoidframeStations`), HUD
+  (`VoidframeHud` vie/faim, `VoidframeGauges` XP/armure/air/boss, `VoidframeDurability`), forme commune des
+  barres (`Chevron`, `BarShape`), recoloration des textures vanilla (`TextureRecolor`, `Duotone`).
+- `client/tooltip` : infobulles d'objets (`ItemTooltipRenderer`, `TooltipStyle`, `EnchantEffects`,
+  `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
+- Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`).
+- Le serveur peut imposer la liste des onglets Guides (`[guides] tabs` dans `fordix-common.toml`).
+
 ## Conventions
 
 - Le code serveur (`panel/server`, `panel/PanelSpec`) ne doit pas référencer de classes client ;
