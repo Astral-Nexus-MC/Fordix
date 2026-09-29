@@ -9,6 +9,7 @@ import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
+import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -97,6 +98,7 @@ public final class FordixClient {
         @SubscribeEvent
         static void onScreenInit(ScreenEvent.Init.Post event) {
             VoidframeButtons.onScreenInit(event);
+            GuideTabs.onScreenInit(event);
         }
 
         @SubscribeEvent
