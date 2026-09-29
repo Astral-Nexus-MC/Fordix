@@ -8,6 +8,7 @@ import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.CartographyTableScreen;
 import net.minecraft.client.gui.screens.inventory.BrewingStandScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CraftingScreen;
@@ -18,6 +19,7 @@ import net.minecraft.client.gui.screens.inventory.GrindstoneScreen;
 import net.minecraft.client.gui.screens.inventory.HopperScreen;
 import net.minecraft.client.gui.screens.inventory.HorseInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.inventory.LoomScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.client.gui.screens.inventory.SmithingScreen;
@@ -91,6 +93,14 @@ public final class VanillaScreens {
         }
         if (type == InventoryScreen.class) {
             return new VoidframeScreens.PlayerInventory(player);
+        }
+        if (type == LoomScreen.class) {
+            LoomScreen vanilla = (LoomScreen) screen;
+            return new VoidframeStations.Loom(vanilla.getMenu(), inventory, vanilla.getTitle());
+        }
+        if (type == CartographyTableScreen.class) {
+            CartographyTableScreen vanilla = (CartographyTableScreen) screen;
+            return new VoidframeStations.Cartography(vanilla.getMenu(), inventory, vanilla.getTitle());
         }
         if (type == AdvancementsScreen.class) {
             return new FordixAdvancementsScreen(player.connection.getAdvancements());

@@ -1,6 +1,7 @@
 package com.omneria.fordix;
 
 import com.mojang.logging.LogUtils;
+import com.omneria.fordix.guide.server.GuideBroadcaster;
 import com.omneria.fordix.notification.server.AutoNotifications;
 import com.omneria.fordix.notification.server.NotifyCommand;
 import com.omneria.fordix.panel.network.PanelNetwork;
@@ -12,6 +13,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 // The value here must match an entry in the META-INF/mods.toml file.
@@ -30,6 +32,8 @@ public class Fordix {
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedIn);
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedOut);
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onServerTick);
+        MinecraftForge.EVENT_BUS.addListener(GuideBroadcaster::onPlayerLoggedIn);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(GuideBroadcaster::onConfigReloading);
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {

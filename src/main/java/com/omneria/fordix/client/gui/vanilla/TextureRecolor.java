@@ -18,15 +18,26 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Vanilla screens that Fordix doesn't redraw (the recipe book) draw from
+ * Vanilla screens that Fordix doesn't redraw (the recipe book, loom, cartography table, vanilla buttons) draw from
  * texture atlases. Their grey pixels are recolored with the current theme and registered
  * over the vanilla textures, so those screens follow the Voidframe look without being
  * reimplemented. Redone after every resource reload and every theme change; switching
  * "voidframeVanillaScreens" off puts the vanilla textures back.
  */
 public final class TextureRecolor {
-    private static final List<ResourceLocation> TARGETS = List.of(
-            new ResourceLocation("textures/gui/recipe_book.png"));
+    /** A texture and the rows of it to recolor (the rest is left as vanilla drew it). */
+    private record Target(ResourceLocation location, int fromRow, int toRow) {
+        Target(String path) {
+            this(new ResourceLocation(path), 0, Integer.MAX_VALUE);
+        }
+    }
+
+    private static final List<Target> TARGETS = List.of(
+            new Target("textures/gui/recipe_book.png"),
+            new Target("textures/gui/container/loom.png"),
+            new Target("textures/gui/container/cartography_table.png"),
+            // Only the button rows of widgets.png: the hotbar and its selection frame share the file.
+            new Target(new ResourceLocation("textures/gui/widgets.png"), 46, 106));
 
     private static boolean ready;
 
@@ -61,7 +72,8 @@ public final class TextureRecolor {
         TextureManager textures = minecraft.getTextureManager();
         int[] ramp = {FordixPalette.BEVEL_SHADOW, FordixPalette.SLOT_FILL, FordixPalette.BUTTON_FILL,
                 FordixPalette.PANEL_FILL, FordixPalette.BEVEL_HIGHLIGHT};
-        for (ResourceLocation location : TARGETS) {
+        for (Target target : TARGETS) {
+            ResourceLocation location = target.location();
             try {
                 if (voidframe) {
                     Optional<Resource> resource = resources.getResource(location);
@@ -70,7 +82,7 @@ public final class TextureRecolor {
                     }
                     try (InputStream stream = resource.get().open()) {
                         NativeImage image = NativeImage.read(stream);
-                        recolor(image, ramp);
+                        recolor(image, ramp, target.fromRow(), target.toRow());
                         textures.register(location, new DynamicTexture(image));
                     }
                 } else {
@@ -82,8 +94,8 @@ public final class TextureRecolor {
         }
     }
 
-    private static void recolor(NativeImage image, int[] ramp) {
-        for (int y = 0; y < image.getHeight(); y++) {
+    private static void recolor(NativeImage image, int[] ramp, int fromRow, int toRow) {
+        for (int y = fromRow; y < Math.min(image.getHeight(), toRow); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 int abgr = image.getPixelRGBA(x, y);
                 // NativeImage stores ABGR; Duotone works on ARGB.

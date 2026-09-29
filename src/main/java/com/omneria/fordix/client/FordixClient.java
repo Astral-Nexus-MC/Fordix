@@ -11,16 +11,20 @@ import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
+import com.omneria.fordix.client.gui.vanilla.VoidframeHud;
 import com.omneria.fordix.client.guide.GuideTabs;
+import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
@@ -129,6 +133,12 @@ public final class FordixClient {
             }
         }
 
+        /** A server's guide list applies to that server only. */
+        @SubscribeEvent
+        static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+            ServerGuides.clear();
+        }
+
         @SubscribeEvent
         static void onScreenOpening(ScreenEvent.Opening event) {
             VanillaScreens.onScreenOpening(event);
@@ -160,6 +170,21 @@ public final class FordixClient {
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onRenderGui(RenderGuiEvent.Post event) {
             NotificationOverlay.onRenderGui(event);
+        }
+
+        @SubscribeEvent
+        static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
+            VoidframeHud.onOverlayPre(event);
+        }
+
+        @SubscribeEvent
+        static void onScreenRenderPre(ScreenEvent.Render.Pre event) {
+            VoidframeHud.onScreenRenderPre(event);
+        }
+
+        @SubscribeEvent
+        static void onScreenRenderPostChat(ScreenEvent.Render.Post event) {
+            VoidframeHud.onScreenRenderPost(event);
         }
 
         @SubscribeEvent

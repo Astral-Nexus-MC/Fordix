@@ -1,5 +1,6 @@
 package com.omneria.fordix;
 
+import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.notification.NotificationTemplate;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -26,6 +27,8 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.IntValue ANNOUNCEMENT_INTERVAL_MINUTES;
     public static final ForgeConfigSpec.IntValue ANNOUNCEMENT_DURATION_SECONDS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ANNOUNCEMENTS;
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -59,6 +62,14 @@ public final class FordixServerConfig {
                 ), FordixServerConfig::isTemplate);
         builder.pop();
 
+        builder.pop();
+
+        builder.comment("Guide tabs shown to every player along the right edge of their inventory.")
+                .push("guides");
+        GUIDES = builder.comment("One per line: \"modid | Label | icon item | action\" (actions: ponder, patchouli:<book id>,",
+                        "url:<https link>, command:<command>). A tab only shows for players who have its mod.",
+                        "Leave empty to let each player use the guides of their own config.")
+                .defineList("tabs", List.of(), value -> value instanceof String text && GuideEntry.parse(text) != null);
         builder.pop();
         SPEC = builder.build();
     }

@@ -13,6 +13,8 @@ import net.minecraft.client.gui.screens.inventory.HorseInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.inventory.SmithingScreen;
+import net.minecraft.client.gui.screens.inventory.CartographyTableScreen;
+import net.minecraft.client.gui.screens.inventory.LoomScreen;
 import net.minecraft.client.gui.screens.inventory.StonecutterScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -29,6 +31,8 @@ import net.minecraft.world.inventory.GrindstoneMenu;
 import net.minecraft.world.inventory.HorseInventoryMenu;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.SmithingMenu;
+import net.minecraft.world.inventory.CartographyTableMenu;
+import net.minecraft.world.inventory.LoomMenu;
 import net.minecraft.world.inventory.StonecutterMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -411,6 +415,37 @@ public final class VoidframeStations {
             VoidframeDraw.well(guiGraphics, leftPos + 26, topPos + 17, 52, 53);
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 51, topPos + 60, 17,
                     (float) (leftPos + 51 - mouseX), (float) (topPos + 75 - 50 - mouseY), horse);
+        }
+
+        @Override
+        protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+        }
+    }
+
+    /**
+     * The loom keeps vanilla's layout (pattern grid, banner preview); its texture is recolored
+     * by {@link TextureRecolor}, so only the labels, drawn dark grey by vanilla, are redone.
+     */
+    public static class Loom extends LoomScreen implements VoidframeScreen {
+        public Loom(LoomMenu menu, Inventory inventory, Component title) {
+            super(menu, inventory, title);
+            slotColor = FordixPalette.SLOT_HOVER;
+        }
+
+        @Override
+        protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+        }
+    }
+
+    /** Same approach as {@link Loom}: recolored texture, light labels. */
+    public static class Cartography extends CartographyTableScreen implements VoidframeScreen {
+        public Cartography(CartographyTableMenu menu, Inventory inventory, Component title) {
+            super(menu, inventory, title);
+            slotColor = FordixPalette.SLOT_HOVER;
         }
 
         @Override

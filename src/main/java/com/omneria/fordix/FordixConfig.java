@@ -16,6 +16,7 @@ import java.util.List;
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
+    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -26,6 +27,9 @@ public final class FordixConfig {
         VOIDFRAME_VANILLA_SCREENS = builder
                 .comment("Draw vanilla container screens (inventory, chests, furnaces...) in the Fordix Voidframe style.")
                 .define("voidframeVanillaScreens", true);
+        VOIDFRAME_HUD = builder
+                .comment("Replace the health hearts with a Voidframe bar showing the exact value.")
+                .define("voidframeHud", true);
         THEME = builder
                 .comment("Color theme for Fordix screens: " + String.join(", ", Theme.NAMES) + ".")
                 .defineInList("theme", Theme.DEFAULT, Theme.NAMES);

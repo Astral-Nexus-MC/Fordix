@@ -47,10 +47,11 @@ public final class GuideTabs {
         }
     }
 
-    /** Configured guides whose mod is installed, in config order. */
+    /** Guides whose mod is installed, in order: the server's list when it sent one, else the local config. */
     public static List<GuideEntry> installedEntries() {
         List<GuideEntry> entries = new ArrayList<>();
-        for (String line : FordixConfig.GUIDES.get()) {
+        List<? extends String> lines = ServerGuides.lines().isEmpty() ? FordixConfig.GUIDES.get() : ServerGuides.lines();
+        for (String line : lines) {
             GuideEntry entry = GuideEntry.parse(line);
             if (entry != null && isInstalled(entry.modId())) {
                 entries.add(entry);

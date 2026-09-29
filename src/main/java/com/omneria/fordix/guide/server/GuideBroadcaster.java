@@ -1,0 +1,44 @@
+package com.omneria.fordix.guide.server;
+
+import com.omneria.fordix.FordixServerConfig;
+import com.omneria.fordix.guide.ClientboundGuidesPayload;
+import com.omneria.fordix.panel.network.PanelNetwork;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.server.ServerLifecycleHooks;
+
+import java.util.List;
+
+/**
+ * Sends the server's guide tab list ({@link FordixServerConfig#GUIDES}) to players when
+ * they join and to everyone when the config file changes, so the tabs can be edited in
+ * one place instead of on every player's machine.
+ */
+public final class GuideBroadcaster {
+    private GuideBroadcaster() {
+    }
+
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            send(player);
+        }
+    }
+
+    public static void onConfigReloading(ModConfigEvent.Reloading event) {
+        if (event.getConfig().getSpec() != FordixServerConfig.SPEC) {
+            return;
+        }
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            server.execute(() -> server.getPlayerList().getPlayers().forEach(GuideBroadcaster::send));
+        }
+    }
+
+    private static void send(ServerPlayer player) {
+        List<String> lines = List.copyOf(FordixServerConfig.GUIDES.get());
+        PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundGuidesPayload(lines));
+    }
+}

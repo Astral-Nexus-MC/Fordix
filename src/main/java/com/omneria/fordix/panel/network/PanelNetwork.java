@@ -1,8 +1,10 @@
 package com.omneria.fordix.panel.network;
 
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.panel.ClientPanelPayloadHandler;
+import com.omneria.fordix.guide.ClientboundGuidesPayload;
 import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
 import com.omneria.fordix.panel.server.ServerPanelPayloadHandler;
 import net.minecraft.resources.ResourceLocation;
@@ -20,7 +22,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -46,6 +48,17 @@ public final class PanelNetwork {
                 ClientboundNotificationPayload::encode,
                 ClientboundNotificationPayload::decode,
                 PanelNetwork::handleNotification);
+        CHANNEL.registerMessage(id++, ClientboundGuidesPayload.class,
+                ClientboundGuidesPayload::encode,
+                ClientboundGuidesPayload::decode,
+                PanelNetwork::handleGuides);
+    }
+
+    private static void handleGuides(ClientboundGuidesPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ServerGuides.set(payload.lines()))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleOpenPanel(ClientboundOpenPanelPayload payload, Supplier<NetworkEvent.Context> ctx) {
