@@ -5,6 +5,7 @@ import com.omneria.fordix.Fordix;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Theme;
+import com.omneria.fordix.client.devtest.DevTest;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.FordixSettingsScreen;
 import com.omneria.fordix.client.gui.vanilla.RarityFrames;
@@ -25,6 +26,7 @@ import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ContainerScreenEvent;
@@ -66,6 +68,13 @@ public final class FordixClient {
             GLFW.GLFW_KEY_UNKNOWN,
             "key.categories.fordix"
     );
+
+    static {
+        // Dev-only screenshot harness (see DevTest): only with FORDIX_DEVTEST set in the environment.
+        if (DevTest.enabled()) {
+            MinecraftForge.EVENT_BUS.register(new DevTest());
+        }
+    }
 
     private FordixClient() {
     }

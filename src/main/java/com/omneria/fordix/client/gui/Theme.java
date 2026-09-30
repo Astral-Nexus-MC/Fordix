@@ -1,5 +1,7 @@
 package com.omneria.fordix.client.gui;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,8 @@ public record Theme(int panelFill, int bevelHighlight, int bevelShadow,
                 0xFFB08CFF, 0xFFB4ABD0, 0xFFE2DAFF, 0xFF0E0B1A, 0xFF282142, 0xFF1F1A36, 0xFFE39B45, 0xFFE0524A));
     }
 
-    public static final List<String> NAMES = List.copyOf(PRESETS.keySet());
+    /** Null-tolerant on purpose: Forge's config validation asks contains(null) for a key missing from the file. */
+    public static final List<String> NAMES = Collections.unmodifiableList(new ArrayList<>(PRESETS.keySet()));
 
     /** The named preset, or the default one for an unknown name. */
     public static Theme byName(String name) {

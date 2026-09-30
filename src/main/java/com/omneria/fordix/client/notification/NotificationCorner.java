@@ -1,5 +1,7 @@
 package com.omneria.fordix.client.notification;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -14,7 +16,9 @@ public enum NotificationCorner {
     BOTTOM_LEFT(false, false);
 
     public static final String AUTO = "auto";
-    public static final List<String> OPTIONS = List.of(AUTO, "top_right", "top_left", "bottom_right", "bottom_left");
+    /** Null-tolerant on purpose: Forge's config validation asks contains(null) for a key missing from the file. */
+    public static final List<String> OPTIONS = Collections.unmodifiableList(
+            new ArrayList<>(List.of(AUTO, "top_right", "top_left", "bottom_right", "bottom_left")));
 
     private final boolean top;
     private final boolean right;
