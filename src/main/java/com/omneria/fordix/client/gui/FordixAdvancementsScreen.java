@@ -19,6 +19,7 @@ import net.minecraft.util.FormattedCharSequence;
 import java.lang.reflect.Field;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,13 +43,37 @@ public class FordixAdvancementsScreen extends FordixScreen {
     /** ClientAdvancements keeps exactly one Map: advancement to progress. */
     private static final Field PROGRESS_FIELD = Reflect.uniqueField(ClientAdvancements.class, Map.class);
 
-    private record Node(Advancement advancement, DisplayInfo display, Node parent) {
+    private static final class Node {
+        private final Advancement advancement;
+        private final DisplayInfo display;
+        private final Node parent;
+        /** Vertical shift that stacks several roots of one mod under each other in one tab. */
+        int offsetY;
+
+        Node(Advancement advancement, DisplayInfo display, Node parent) {
+            this.advancement = advancement;
+            this.display = display;
+            this.parent = parent;
+        }
+
+        Advancement advancement() {
+            return advancement;
+        }
+
+        DisplayInfo display() {
+            return display;
+        }
+
+        Node parent() {
+            return parent;
+        }
+
         int worldX() {
             return Math.round(display.getX() * PITCH_X);
         }
 
         int worldY() {
-            return Math.round(display.getY() * PITCH_Y);
+            return Math.round(display.getY() * PITCH_Y) + offsetY;
         }
     }
 
@@ -88,6 +113,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
     private double tabScroll;
     private long lastFrame;
     private boolean dragging;
+    private boolean draggingBar;
 
     public FordixAdvancementsScreen(ClientAdvancements advancements) {
         super(Component.translatable("gui.advancements"));
@@ -115,28 +141,40 @@ public class FordixAdvancementsScreen extends FordixScreen {
         Advancement previous = selected != null ? selected.root : null;
         tabs.clear();
         selected = null;
+        // One tab per mod: a mod's several roots (Minecraft has five) are stacked in the same tab.
+        Map<String, Tab> byMod = new LinkedHashMap<>();
         for (Advancement root : advancements.getAdvancements().getRoots()) {
             if (root.getDisplay() == null) {
                 continue;
             }
-            Tab tab = new Tab(root);
+            Tab tab = byMod.computeIfAbsent(root.getId().getNamespace(), key -> new Tab(root));
+            List<Node> tree = new ArrayList<>();
             ArrayDeque<Node> pending = new ArrayDeque<>();
             pending.add(new Node(root, root.getDisplay(), null));
             while (!pending.isEmpty()) {
                 Node node = pending.poll();
-                tab.nodes.add(node);
-                tab.minX = Math.min(tab.minX, node.worldX());
-                tab.minY = Math.min(tab.minY, node.worldY());
-                tab.maxX = Math.max(tab.maxX, node.worldX() + NODE);
-                tab.maxY = Math.max(tab.maxY, node.worldY() + NODE);
+                tree.add(node);
                 for (Advancement child : node.advancement().getChildren()) {
                     if (child.getDisplay() != null) {
                         pending.add(new Node(child, child.getDisplay(), node));
                     }
                 }
             }
-            tabs.add(tab);
+            int treeMin = Integer.MAX_VALUE;
+            for (Node node : tree) {
+                treeMin = Math.min(treeMin, node.worldY());
+            }
+            int shift = tab.nodes.isEmpty() ? 0 : tab.maxY + 2 * PITCH_Y - treeMin;
+            for (Node node : tree) {
+                node.offsetY = shift;
+                tab.nodes.add(node);
+                tab.minX = Math.min(tab.minX, node.worldX());
+                tab.minY = Math.min(tab.minY, node.worldY());
+                tab.maxX = Math.max(tab.maxX, node.worldX() + NODE);
+                tab.maxY = Math.max(tab.maxY, node.worldY() + NODE);
+            }
         }
+        tabs.addAll(byMod.values());
         builtFor = advancements.getAdvancements().getAllAdvancements().size();
         for (Tab tab : tabs) {
             if (tab.root == previous) {
@@ -220,6 +258,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
                     viewX + viewWidth / 2, viewY + viewHeight / 2 - 4, FordixPalette.TEXT);
         } else {
             hovered = drawTree(guiGraphics, mouseX, mouseY);
+            drawScrollbars(guiGraphics);
             drawInfoBar(guiGraphics);
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -292,6 +331,39 @@ public class FordixAdvancementsScreen extends FordixScreen {
         }
         guiGraphics.disableScissor();
         return hovered;
+    }
+
+    private double[] barThumb() {
+        double[] ys = yRange(selected);
+        double range = ys[1] - ys[0];
+        if (range <= 0) {
+            return null;
+        }
+        double content = range + viewHeight;
+        int thumb = (int) Math.max(14, viewHeight * viewHeight / content);
+        double ratio = Math.max(0, Math.min(1, (scrollY - ys[0]) / range));
+        return new double[]{viewY + ratio * (viewHeight - thumb), thumb};
+    }
+
+    private void drawScrollbars(GuiGraphics guiGraphics) {
+        double[] thumb = barThumb();
+        if (thumb != null) {
+            int x = viewX + viewWidth - 5;
+            guiGraphics.fill(x, viewY, x + 4, viewY + viewHeight, 0x88000000 | (FordixPalette.PROGRESS_TRACK & 0xFFFFFF));
+            guiGraphics.fill(x, (int) thumb[0], x + 4, (int) (thumb[0] + thumb[1]),
+                    draggingBar ? FordixPalette.TEXT_BRIGHT : FordixPalette.ACCENT);
+        }
+        double[] xs = xRange(selected);
+        double range = xs[1] - xs[0];
+        if (range > 0) {
+            int thumbW = (int) Math.max(14, viewWidth * (double) viewWidth / (range + viewWidth));
+            double ratio = Math.max(0, Math.min(1, (scrollX - xs[0]) / range));
+            int y = viewY + viewHeight - 5;
+            int endX = viewX + viewWidth - (thumb != null ? 6 : 0);
+            guiGraphics.fill(viewX, y, endX, y + 4, 0x88000000 | (FordixPalette.PROGRESS_TRACK & 0xFFFFFF));
+            int tx = viewX + (int) (ratio * (endX - viewX - thumbW));
+            guiGraphics.fill(tx, y, tx + thumbW, y + 4, FordixPalette.ACCENT);
+        }
     }
 
     private void drawLink(GuiGraphics guiGraphics, Node from, Node to, int offsetX, int offsetY) {
@@ -381,12 +453,22 @@ public class FordixAdvancementsScreen extends FordixScreen {
             }
             return true;
         }
+        if (button == 0 && selected != null && mouseX >= viewX + viewWidth - 7 && mouseX < viewX + viewWidth
+                && mouseY >= viewY && mouseY < viewY + viewHeight && barThumb() != null) {
+            draggingBar = true;
+            dragBar(mouseY);
+            return true;
+        }
         dragging = button == 0 && insideView(mouseX, mouseY);
         return dragging;
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggingBar && button == 0) {
+            dragBar(mouseY);
+            return true;
+        }
         if (dragging && button == 0) {
             // Follow the cursor immediately; the easing only smooths wheel and tab moves.
             targetX -= dragX;
@@ -399,9 +481,19 @@ public class FordixAdvancementsScreen extends FordixScreen {
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
+    private void dragBar(double mouseY) {
+        double[] thumb = barThumb();
+        double[] ys = yRange(selected);
+        double free = viewHeight - thumb[1];
+        double ratio = free <= 0 ? 0 : Math.max(0, Math.min(1, (mouseY - viewY - thumb[1] / 2) / free));
+        targetY = ys[0] + ratio * (ys[1] - ys[0]);
+        scrollY = targetY;
+    }
+
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         dragging = false;
+        draggingBar = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
