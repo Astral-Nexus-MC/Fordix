@@ -155,6 +155,27 @@ public final class DevTest {
         steps.add(new Step("12-chat", () -> mc.setScreen(new ChatScreen("/fordix notify")), 30, false));
         steps.add(new Step("13-pause", () -> mc.setScreen(null), 10, false));
         steps.add(new Step("14-pause-menu", () -> mc.pauseGame(false), 30, false));
+        steps.add(new Step("15-air", () -> {
+            cmd(mc, "execute at @s run fill ~-1 ~ ~-1 ~1 ~3 ~1 minecraft:water");
+            mc.setScreen(null);
+        }, 90, false));
+        steps.add(new Step("16-mount", () -> {
+            cmd(mc, "execute at @s run fill ~-1 ~ ~-1 ~1 ~3 ~1 minecraft:air");
+            cmd(mc, "summon minecraft:horse ~ ~ ~ {Tame:1b,SaddleItem:{id:\"minecraft:saddle\",Count:1b}}");
+        }, 40, false));
+        steps.add(new Step("16b-mount-ride", () -> cmd(mc, "ride @s mount @e[type=minecraft:horse,limit=1,sort=nearest]"), 40, false));
+        steps.add(new Step("17-rarity", () -> {
+            cmd(mc, "ride @s dismount");
+            cmd(mc, "clear @s");
+            cmd(mc, "give @s minecraft:dragon_head");
+            cmd(mc, "give @s minecraft:netherite_sword{Enchantments:[{id:\"minecraft:sharpness\",lvl:7}]}");
+            cmd(mc, "give @s minecraft:iron_chestplate");
+            cmd(mc, "give @s minecraft:stone_pickaxe");
+            cmd(mc, "give @s minecraft:golden_helmet");
+            cmd(mc, "give @s minecraft:emerald_block");
+            cmd(mc, "give @s minecraft:enchanted_book{StoredEnchantments:[{id:\"minecraft:protection\",lvl:4},{id:\"minecraft:silk_touch\",lvl:1}]}");
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
             mc.stop();
