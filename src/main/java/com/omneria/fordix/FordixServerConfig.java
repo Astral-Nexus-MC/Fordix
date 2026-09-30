@@ -2,6 +2,7 @@ package com.omneria.fordix;
 
 import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.notification.NotificationTemplate;
+import com.omneria.fordix.rarity.RarityRules;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
@@ -29,6 +30,8 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ANNOUNCEMENTS;
 
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> RARITY_RULES;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -70,6 +73,14 @@ public final class FordixServerConfig {
                         "url:<https link>, command:<command>). A tab only shows for players who have its mod.",
                         "Leave empty to let each player use the guides of their own config.")
                 .defineList("tabs", List.of(), value -> value instanceof String text && GuideEntry.parse(text) != null);
+        builder.pop();
+
+        builder.comment("Item rarity, the same for every player.")
+                .push("rarities");
+        RARITY_RULES = builder.comment("One rule per line: \"pattern | TIER\", the first matching rule wins. TIER is COMMON, UNCOMMON, RARE, EPIC or LEGENDARY.",
+                        "In a pattern, * stands for any text and {a,b} for a choice: \"twilightforest:knightmetal_*\", \"minecraft:iron_{sword,axe}\".",
+                        "Strong enchantments raise a ruled item one or two tiers. Items no rule matches keep their own rarity.")
+                .defineList("rules", RarityRules.DEFAULT_LINES, value -> value instanceof String text && RarityRules.parseLine(text) != null);
         builder.pop();
         SPEC = builder.build();
     }

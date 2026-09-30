@@ -19,6 +19,7 @@ import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.AnalysisCommand;
 import com.omneria.fordix.client.tooltip.ItemTooltipRenderer;
+import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -151,6 +152,7 @@ public final class FordixClient {
         @SubscribeEvent
         static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
             ServerGuides.clear();
+            ServerRarities.clear();
         }
 
         @SubscribeEvent

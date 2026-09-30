@@ -2,6 +2,7 @@ package com.omneria.fordix.panel.network;
 
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.guide.ServerGuides;
+import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.panel.ClientPanelPayloadHandler;
 import com.omneria.fordix.guide.ClientboundGuidesPayload;
@@ -22,7 +23,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -56,7 +57,10 @@ public final class PanelNetwork {
 
     private static void handleGuides(ClientboundGuidesPayload payload, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() ->
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ServerGuides.set(payload.lines()))
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                    ServerGuides.set(payload.lines());
+                    ServerRarities.set(payload.rarityRules());
+                })
         );
         ctx.get().setPacketHandled(true);
     }
