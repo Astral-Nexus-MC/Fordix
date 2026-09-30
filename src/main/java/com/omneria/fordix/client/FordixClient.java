@@ -7,6 +7,7 @@ import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.FordixSettingsScreen;
+import com.omneria.fordix.client.gui.vanilla.RarityFrames;
 import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
@@ -186,6 +187,11 @@ public final class FordixClient {
         }
 
         @SubscribeEvent
+        static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
+            RarityFrames.onOverlayPost(event);
+        }
+
+        @SubscribeEvent
         static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
             VoidframeHud.onOverlayPre(event);
         }
@@ -217,6 +223,7 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
+            RarityFrames.onContainerForeground(event);
             VoidframeChrome.onContainerForeground(event);
         }
 

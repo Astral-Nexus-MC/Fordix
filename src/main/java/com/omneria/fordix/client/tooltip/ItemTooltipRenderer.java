@@ -3,6 +3,7 @@ package com.omneria.fordix.client.tooltip;
 import com.google.common.collect.Multimap;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.ModNames;
 import com.omneria.fordix.client.gui.vanilla.Chevron;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -18,12 +19,10 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.joml.Vector2ic;
 
@@ -74,7 +73,7 @@ public final class ItemTooltipRenderer {
         List<ClientTooltipComponent> rest = components.subList(1, components.size());
         List<Section> sections = sections(stack);
 
-        String subLine = typeOf(stack) + " · " + rarityName(stack.getRarity()) + " · " + modName(stack);
+        String subLine = typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack);
         int width = Math.max(title.getWidth(font) + 30, font.width(subLine) + 30);
         for (ClientTooltipComponent component : rest) {
             width = Math.max(width, component.getWidth(font));
@@ -244,11 +243,7 @@ public final class ItemTooltipRenderer {
     }
 
     private static int rarityColor(ItemStack stack) {
-        Rarity rarity = stack.getRarity();
-        if (rarity == Rarity.COMMON || rarity.color.getColor() == null) {
-            return FordixPalette.TOOLTIP_BORDER_TOP | 0xFF000000;
-        }
-        return 0xFF000000 | rarity.color.getColor();
+        return ItemRarity.isNotable(stack) ? ItemRarity.color(stack) : FordixPalette.TOOLTIP_BORDER_TOP | 0xFF000000;
     }
 
     private static String typeOf(ItemStack stack) {
@@ -266,21 +261,8 @@ public final class ItemTooltipRenderer {
         return item instanceof BlockItem ? "Bloc" : "Objet";
     }
 
-    private static String rarityName(Rarity rarity) {
-        return switch (rarity) {
-            case COMMON -> "Commun";
-            case UNCOMMON -> "Peu commun";
-            case RARE -> "Rare";
-            case EPIC -> "Épique";
-        };
-    }
-
     private static String modName(ItemStack stack) {
         var key = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        String namespace = key == null ? "minecraft" : key.getNamespace();
-        if (namespace.equals("minecraft")) {
-            return "Minecraft";
-        }
-        return ModList.get().getModContainerById(namespace).map(container -> container.getModInfo().getDisplayName()).orElse(namespace);
+        return ModNames.of(key == null ? "minecraft" : key.getNamespace());
     }
 }

@@ -58,6 +58,10 @@ public final class TooltipStyle {
         if (FordixConfig.VOIDFRAME_TOOLTIPS.get()) {
             removeVanillaModifierLines(stack, lines);
         }
+        if (!lines.isEmpty() && !stack.isEmpty()) {
+            int nameColor = ItemRarity.color(stack) & 0xFFFFFF;
+            lines.set(0, lines.get(0).copy().withStyle(style -> style.withColor(nameColor)));
+        }
         for (Map.Entry<Enchantment, Integer> entry : enchantmentsOf(stack).entrySet()) {
             Enchantment enchantment = entry.getKey();
             int level = entry.getValue();

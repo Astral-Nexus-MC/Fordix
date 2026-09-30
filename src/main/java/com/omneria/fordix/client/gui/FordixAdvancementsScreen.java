@@ -247,7 +247,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
             guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + tabWidth - 2, tabsY + TAB_HEIGHT,
                     active ? FordixPalette.ACCENT : FordixPalette.BEVEL_SHADOW);
             guiGraphics.renderFakeItem(tab.root.getDisplay().getIcon(), x + 4, tabsY + 3);
-            String title = this.font.plainSubstrByWidth(tab.root.getDisplay().getTitle().getString(), tabWidth - 28);
+            String title = this.font.plainSubstrByWidth(ModNames.of(tab.root.getId().getNamespace()), tabWidth - 28);
             guiGraphics.drawString(this.font, title, x + 23, tabsY + 7,
                     active ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
         }

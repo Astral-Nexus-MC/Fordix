@@ -190,27 +190,35 @@ public final class VoidframeScreens {
 
     /** The survival inventory (E key). Creative mode uses its own screen, which stays vanilla. */
     public static class PlayerInventory extends InventoryScreen implements VoidframeScreen {
-        private final int panelWidth;
-
         /**
-         * The declared width includes the guide tab column, so JEI (which lays out
-         * from it) keeps its item list clear of the tabs, and clicks on them don't
-         * count as clicks outside the inventory. The panel itself keeps vanilla's width.
+         * The panel keeps vanilla's width, so the recipe book sits right beside it. JEI lays its item
+         * list out from {@link #getXSize()}, which reports the width plus the guide tab column so
+         * the list stays clear of the tabs; clicks on the tabs don't count as clicks outside.
          */
         public PlayerInventory(Player player) {
             super(player);
             slotColor = FordixPalette.SLOT_HOVER;
-            panelWidth = imageWidth;
-            imageWidth += GuideTabs.stripWidth();
         }
 
         public int panelWidth() {
-            return panelWidth;
+            return imageWidth;
+        }
+
+        @Override
+        public int getXSize() {
+            return imageWidth + GuideTabs.stripWidth();
+        }
+
+        @Override
+        protected boolean hasClickedOutside(double mouseX, double mouseY, int guiLeft, int guiTop, int mouseButton) {
+            boolean onTabs = mouseX >= guiLeft + imageWidth && mouseX < guiLeft + getXSize()
+                    && mouseY >= guiTop && mouseY < guiTop + imageHeight;
+            return !onTabs && super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton);
         }
 
         @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, panelWidth, imageHeight);
+            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
             VoidframeDraw.well(guiGraphics, leftPos + 26, topPos + 8, 50, 70);
             VoidframeDraw.arrow(guiGraphics, leftPos + 134, topPos + 31, 13, 11, 13);
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 51, topPos + 75, 30,
