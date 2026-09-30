@@ -260,20 +260,39 @@ public final class FordixClient {
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {
             if (event.getScreen() instanceof net.minecraft.client.gui.screens.PauseScreen screen) {
-                int bottom = 0;
-                int left = screen.width / 2 - 102;
-                int width = 204;
+                net.minecraft.client.gui.components.AbstractWidget back = null;
+                net.minecraft.client.gui.components.AbstractWidget advancements = null;
+                net.minecraft.client.gui.components.AbstractWidget stats = null;
+                java.util.List<net.minecraft.client.gui.components.AbstractWidget> widgets = new java.util.ArrayList<>();
                 for (net.minecraft.client.gui.components.events.GuiEventListener child : event.getListenersList()) {
-                    if (child instanceof net.minecraft.client.gui.components.AbstractWidget widget) {
-                        bottom = Math.max(bottom, widget.getY() + widget.getHeight());
+                    if (child instanceof net.minecraft.client.gui.components.Button widget) {
+                        widgets.add(widget);
+                        String key = widget.getMessage().getContents() instanceof
+                                net.minecraft.network.chat.contents.TranslatableContents t ? t.getKey() : "";
+                        switch (key) {
+                            case "menu.returnToGame" -> back = widget;
+                            case "gui.advancements" -> advancements = widget;
+                            case "gui.stats" -> stats = widget;
+                            default -> { }
+                        }
                     }
                 }
-                if (bottom == 0) {
+                if (back == null) {
                     return;
                 }
-                boolean unread = ServerPages.hasUnread();
-                event.addListener(new GuidesPauseButton(left, bottom + 4, width, unread,
-                        () -> Minecraft.getInstance().setScreen(new GuidesScreen(screen))));
+                int step = back.getHeight() + 4;
+                event.removeListener(advancements);
+                for (net.minecraft.client.gui.components.AbstractWidget widget : widgets) {
+                    if (widget != back && widget != advancements) {
+                        widget.setY(widget.getY() + step);
+                    }
+                }
+                if (advancements != null && stats != null) {
+                    stats.setX(back.getX());
+                    stats.setWidth(back.getWidth());
+                }
+                event.addListener(new GuidesPauseButton(back.getX(), back.getY() + step, back.getWidth(),
+                        ServerPages.hasUnread(), () -> Minecraft.getInstance().setScreen(new GuidesScreen(screen))));
             }
         }
 
