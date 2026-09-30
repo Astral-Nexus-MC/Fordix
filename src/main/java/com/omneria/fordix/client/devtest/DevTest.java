@@ -166,6 +166,29 @@ public final class DevTest {
             }
             mc.setScreen(new FordixAdminScreen(null));
         }, 50, false));
+        steps.add(new Step("11b-admin-schedule", () -> {
+            // The server is this very game: seed a schedule, a template and a panel through the real protocol.
+            FordixAdminScreen admin = new FordixAdminScreen(null);
+            mc.setScreen(admin);
+            var channel = com.omneria.fordix.panel.network.PanelNetwork.CHANNEL;
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("schedule_add",
+                    java.util.List.of("warning", "8", "Redemarrage du serveur", "Dans 10 minutes", "tous", "", "once", "10")));
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("schedule_add",
+                    java.util.List.of("info", "5", "Pensez a voter !", "", "tous", "", "every", "120")));
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("template_save",
+                    java.util.List.of("Annonce evenement", "success", "15", "Evenement ce soir", "20h sur le serveur")));
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("save_panel",
+                    java.util.List.of("demo", "Menu du spawn", "Bienvenue", "Retour spawn\t/spawn", "Kit de depart\t/kit start", "Regles\t/rules")));
+            admin.switchTab(1);
+        }, 60, false));
+        steps.add(new Step("11c-admin-templates", () -> ((FordixAdminScreen) mc.screen).switchTab(2), 30, false));
+        steps.add(new Step("11d-admin-panels", () -> {
+            FordixAdminScreen admin = (FordixAdminScreen) mc.screen;
+            admin.switchTab(3);
+            com.omneria.fordix.panel.network.PanelNetwork.CHANNEL.sendToServer(
+                    new com.omneria.fordix.admin.ServerboundAdminPayload("panels", java.util.List.of()));
+            admin.selectPanel("demo");
+        }, 40, false));
         steps.add(new Step("12-chat", () -> mc.setScreen(new ChatScreen("/fordix notify")), 30, false));
         steps.add(new Step("13-pause", () -> mc.setScreen(null), 10, false));
         steps.add(new Step("14-pause-menu", () -> mc.pauseGame(false), 30, false));

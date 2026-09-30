@@ -10,6 +10,8 @@ public final class ClientAdminData {
     private static volatile List<String> panels = List.of();
     private static volatile List<String> panel = List.of();
     private static volatile List<String> history = List.of();
+    private static volatile List<String> schedules = List.of();
+    private static volatile List<String> templates = List.of();
     private static volatile String status = "";
     private static volatile boolean denied;
     private static volatile int version;
@@ -22,6 +24,8 @@ public final class ClientAdminData {
             case "panels" -> panels = List.copyOf(lines);
             case "panel" -> panel = List.copyOf(lines);
             case "history" -> history = List.copyOf(lines);
+            case "schedules" -> schedules = List.copyOf(lines);
+            case "templates" -> templates = List.copyOf(lines);
             case "status" -> status = lines.isEmpty() ? "" : lines.get(0);
             case "denied" -> {
                 denied = true;
@@ -37,6 +41,8 @@ public final class ClientAdminData {
         panels = List.of();
         panel = List.of();
         history = List.of();
+        schedules = List.of();
+        templates = List.of();
         status = "";
         denied = false;
         version++;
@@ -49,6 +55,16 @@ public final class ClientAdminData {
     /** The panel last asked for: id, title, description, then "label TAB command" lines. */
     public static List<String> panel() {
         return panel;
+    }
+
+    /** "id TAB description" per scheduled notification. */
+    public static List<String> schedules() {
+        return schedules;
+    }
+
+    /** "name TAB style TAB seconds TAB title TAB message" per template. */
+    public static List<String> templates() {
+        return templates;
     }
 
     public static List<String> history() {

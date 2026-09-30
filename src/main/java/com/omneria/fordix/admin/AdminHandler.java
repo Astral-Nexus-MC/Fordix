@@ -3,6 +3,7 @@ package com.omneria.fordix.admin;
 import com.omneria.fordix.notification.FordixNotifications;
 import com.omneria.fordix.notification.NotificationHistory;
 import com.omneria.fordix.notification.NotificationStyle;
+import com.omneria.fordix.notification.server.NotificationScheduler;
 import com.omneria.fordix.notification.server.NotificationSender;
 import com.omneria.fordix.notification.server.NotificationTargets;
 import com.omneria.fordix.panel.PanelSpec;
@@ -31,6 +32,8 @@ public final class AdminHandler {
     private static final int MAX_BUTTONS = 12;
     private static final int MAX_TEXT = 256;
     private static final int HISTORY_LINES = 12;
+    private static final int MAX_MINUTES = 60 * 24 * 30;
+    private static final Pattern TEMPLATE_NAME = Pattern.compile("[^\\t\\n]{1,32}");
 
     private AdminHandler() {
     }
@@ -67,6 +70,24 @@ public final class AdminHandler {
                 }
                 case "notify" -> notify(player, server, args);
                 case "history" -> history(player);
+                case "schedules" -> schedules(player);
+                case "schedule_add" -> scheduleAdd(player, args);
+                case "schedule_delete" -> {
+                    int id = parseInt(arg(args, 0), -1);
+                    boolean removed = NotificationScheduler.store().deleteSchedule(id);
+                    NotificationScheduler.save();
+                    status(player, removed ? "Programmation #" + id + " supprimee." : "Programmation introuvable.");
+                    schedules(player);
+                }
+                case "templates" -> templates(player);
+                case "template_save" -> templateSave(player, args);
+                case "template_delete" -> {
+                    String name = arg(args, 0);
+                    boolean removed = NotificationScheduler.store().deleteTemplate(name);
+                    NotificationScheduler.save();
+                    status(player, removed ? "Modele '" + name + "' supprime." : "Modele introuvable.");
+                    templates(player);
+                }
                 default -> status(player, "Action inconnue.");
             }
         });
@@ -132,6 +153,77 @@ public final class AdminHandler {
                 target.label(), target.players());
         status(player, "Envoyee a " + count + " joueur(s) (" + target.label() + ").");
         history(player);
+    }
+
+    /** Args: style, seconds, title, message, target kind, target value, mode ("once" or "every"), minutes. */
+    private static void scheduleAdd(ServerPlayer player, List<String> args) {
+        NotificationStyle style = NotificationStyle.byId(arg(args, 0));
+        String title = clip(arg(args, 2));
+        if (style == null || title.isBlank()) {
+            status(player, style == null ? "Style inconnu." : "Le titre est vide.");
+            return;
+        }
+        int minutes = parseInt(arg(args, 7), 0);
+        if (minutes < 1 || minutes > MAX_MINUTES) {
+            status(player, "Delai invalide (1 a " + MAX_MINUTES + " minutes).");
+            return;
+        }
+        boolean repeating = arg(args, 6).equals("every");
+        long now = System.currentTimeMillis();
+        long delay = minutes * 60_000L;
+        var entry = NotificationScheduler.store().schedule(style.id(), Math.max(1, Math.min(120, parseInt(arg(args, 1), 5))),
+                title, clip(arg(args, 3)), arg(args, 4), clip(arg(args, 5)), now + delay, repeating ? delay : 0,
+                player.getGameProfile().getName());
+        if (entry == null) {
+            status(player, "Trop de programmations (" + com.omneria.fordix.notification.AdminStore.MAX_SCHEDULES + " max).");
+            return;
+        }
+        NotificationScheduler.save();
+        status(player, "Programmation #" + entry.id + " enregistree.");
+        schedules(player);
+    }
+
+    private static void schedules(ServerPlayer player) {
+        long now = System.currentTimeMillis();
+        List<String> lines = new ArrayList<>();
+        for (var entry : NotificationScheduler.store().schedules) {
+            lines.add(entry.id + "\t" + entry.describe(now));
+        }
+        reply(player, "schedules", lines);
+    }
+
+    /** Args: name, style, seconds, title, message. */
+    private static void templateSave(ServerPlayer player, List<String> args) {
+        String name = arg(args, 0).trim();
+        NotificationStyle style = NotificationStyle.byId(arg(args, 1));
+        if (!TEMPLATE_NAME.matcher(name).matches() || style == null) {
+            status(player, style == null ? "Style inconnu." : "Nom invalide (1 a 32 caracteres, sans tabulation).");
+            return;
+        }
+        boolean saved = NotificationScheduler.store().saveTemplate(name, style.id(),
+                Math.max(1, Math.min(120, parseInt(arg(args, 2), 5))), clip(arg(args, 3)), clip(arg(args, 4)));
+        if (!saved) {
+            status(player, "Trop de modeles (" + com.omneria.fordix.notification.AdminStore.MAX_TEMPLATES + " max).");
+            return;
+        }
+        NotificationScheduler.save();
+        status(player, "Modele '" + name + "' enregistre.");
+        templates(player);
+    }
+
+    private static void templates(ServerPlayer player) {
+        List<String> lines = new ArrayList<>();
+        NotificationScheduler.store().templates.forEach((name, template) -> lines.add(String.join("\t", name, template.style,
+                Integer.toString(template.seconds), template.title, template.message)));
+        reply(player, "templates", lines);
+    }
+
+    private static int parseInt(String text, int fallback) {
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
     }
 
     private static void history(ServerPlayer player) {

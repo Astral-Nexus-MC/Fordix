@@ -46,6 +46,8 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   barres (`Chevron`, `BarShape`), recoloration des textures vanilla (`TextureRecolor`, `Duotone`).
 - `client/tooltip` : infobulles d'objets (`ItemTooltipRenderer`, `TooltipStyle`, `EnchantEffects`,
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
+- Écran d'administration (`FordixAdminScreen`, ops) : envoi de notifications, planification (`AdminStore`,
+  `NotificationScheduler`, sauvegardée dans `fordix-admin.json` du monde), modèles et éditeur de panels.
 - Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`).
 - Le serveur peut imposer la liste des onglets Guides (`[guides] tabs` dans `fordix-common.toml`).
 

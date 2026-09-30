@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Server to client: an answer for the admin screen. {@code kind} is "panels" (ids), "panel" (id,
  * title, description, then one "label TAB command" per button), "history", "status" (one message)
- * or "denied" (the player isn't allowed).
+ * "schedules" (id TAB description), "templates" (name TAB style TAB seconds TAB title TAB message) or "denied" (the player isn't allowed).
  */
 public record ClientboundAdminPayload(String kind, List<String> lines) {
 

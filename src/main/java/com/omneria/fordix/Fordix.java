@@ -3,6 +3,7 @@ package com.omneria.fordix;
 import com.mojang.logging.LogUtils;
 import com.omneria.fordix.guide.server.GuideBroadcaster;
 import com.omneria.fordix.notification.server.AutoNotifications;
+import com.omneria.fordix.notification.server.NotificationScheduler;
 import com.omneria.fordix.notification.server.NotifyCommand;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.server.PanelCommand;
@@ -32,6 +33,9 @@ public class Fordix {
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedIn);
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onPlayerLoggedOut);
         MinecraftForge.EVENT_BUS.addListener(AutoNotifications::onServerTick);
+        MinecraftForge.EVENT_BUS.addListener(NotificationScheduler::onServerStarted);
+        MinecraftForge.EVENT_BUS.addListener(NotificationScheduler::onServerStopped);
+        MinecraftForge.EVENT_BUS.addListener(NotificationScheduler::onServerTick);
         MinecraftForge.EVENT_BUS.addListener(GuideBroadcaster::onPlayerLoggedIn);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(GuideBroadcaster::onConfigReloading);
     }
