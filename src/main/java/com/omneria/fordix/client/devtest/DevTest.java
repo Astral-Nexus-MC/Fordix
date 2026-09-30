@@ -176,6 +176,10 @@ public final class DevTest {
             cmd(mc, "give @s minecraft:enchanted_book{StoredEnchantments:[{id:\"minecraft:protection\",lvl:4},{id:\"minecraft:silk_touch\",lvl:1}]}");
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, false));
+        steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
+        steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
+        steps.add(new Step("21-singleplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(null)), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
             mc.stop();

@@ -26,14 +26,20 @@ import java.util.Optional;
  */
 public final class TextureRecolor {
     /** A texture and the rows of it to recolor (the rest is left as vanilla drew it). */
-    private record Target(ResourceLocation location, int fromRow, int toRow) {
+    private record Target(ResourceLocation location, int fromRow, int toRow, boolean flat) {
         Target(String path) {
-            this(new ResourceLocation(path), 0, Integer.MAX_VALUE);
+            this(new ResourceLocation(path), 0, Integer.MAX_VALUE, false);
+        }
+
+        Target(ResourceLocation location, int fromRow, int toRow) {
+            this(location, fromRow, toRow, false);
         }
     }
 
     private static final List<Target> TARGETS = List.of(
             new Target("textures/gui/recipe_book.png"),
+            // The tiled backdrop of the options, world list and mod list screens.
+            new Target(new ResourceLocation("textures/gui/options_background.png"), 0, Integer.MAX_VALUE, true),
             new Target("textures/gui/container/loom.png"),
             new Target("textures/gui/container/cartography_table.png"),
             new Target("textures/gui/container/creative_inventory/tab_items.png"),
@@ -104,7 +110,7 @@ public final class TextureRecolor {
                     }
                     try (InputStream stream = resource.get().open()) {
                         NativeImage image = NativeImage.read(stream);
-                        recolor(image, ramp, target.fromRow(), target.toRow());
+                        recolor(image, ramp, target.fromRow(), target.toRow(), target.flat());
                         textures.register(location, new DynamicTexture(image));
                     }
                 } else {
@@ -116,15 +122,26 @@ public final class TextureRecolor {
         }
     }
 
-    private static void recolor(NativeImage image, int[] ramp, int fromRow, int toRow) {
+    private static void recolor(NativeImage image, int[] ramp, int fromRow, int toRow, boolean flat) {
         for (int y = fromRow; y < Math.min(image.getHeight(), toRow); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 int abgr = image.getPixelRGBA(x, y);
                 // NativeImage stores ABGR; Duotone works on ARGB.
                 int argb = (abgr & 0xFF00FF00) | ((abgr & 0xFF) << 16) | ((abgr >> 16) & 0xFF);
                 int out = Duotone.recolor(argb, ramp);
+                if (flat) {
+                    // A quiet texture: mostly the slot color, the original grain only faintly visible.
+                    out = blend(out, FordixPalette.SLOT_FILL, 0.8F);
+                }
                 image.setPixelRGBA(x, y, (out & 0xFF00FF00) | ((out & 0xFF) << 16) | ((out >> 16) & 0xFF));
             }
         }
+    }
+
+    private static int blend(int from, int to, float amount) {
+        int r = Math.round(((from >> 16) & 0xFF) * (1 - amount) + ((to >> 16) & 0xFF) * amount);
+        int g = Math.round(((from >> 8) & 0xFF) * (1 - amount) + ((to >> 8) & 0xFF) * amount);
+        int b = Math.round((from & 0xFF) * (1 - amount) + (to & 0xFF) * amount);
+        return 0xFF000000 | r << 16 | g << 8 | b;
     }
 }

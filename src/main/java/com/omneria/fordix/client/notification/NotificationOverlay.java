@@ -79,7 +79,18 @@ public final class NotificationOverlay {
         int height = PADDING * 2 + (title.size() + lines.size()) * LINE_HEIGHT + 4;
         STACK.add(new Shown(payload.style(), title, lines, width), height,
                 System.currentTimeMillis(), payload.durationTicks() * 50L);
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.value(), 1.6F, 0.35F));
+        playSound(minecraft, payload.style());
+    }
+
+    /** A different note per kind, so a warning or an error is recognized without looking. */
+    private static void playSound(Minecraft minecraft, NotificationStyle style) {
+        SimpleSoundInstance sound = switch (style) {
+            case SUCCESS -> SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_CHIME.value(), 1.5F, 0.4F);
+            case WARNING -> SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BELL.value(), 0.8F, 0.4F);
+            case ERROR -> SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.6F, 0.6F);
+            case INFO -> SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.value(), 1.6F, 0.35F);
+        };
+        minecraft.getSoundManager().play(sound);
     }
 
     /** In-game HUD. Skipped while a screen is open - {@link #onScreenRenderPost} draws on top of it instead. */
