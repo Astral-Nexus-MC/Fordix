@@ -52,6 +52,11 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
 - Écran d'administration (`FordixAdminScreen`, ops) : envoi de notifications, planification (`AdminStore`,
   `NotificationScheduler`, sauvegardée dans `fordix-admin.json` du monde), modèles et éditeur de panels.
+- Guides : onglets de l'inventaire (`GuideTabs`), écran Guides ouvert depuis le menu pause (`GuidesScreen` : guides des mods
+  + pages du serveur `GuidePage`/`PageMarkup`, stockées dans `AdminStore`, édités dans l'onglet Pages de l'admin, envoyées par
+  `ClientboundGuidePagesPayload`), indice Maj + G dans l'infobulle des objets d'un mod avec guide (`GuideHints`).
+- Livre de bienvenue (item `fordix:welcome_book`, `welcome/`) : liste d'étapes `[welcomeBook] steps` de `fordix-common.toml`
+  (advancement, command, guides, manual), récompense facultative, donné à la première connexion ou par `/fordix book`.
 - Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`).
 - Le serveur peut imposer la liste des onglets Guides (`[guides] tabs` dans `fordix-common.toml`).
 

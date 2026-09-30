@@ -69,7 +69,7 @@ public final class GuideTabs {
         return modId.equals("minecraft") || ModList.get().isLoaded(modId);
     }
 
-    private static ItemStack iconFor(String itemId) {
+    public static ItemStack iconFor(String itemId) {
         ResourceLocation id = ResourceLocation.tryParse(itemId);
         Item item = id == null ? Items.AIR : BuiltInRegistries.ITEM.get(id);
         return new ItemStack(item == Items.AIR ? Items.BOOK : item);

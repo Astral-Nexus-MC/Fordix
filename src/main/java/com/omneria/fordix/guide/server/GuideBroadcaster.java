@@ -1,7 +1,10 @@
 package com.omneria.fordix.guide.server;
 
 import com.omneria.fordix.FordixServerConfig;
+import com.omneria.fordix.guide.ClientboundGuidePagesPayload;
 import com.omneria.fordix.guide.ClientboundGuidesPayload;
+import com.omneria.fordix.guide.GuidePage;
+import com.omneria.fordix.notification.server.NotificationScheduler;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +40,18 @@ public final class GuideBroadcaster {
         }
     }
 
+    /** Sends every guide page to one player, or to everyone when an admin changed them. */
+    public static void sendPages(ServerPlayer player) {
+        List<GuidePage> pages = List.copyOf(NotificationScheduler.store().pages.values());
+        PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundGuidePagesPayload(pages));
+    }
+
+    public static void broadcastPages(MinecraftServer server) {
+        server.getPlayerList().getPlayers().forEach(GuideBroadcaster::sendPages);
+    }
+
     private static void send(ServerPlayer player) {
+        sendPages(player);
         List<String> lines = List.copyOf(FordixServerConfig.GUIDES.get());
         List<String> rules = List.copyOf(FordixServerConfig.RARITY_RULES.get());
         PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundGuidesPayload(lines, rules));

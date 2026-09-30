@@ -6,9 +6,15 @@ import com.omneria.fordix.admin.ClientboundAdminPayload;
 import com.omneria.fordix.admin.ServerboundAdminPayload;
 import com.omneria.fordix.client.admin.ClientAdminData;
 import com.omneria.fordix.client.guide.ServerGuides;
+import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.panel.ClientPanelPayloadHandler;
+import com.omneria.fordix.client.welcome.ClientWelcome;
+import com.omneria.fordix.guide.ClientboundGuidePagesPayload;
+import com.omneria.fordix.welcome.ClientboundWelcomePayload;
+import com.omneria.fordix.welcome.ServerboundWelcomePayload;
+import com.omneria.fordix.welcome.WelcomeService;
 import com.omneria.fordix.guide.ClientboundGuidesPayload;
 import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
 import com.omneria.fordix.panel.server.ServerPanelPayloadHandler;
@@ -27,7 +33,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "5";
+    private static final String PROTOCOL_VERSION = "6";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -65,11 +71,37 @@ public final class PanelNetwork {
                 ClientboundAdminPayload::encode,
                 ClientboundAdminPayload::decode,
                 PanelNetwork::handleAdmin);
+        CHANNEL.registerMessage(id++, ClientboundWelcomePayload.class,
+                ClientboundWelcomePayload::encode,
+                ClientboundWelcomePayload::decode,
+                PanelNetwork::handleWelcome);
+        CHANNEL.registerMessage(id++, ServerboundWelcomePayload.class,
+                ServerboundWelcomePayload::encode,
+                ServerboundWelcomePayload::decode,
+                WelcomeService::handle);
+        CHANNEL.registerMessage(id++, ClientboundGuidePagesPayload.class,
+                ClientboundGuidePagesPayload::encode,
+                ClientboundGuidePagesPayload::decode,
+                PanelNetwork::handleGuidePages);
     }
 
     private static void handleAdmin(ClientboundAdminPayload payload, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() ->
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAdminData.receive(payload.kind(), payload.lines()))
+        );
+        ctx.get().setPacketHandled(true);
+    }
+
+    private static void handleWelcome(ClientboundWelcomePayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientWelcome.receive(payload))
+        );
+        ctx.get().setPacketHandled(true);
+    }
+
+    private static void handleGuidePages(ClientboundGuidePagesPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ServerPages.set(payload.pages()))
         );
         ctx.get().setPacketHandled(true);
     }

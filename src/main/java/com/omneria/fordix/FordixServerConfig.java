@@ -3,6 +3,7 @@ package com.omneria.fordix;
 import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.notification.NotificationTemplate;
 import com.omneria.fordix.rarity.RarityRules;
+import com.omneria.fordix.welcome.WelcomeStep;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
@@ -32,6 +33,9 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
 
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> RARITY_RULES;
+    public static final ForgeConfigSpec.BooleanValue WELCOME_BOOK_GIVE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> WELCOME_BOOK_STEPS;
+    public static final ForgeConfigSpec.ConfigValue<String> WELCOME_BOOK_REWARD;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -81,6 +85,24 @@ public final class FordixServerConfig {
                         "In a pattern, * stands for any text and {a,b} for a choice: \"twilightforest:knightmetal_*\", \"minecraft:iron_{sword,axe}\".",
                         "Strong enchantments raise a ruled item one or two tiers. Items no rule matches keep their own rarity.")
                 .defineList("rules", RarityRules.DEFAULT_LINES, value -> value instanceof String text && RarityRules.parseLine(text) != null);
+        builder.pop();
+
+        builder.comment("The welcome book: an item with a checklist for new players (right-click to open it).")
+                .push("welcomeBook");
+        WELCOME_BOOK_GIVE = builder.comment("Give the book to a player the first time he joins (/fordix book gives it by hand).")
+                .define("giveOnFirstJoin", true);
+        WELCOME_BOOK_STEPS = builder.comment("One step per line: \"label | condition\" or \"label | condition | action\".",
+                        "Conditions: advancement:<id>, command:<text> (a command starting with it), guides (opens the Guides screen),",
+                        "manual (the player ticks it). The action is a button: command:/team join or url:https://...")
+                .defineList("steps", List.of(
+                        "Ouvrir les Guides depuis le menu pause | guides",
+                        "Miner de la pierre | advancement:minecraft:story/mine_stone",
+                        "Fabriquer des outils en pierre | advancement:minecraft:story/upgrade_tools",
+                        "Lire les regles du serveur | manual"
+                ), value -> value instanceof String text && WelcomeStep.parse(text) != null);
+        WELCOME_BOOK_REWARD = builder.comment("Command run once by the server when a player has ticked every step; %player% is his name.",
+                        "Example: give %player% minecraft:diamond 3. Empty for no reward.")
+                .define("reward", "");
         builder.pop();
         SPEC = builder.build();
     }

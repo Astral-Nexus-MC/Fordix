@@ -1,5 +1,7 @@
 package com.omneria.fordix.admin;
 
+import com.omneria.fordix.guide.GuidePage;
+import com.omneria.fordix.guide.server.GuideBroadcaster;
 import com.omneria.fordix.notification.FordixNotifications;
 import com.omneria.fordix.notification.NotificationHistory;
 import com.omneria.fordix.notification.NotificationStyle;
@@ -78,6 +80,17 @@ public final class AdminHandler {
                     NotificationScheduler.save();
                     status(player, removed ? "Programmation #" + id + " supprimee." : "Programmation introuvable.");
                     schedules(player);
+                }
+                case "pages" -> pageList(player);
+                case "page" -> pageGet(player, arg(args, 0));
+                case "page_save" -> pageSave(player, server, args);
+                case "page_delete" -> {
+                    String id = arg(args, 0);
+                    boolean removed = NotificationScheduler.store().deletePage(id);
+                    NotificationScheduler.save();
+                    GuideBroadcaster.broadcastPages(server);
+                    status(player, removed ? "Page '" + id + "' supprimee." : "Page introuvable.");
+                    pageList(player);
                 }
                 case "templates" -> templates(player);
                 case "template_save" -> templateSave(player, args);
@@ -216,6 +229,43 @@ public final class AdminHandler {
         NotificationScheduler.store().templates.forEach((name, template) -> lines.add(String.join("\t", name, template.style,
                 Integer.toString(template.seconds), template.title, template.message)));
         reply(player, "templates", lines);
+    }
+
+    private static void pageList(ServerPlayer player) {
+        List<String> lines = new ArrayList<>();
+        NotificationScheduler.store().pages.values().forEach(page -> lines.add(page.id + "\t" + page.title));
+        reply(player, "pages", lines);
+    }
+
+    private static void pageGet(ServerPlayer player, String id) {
+        GuidePage page = NotificationScheduler.store().pages.get(id);
+        if (page == null) {
+            status(player, "Page '" + id + "' introuvable.");
+            return;
+        }
+        reply(player, "page", List.of(page.id, page.title, page.body));
+    }
+
+    /** Args: id, title, body. Saves and pushes the pages to every player. */
+    private static void pageSave(ServerPlayer player, MinecraftServer server, List<String> args) {
+        String id = arg(args, 0);
+        if (!PANEL_ID.matcher(id).matches()) {
+            status(player, "Identifiant invalide (a-z, 0-9, _ et - ; 32 max).");
+            return;
+        }
+        String body = arg(args, 2);
+        if (body.length() > GuidePage.MAX_BODY) {
+            body = body.substring(0, GuidePage.MAX_BODY);
+        }
+        String title = clip(arg(args, 1).isBlank() ? id : arg(args, 1));
+        if (!NotificationScheduler.store().savePage(id, title, body, player.getGameProfile().getName(), System.currentTimeMillis())) {
+            status(player, "Trop de pages (" + com.omneria.fordix.notification.AdminStore.MAX_PAGES + " max).");
+            return;
+        }
+        NotificationScheduler.save();
+        GuideBroadcaster.broadcastPages(server);
+        status(player, "Page '" + id + "' enregistree.");
+        pageList(player);
     }
 
     private static int parseInt(String text, int fallback) {

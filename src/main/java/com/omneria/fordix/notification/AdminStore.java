@@ -2,6 +2,7 @@ package com.omneria.fordix.notification;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.omneria.fordix.guide.GuidePage;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,6 +19,7 @@ public final class AdminStore {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final int MAX_SCHEDULES = 50;
     public static final int MAX_TEMPLATES = 50;
+    public static final int MAX_PAGES = 30;
 
     /** A notification to send at {@code nextAt} (epoch ms); repeats every {@code everyMs} when it is above 0. */
     public static final class Scheduled {
@@ -51,6 +53,8 @@ public final class AdminStore {
     public List<Scheduled> schedules = new ArrayList<>();
     public Map<String, Template> templates = new LinkedHashMap<>();
     public int nextId = 1;
+    /** Guide pages shown to every player, by id. */
+    public Map<String, GuidePage> pages = new LinkedHashMap<>();
 
     /** Adds a schedule; returns it, or null when the list is full. */
     public Scheduled schedule(String style, int seconds, String title, String message, String kind, String value,
@@ -117,6 +121,19 @@ public final class AdminStore {
         return templates.remove(name) != null;
     }
 
+    /** Saves (or replaces) a guide page; false when the store is full of other pages. */
+    public boolean savePage(String id, String title, String body, String author, long now) {
+        if (!pages.containsKey(id) && pages.size() >= MAX_PAGES) {
+            return false;
+        }
+        pages.put(id, new GuidePage(id, title, body, author, now));
+        return true;
+    }
+
+    public boolean deletePage(String id) {
+        return pages.remove(id) != null;
+    }
+
     public String toJson() {
         return GSON.toJson(this);
     }
@@ -133,6 +150,9 @@ public final class AdminStore {
             }
             if (store.templates == null) {
                 store.templates = new LinkedHashMap<>();
+            }
+            if (store.pages == null) {
+                store.pages = new LinkedHashMap<>();
             }
             for (Scheduled entry : store.schedules) {
                 store.nextId = Math.max(store.nextId, entry.id + 1);

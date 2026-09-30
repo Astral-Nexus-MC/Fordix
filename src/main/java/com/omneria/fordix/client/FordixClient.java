@@ -18,13 +18,18 @@ import com.omneria.fordix.client.gui.vanilla.VoidframeGauges;
 import com.omneria.fordix.client.gui.vanilla.VoidframeHud;
 import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
+import com.omneria.fordix.client.guide.GuideHints;
+import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.AnalysisCommand;
 import com.omneria.fordix.client.tooltip.ItemTooltipRenderer;
 import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
+import com.omneria.fordix.client.gui.GuidesScreen;
+import com.omneria.fordix.client.gui.widget.FordixButton;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.ConfigScreenHandler;
@@ -69,6 +74,14 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
+    /** Shift + this key over an item opens the guide of its mod (default G; Shift keeps it clear of text fields). */
+    public static final KeyMapping OPEN_GUIDE = new KeyMapping(
+            "key.fordix.open_guide",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_G,
+            "key.categories.fordix"
+    );
+
     static {
         // Dev-only screenshot harness (see DevTest): only with FORDIX_DEVTEST set in the environment.
         if (DevTest.enabled()) {
@@ -96,6 +109,7 @@ public final class FordixClient {
         static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
             event.register(TOGGLE_DEMO);
             event.register(OPEN_SETTINGS);
+            event.register(OPEN_GUIDE);
         }
 
         /** Recolors the recipe book and advancement textures once resources are loaded, and again after each reload. */
@@ -163,6 +177,7 @@ public final class FordixClient {
         @SubscribeEvent
         static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
             ServerGuides.clear();
+            ServerPages.clear();
             ServerRarities.clear();
         }
 
@@ -234,6 +249,27 @@ public final class FordixClient {
         @SubscribeEvent
         static void onItemTooltip(ItemTooltipEvent event) {
             TooltipStyle.onItemTooltip(event);
+        }
+
+        /** After everything else, so the guide line ends the tooltip. */
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        static void onItemTooltipGuideHint(ItemTooltipEvent event) {
+            GuideHints.onItemTooltip(event);
+        }
+
+        /** A "Guides" button in the pause menu, lit when a server page changed since it was read. */
+        @SubscribeEvent
+        static void onPauseMenuInit(ScreenEvent.Init.Post event) {
+            if (event.getScreen() instanceof net.minecraft.client.gui.screens.PauseScreen screen) {
+                String label = ServerPages.hasUnread() ? "Guides *" : "Guides";
+                event.addListener(new FordixButton(6, 6, 80, 20, Component.literal(label),
+                        () -> Minecraft.getInstance().setScreen(new GuidesScreen(screen))));
+            }
+        }
+
+        @SubscribeEvent
+        static void onGuideKey(ScreenEvent.KeyPressed.Pre event) {
+            GuideHints.onKeyPressed(event);
         }
 
         @SubscribeEvent

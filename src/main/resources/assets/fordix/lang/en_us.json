@@ -1,5 +1,7 @@
 {
     "key.fordix.toggle_demo": "Toggle Fordix Demo Screen",
     "key.categories.fordix": "Fordix",
-    "key.fordix.open_settings": "Open Fordix Settings"
+    "item.fordix.welcome_book": "Livre de bienvenue",
+    "key.fordix.open_settings": "Open Fordix Settings",
+    "key.fordix.open_guide": "Open the guide of the item under the cursor (with Shift)"
 }

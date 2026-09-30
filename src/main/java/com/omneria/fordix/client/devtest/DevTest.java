@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.gui.FordixAdminScreen;
 import com.omneria.fordix.client.gui.FordixSettingsScreen;
+import com.omneria.fordix.client.gui.GuidesScreen;
 import com.omneria.fordix.client.gui.HudLayoutScreen;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.notification.NotificationStyle;
@@ -189,6 +190,38 @@ public final class DevTest {
             com.omneria.fordix.panel.network.PanelNetwork.CHANNEL.sendToServer(
                     new com.omneria.fordix.admin.ServerboundAdminPayload("panels", java.util.List.of()));
             admin.selectPanel("demo");
+        }, 40, false));
+        steps.add(new Step("11e-admin-pages", () -> {
+            FordixAdminScreen admin = new FordixAdminScreen(null);
+            mc.setScreen(admin);
+            var channel = com.omneria.fordix.panel.network.PanelNetwork.CHANNEL;
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("page_save", java.util.List.of("regles", "Regles du serveur",
+                    "# Respect\nPas d'insultes ni de harcelement. Les conflits se reglent avec un moderateur.\n\n# Pillage\nAutorise en zone de guerre uniquement, les coffres sont proteges ailleurs.\n\n# Commandes utiles\n@button Retour au spawn | command:/spawn\n@button Wiki du serveur | url:https://wiki.exemple.fr")));
+            channel.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("page_save", java.util.List.of("demarrage", "Bien demarrer",
+                    "# Premiers pas\nRejoins une equipe puis pose ton foyer.")));
+            admin.switchTab(4);
+        }, 50, false));
+        steps.add(new Step("11f-admin-page-edit", () -> ((FordixAdminScreen) mc.screen).pickPage("regles"), 40, false));
+        steps.add(new Step("11g-guides-screen", () -> {
+            GuidesScreen guides = new GuidesScreen(null);
+            mc.setScreen(guides);
+            guides.selectRow(Integer.MAX_VALUE - 1);
+            guides.selectRow(2);
+        }, 30, false));
+        steps.add(new Step("11h-guides-mod", () -> ((GuidesScreen) mc.screen).selectRow(0), 25, false));
+        steps.add(new Step("11i-pause-guides", () -> {
+            mc.setScreen(null);
+            mc.pauseGame(false);
+        }, 30, false));
+        steps.add(new Step("11j-welcome-book-give", () -> {
+            mc.setScreen(null);
+            cmd(mc, "clear @s");
+            cmd(mc, "advancement grant @s only minecraft:story/mine_stone");
+            cmd(mc, "give @s fordix:welcome_book");
+        }, 40, false));
+        steps.add(new Step("11k-welcome-book-open", () -> {
+            mc.player.getInventory().selected = 0;
+            mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
         }, 40, false));
         steps.add(new Step("12-chat", () -> mc.setScreen(new ChatScreen("/fordix notify")), 30, false));
         steps.add(new Step("13-pause", () -> mc.setScreen(null), 10, false));

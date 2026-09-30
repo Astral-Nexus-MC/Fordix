@@ -8,6 +8,7 @@ import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -28,7 +29,7 @@ public class FordixAdminScreen extends FordixScreen {
     private static final List<String> STYLES = List.of("info", "success", "warning", "error");
     private static final int[] SECONDS = {3, 5, 8, 15, 30};
     private static final List<String> KINDS = List.of("tous", "joueur", "equipe", "tag", "permission");
-    private static final List<String> TAB_NAMES = List.of("Envoi", "Planifier", "Modeles", "Panels");
+    private static final List<String> TAB_NAMES = List.of("Envoi", "Plan", "Modeles", "Panels", "Pages");
     private static final int MAX_LIST_ROWS = 7;
     private static final int SCHEDULE_ROWS = 5;
     private static final int BUTTON_ROWS = 4;
@@ -37,6 +38,7 @@ public class FordixAdminScreen extends FordixScreen {
     private static final int TAB_SCHEDULE = 1;
     private static final int TAB_TEMPLATES = 2;
     private static final int TAB_PANELS = 3;
+    private static final int TAB_PAGES = 4;
 
     private int panelWidth = MAX_PANEL_WIDTH;
     private int panelHeight = MAX_PANEL_HEIGHT;
@@ -74,6 +76,15 @@ public class FordixAdminScreen extends FordixScreen {
     private final List<String[]> editButtons = new ArrayList<>();
     private int buttonOffset;
 
+    // Guide pages.
+    private List<String> pageLines = List.of();
+    private int pageListOffset;
+    private String selectedPage = "";
+    private String newPageId = "";
+    private String pageTitle = "";
+    private String pageBody = "";
+    private boolean awaitingPage;
+
     public FordixAdminScreen(Screen parent) {
         super(Component.literal("FORDIX // ADMINISTRATION"));
         this.parent = parent;
@@ -82,6 +93,7 @@ public class FordixAdminScreen extends FordixScreen {
         send("history");
         send("schedules");
         send("templates");
+        send("pages");
     }
 
     private static void send(String action, String... args) {
@@ -117,6 +129,7 @@ public class FordixAdminScreen extends FordixScreen {
             }
             case TAB_SCHEDULE -> initSchedule(x, y, inner);
             case TAB_TEMPLATES -> initTemplates(x, y, inner);
+            case TAB_PAGES -> initPages(x, y, inner);
             default -> initPanels(x, y, inner);
         }
     }
@@ -240,6 +253,77 @@ public class FordixAdminScreen extends FordixScreen {
         notifMessage = parts[4];
         templateName = parts[0];
         tab = TAB_NOTIFY;
+        rebuildWidgets();
+    }
+
+    // ---- Guide pages ----------------------------------------------------------------------------
+
+    private void initPages(int x, int y, int inner) {
+        addRenderableWidget(edit(x, y, 80, "nouvel-id", newPageId, 32, text -> newPageId = text.toLowerCase()));
+        addRenderableWidget(new FordixButton(x + 84, y, 36, 18, Component.literal("Creer"), () -> {
+            if (!newPageId.isBlank()) {
+                selectedPage = newPageId;
+                pageTitle = newPageId;
+                pageBody = "";
+                awaitingPage = false;
+                send("page_save", newPageId, newPageId, "");
+                newPageId = "";
+                rebuildWidgets();
+            }
+        }));
+        int listY = y + 24;
+        for (int i = 0; i < listRows(); i++) {
+            int index = pageListOffset + i;
+            if (index >= pageLines.size()) {
+                break;
+            }
+            String[] parts = pageLines.get(index).split("\t", 2);
+            String id = parts[0];
+            addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18,
+                    Component.literal((id.equals(selectedPage) ? "> " : "") + this.font.plainSubstrByWidth(parts.length > 1 ? parts[1] : id, 100)),
+                    () -> selectPage(id)));
+        }
+        addRenderableWidget(new FordixButton(x, listY + listRows() * 20, 58, 16, Component.literal("▲"), () -> {
+            pageListOffset = Math.max(0, pageListOffset - listRows());
+            rebuildWidgets();
+        }));
+        addRenderableWidget(new FordixButton(x + 62, listY + listRows() * 20, 58, 16, Component.literal("▼"), () -> {
+            if (pageListOffset + listRows() < pageLines.size()) {
+                pageListOffset += listRows();
+                rebuildWidgets();
+            }
+        }));
+        if (selectedPage.isEmpty()) {
+            return;
+        }
+        int ex = x + 130;
+        int ew = inner - 130;
+        addRenderableWidget(edit(ex, y, ew, "Titre de la page", pageTitle, 64, text -> pageTitle = text));
+        int boxHeight = Math.max(50, panelHeight - 48 - 24 - 14 - 20 - 26 - 22);
+        MultiLineEditBox body = new MultiLineEditBox(this.font, ex, y + 24, ew, boxHeight,
+                Component.literal("# Titre | texte | @button Libelle | command:/spawn"), Component.literal("Contenu"));
+        body.setValue(pageBody);
+        body.setValueListener(text -> pageBody = text);
+        addRenderableWidget(body);
+        int by = y + 24 + boxHeight + 4;
+        addRenderableWidget(new FordixButton(ex, by, 100, 18, Component.literal("Enregistrer"),
+                () -> send("page_save", selectedPage, pageTitle, pageBody)));
+        addRenderableWidget(new FordixButton(ex + 104, by, 100, 18, Component.literal("Supprimer"), () -> {
+            send("page_delete", selectedPage);
+            selectedPage = "";
+            rebuildWidgets();
+        }));
+    }
+
+    /** Opens a guide page in the editor (also used by the dev test). */
+    public void pickPage(String id) {
+        selectPage(id);
+    }
+
+    private void selectPage(String id) {
+        selectedPage = id;
+        awaitingPage = true;
+        send("page", id);
         rebuildWidgets();
     }
 
@@ -421,6 +505,13 @@ public class FordixAdminScreen extends FordixScreen {
                 guiGraphics.drawString(font, "Aucun modele : remplis le formulaire (onglet Notifications), puis donne-lui un nom.",
                         x, panel.getY() + 48 + 30, FordixPalette.TEXT, false);
             }
+        } else if (tab == TAB_PAGES) {
+            if (selectedPage.isEmpty()) {
+                guiGraphics.drawString(font, "Choisis une page, ou cree-en une.", x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
+            } else {
+                guiGraphics.drawString(font, font.plainSubstrByWidth("# titre · @button Libelle | command:/x · ligne vide = paragraphe",
+                        panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, FordixPalette.BEVEL_HIGHLIGHT, false);
+            }
         } else if (selectedId.isEmpty()) {
             guiGraphics.drawString(font, "Choisis un panel, ou cree-en un.", x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
         } else if (editButtons.isEmpty()) {
@@ -443,6 +534,13 @@ public class FordixAdminScreen extends FordixScreen {
         panelIds = ClientAdminData.panels();
         scheduleLines = ClientAdminData.schedules();
         templateLines = ClientAdminData.templates();
+        pageLines = ClientAdminData.pages();
+        List<String> pageData = ClientAdminData.page();
+        if (awaitingPage && pageData.size() >= 3 && pageData.get(0).equals(selectedPage)) {
+            awaitingPage = false;
+            pageTitle = pageData.get(1);
+            pageBody = pageData.get(2);
+        }
         List<String> data = ClientAdminData.panel();
         if (awaitingPanel && data.size() >= 3 && data.get(0).equals(selectedId)) {
             awaitingPanel = false;

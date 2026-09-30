@@ -12,6 +12,8 @@ public final class ClientAdminData {
     private static volatile List<String> history = List.of();
     private static volatile List<String> schedules = List.of();
     private static volatile List<String> templates = List.of();
+    private static volatile List<String> pages = List.of();
+    private static volatile List<String> page = List.of();
     private static volatile String status = "";
     private static volatile boolean denied;
     private static volatile int version;
@@ -25,6 +27,8 @@ public final class ClientAdminData {
             case "panel" -> panel = List.copyOf(lines);
             case "history" -> history = List.copyOf(lines);
             case "schedules" -> schedules = List.copyOf(lines);
+            case "pages" -> pages = List.copyOf(lines);
+            case "page" -> page = List.copyOf(lines);
             case "templates" -> templates = List.copyOf(lines);
             case "status" -> status = lines.isEmpty() ? "" : lines.get(0);
             case "denied" -> {
@@ -43,6 +47,8 @@ public final class ClientAdminData {
         history = List.of();
         schedules = List.of();
         templates = List.of();
+        pages = List.of();
+        page = List.of();
         status = "";
         denied = false;
         version++;
@@ -65,6 +71,16 @@ public final class ClientAdminData {
     /** "name TAB style TAB seconds TAB title TAB message" per template. */
     public static List<String> templates() {
         return templates;
+    }
+
+    /** "id TAB title" per guide page. */
+    public static List<String> pages() {
+        return pages;
+    }
+
+    /** The guide page last asked for: id, title, body. */
+    public static List<String> page() {
+        return page;
     }
 
     public static List<String> history() {
