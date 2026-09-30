@@ -1,11 +1,14 @@
 package com.omneria.fordix;
 
 import com.omneria.fordix.client.gui.Theme;
+import com.omneria.fordix.client.tooltip.TooltipStyles;
 import com.omneria.fordix.client.notification.NotificationCorner;
 import com.omneria.fordix.client.guide.GuideEntry;
 import net.minecraftforge.common.ForgeConfigSpec;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Client-side options, saved per player in config/fordix-client.toml. Nothing here
@@ -18,6 +21,10 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
+    public static final ForgeConfigSpec.ConfigValue<String> TOOLTIP_STYLE;
+    /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
+    public static final List<String> HUD_ELEMENTS = List.of("health", "hunger", "armor", "air", "experience", "boss");
+    private static final Map<String, ForgeConfigSpec.IntValue[]> HUD_OFFSETS = new LinkedHashMap<>();
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -34,6 +41,21 @@ public final class FordixConfig {
         VOIDFRAME_TOOLTIPS = builder
                 .comment("Draw item tooltips with a header, attribute bars and rarity colors.")
                 .define("voidframeTooltips", true);
+        TOOLTIP_STYLE = builder
+                .comment("Item tooltip layout: " + String.join(", ", TooltipStyles.NAMES) + ".",
+                        "full: header, attribute bars and enchantment chips; compact: bars only, no header line or chips;",
+                        "classic: vanilla layout in Fordix colors. Ignored (classic) when voidframeTooltips is false.")
+                .defineInList("tooltipStyle", TooltipStyles.FULL, TooltipStyles.NAMES);
+        builder.comment("Offsets in pixels (scaled GUI) of the Voidframe HUD elements from their default spot; edited from the in-game layout screen.")
+                .push("hud");
+        for (String element : HUD_ELEMENTS) {
+            builder.push(element);
+            ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -400, 400);
+            ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -400, 400);
+            builder.pop();
+            HUD_OFFSETS.put(element, new ForgeConfigSpec.IntValue[]{x, y});
+        }
+        builder.pop();
         THEME = builder
                 .comment("Color theme for Fordix screens: " + String.join(", ", Theme.NAMES) + ".")
                 .defineInList("theme", Theme.DEFAULT, Theme.NAMES);
@@ -58,5 +80,27 @@ public final class FordixConfig {
     }
 
     private FordixConfig() {
+    }
+
+    public static ForgeConfigSpec.IntValue hudOffsetX(String element) {
+        return HUD_OFFSETS.get(element)[0];
+    }
+
+    public static ForgeConfigSpec.IntValue hudOffsetY(String element) {
+        return HUD_OFFSETS.get(element)[1];
+    }
+
+    /** {x, y} offset of a HUD element; zero before the config has loaded. */
+    public static int[] hudOffset(String element) {
+        try {
+            return new int[]{hudOffsetX(element).get(), hudOffsetY(element).get()};
+        } catch (IllegalStateException notLoadedYet) {
+            return new int[]{0, 0};
+        }
+    }
+
+    /** The tooltip layout in force: "classic" when the tooltip option is off. */
+    public static String tooltipStyle() {
+        return VOIDFRAME_TOOLTIPS.get() ? TOOLTIP_STYLE.get() : TooltipStyles.CLASSIC;
     }
 }

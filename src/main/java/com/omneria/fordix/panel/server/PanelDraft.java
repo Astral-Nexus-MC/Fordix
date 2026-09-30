@@ -34,6 +34,12 @@ public final class PanelDraft {
         this.description = description;
     }
 
+    /** Replaces every button at once, as the admin screen's editor saves them. */
+    public void replaceButtons(List<PanelSpec.PanelButton> newButtons) {
+        buttons.clear();
+        buttons.addAll(newButtons);
+    }
+
     public void addButton(String label, String command) {
         buttons.add(new PanelSpec.PanelButton(label, command));
     }

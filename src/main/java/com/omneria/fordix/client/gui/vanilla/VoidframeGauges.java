@@ -2,6 +2,7 @@ package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
+import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,6 +11,8 @@ import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
@@ -34,6 +37,10 @@ public final class VoidframeGauges {
     private static final int ARMOR_BOTTOM = 0xFF6F8290;
     private static final int AIR_TOP = 0xFF9BE0FF;
     private static final int AIR_BOTTOM = 0xFF3A8FBF;
+    private static final int MOUNT_WIDTH = 81;
+    private static final int ATTACK_BOTTOM = 0xFF9FB3C0;
+    private static AttackIndicatorStatus savedAttackIndicator = AttackIndicatorStatus.CROSSHAIR;
+    private static boolean attackIndicatorSuppressed;
     private static final Field BOSS_EVENTS = Reflect.uniqueField(BossHealthOverlay.class, Map.class);
 
     private VoidframeGauges() {
@@ -55,7 +62,8 @@ public final class VoidframeGauges {
             if (gui.shouldDrawSurvivalElements() && minecraft.player != null && minecraft.player.jumpableVehicle() == null
                     && minecraft.gameMode != null && minecraft.gameMode.hasExperience()) {
                 event.setCanceled(true);
-                drawExperience(guiGraphics, minecraft.font, player, width, height);
+                int[] offset = FordixConfig.hudOffset("experience");
+                drawExperience(guiGraphics, minecraft.font, player, width + 2 * offset[0], height + offset[1]);
             }
         } else if (overlay == VanillaGuiOverlay.ARMOR_LEVEL.type()) {
             if (gui.shouldDrawSurvivalElements()) {
@@ -63,7 +71,8 @@ public final class VoidframeGauges {
                 int top = height - gui.leftHeight;
                 gui.leftHeight += 10;
                 if (player.getArmorValue() > 0) {
-                    drawArmor(guiGraphics, minecraft.font, player, width / 2 - 91, top + 1);
+                    int[] offset = FordixConfig.hudOffset("armor");
+                    drawArmor(guiGraphics, minecraft.font, player, width / 2 - 91 + offset[0], top + 1 + offset[1]);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.AIR_LEVEL.type()) {
@@ -73,14 +82,95 @@ public final class VoidframeGauges {
                 event.setCanceled(true);
                 int top = height - gui.rightHeight;
                 gui.rightHeight += 10;
-                drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH, top + 1);
+                int[] offset = FordixConfig.hudOffset("air");
+                drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH + offset[0], top + 1 + offset[1]);
             }
+        } else if (overlay == VanillaGuiOverlay.JUMP_BAR.type()) {
+            if (minecraft.player != null && minecraft.player.jumpableVehicle() != null) {
+                event.setCanceled(true);
+                int[] offset = FordixConfig.hudOffset("experience");
+                drawJump(guiGraphics, minecraft.player.getJumpRidingScale(), width + 2 * offset[0], height + offset[1]);
+            }
+        } else if (overlay == VanillaGuiOverlay.MOUNT_HEALTH.type()) {
+            if (gui.shouldDrawSurvivalElements() && player.getVehicle() instanceof LivingEntity mount) {
+                event.setCanceled(true);
+                int top = height - gui.rightHeight;
+                gui.rightHeight += 10;
+                int[] offset = FordixConfig.hudOffset("hunger");
+                drawMountHealth(guiGraphics, minecraft.font, mount, width / 2 + 91 - MOUNT_WIDTH + offset[0], top + offset[1]);
+            }
+        } else if (overlay == VanillaGuiOverlay.CROSSHAIR.type()) {
+            suppressVanillaAttackIndicator(minecraft);
         } else if (overlay == VanillaGuiOverlay.BOSS_EVENT_PROGRESS.type()) {
             if (Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events) {
                 event.setCanceled(true);
+                int[] offset = FordixConfig.hudOffset("boss");
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(offset[0], offset[1], 0.0F);
                 drawBosses(guiGraphics, minecraft.font, events, width, height);
+                guiGraphics.pose().popPose();
             }
         }
+    }
+
+    /** After the crosshair: give the vanilla attack indicator setting back and draw ours under the crosshair. */
+    public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
+        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type() || !FordixConfig.VOIDFRAME_HUD.get()) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        boolean wanted = restoreAttackIndicator(minecraft);
+        if (!wanted || minecraft.player == null || !minecraft.options.getCameraType().isFirstPerson()
+                || minecraft.gameMode == null || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR) {
+            return;
+        }
+        float strength = minecraft.player.getAttackStrengthScale(0.0F);
+        if (strength < 1.0F) {
+            int x = event.getWindow().getGuiScaledWidth() / 2 - 10;
+            int y = event.getWindow().getGuiScaledHeight() / 2 + 10;
+            Chevron.draw(event.getGuiGraphics(), x, y, 20, 3, true, 1, strength, 0xFFFFFFFF, ATTACK_BOTTOM, false);
+        }
+    }
+
+    /** Vanilla draws the indicator inside the crosshair overlay: switch it off for that overlay only. */
+    private static void suppressVanillaAttackIndicator(Minecraft minecraft) {
+        if (!FordixConfig.VOIDFRAME_HUD.get() || attackIndicatorSuppressed) {
+            return;
+        }
+        AttackIndicatorStatus status = minecraft.options.attackIndicator().get();
+        if (status != AttackIndicatorStatus.OFF) {
+            savedAttackIndicator = status;
+            attackIndicatorSuppressed = true;
+            minecraft.options.attackIndicator().set(AttackIndicatorStatus.OFF);
+        }
+    }
+
+    /**
+     * Puts the player's attack indicator setting back; also called when the frame ends, in case
+     * another mod cancelled the crosshair overlay before it could. Returns whether it was on.
+     */
+    public static boolean restoreAttackIndicator(Minecraft minecraft) {
+        if (!attackIndicatorSuppressed) {
+            return false;
+        }
+        attackIndicatorSuppressed = false;
+        minecraft.options.attackIndicator().set(savedAttackIndicator);
+        return true;
+    }
+
+    /** The horse's jump charge, where the experience line normally is. */
+    private static void drawJump(GuiGraphics guiGraphics, float charge, int width, int height) {
+        Chevron.draw(guiGraphics, width / 2 - 91, height - 25, 182, 3, true, 1, charge, FordixPalette.ACCENT,
+                Chevron.mix(FordixPalette.ACCENT, 0xFF000000, 0.35F), false);
+    }
+
+    /** The mount's health, in the hunger bar's place and shape. */
+    private static void drawMountHealth(GuiGraphics guiGraphics, Font font, LivingEntity mount, int x, int y) {
+        float max = Math.max(1.0F, mount.getMaxHealth());
+        float health = Mth.clamp(mount.getHealth(), 0.0F, max);
+        Chevron.draw(guiGraphics, x, y, MOUNT_WIDTH, 9, false, 4, health / max, 0xFFFF7468, 0xFFA82F29, true);
+        String text = String.valueOf(Mth.ceil(health));
+        guiGraphics.drawString(font, text, x + MOUNT_WIDTH - 5 - font.width(text), y + 1, FordixPalette.TEXT_BRIGHT, true);
     }
 
     /** A thin line just above the hotbar, and the level in a badge between health and hunger. */

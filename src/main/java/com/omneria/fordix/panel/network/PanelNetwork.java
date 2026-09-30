@@ -1,6 +1,10 @@
 package com.omneria.fordix.panel.network;
 
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.admin.AdminHandler;
+import com.omneria.fordix.admin.ClientboundAdminPayload;
+import com.omneria.fordix.admin.ServerboundAdminPayload;
+import com.omneria.fordix.client.admin.ClientAdminData;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.notification.NotificationOverlay;
@@ -23,7 +27,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -53,6 +57,21 @@ public final class PanelNetwork {
                 ClientboundGuidesPayload::encode,
                 ClientboundGuidesPayload::decode,
                 PanelNetwork::handleGuides);
+        CHANNEL.registerMessage(id++, ServerboundAdminPayload.class,
+                ServerboundAdminPayload::encode,
+                ServerboundAdminPayload::decode,
+                AdminHandler::handle);
+        CHANNEL.registerMessage(id++, ClientboundAdminPayload.class,
+                ClientboundAdminPayload::encode,
+                ClientboundAdminPayload::decode,
+                PanelNetwork::handleAdmin);
+    }
+
+    private static void handleAdmin(ClientboundAdminPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientAdminData.receive(payload.kind(), payload.lines()))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleGuides(ClientboundGuidesPayload payload, Supplier<NetworkEvent.Context> ctx) {

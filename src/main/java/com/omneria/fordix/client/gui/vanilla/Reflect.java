@@ -43,6 +43,29 @@ public final class Reflect {
         }
     }
 
+    /** The only static field of {@code type} declared on {@code owner}, made accessible; null if not exactly one. */
+    public static Field uniqueStaticField(Class<?> owner, Class<?> type) {
+        Field found = null;
+        for (Field field : owner.getDeclaredFields()) {
+            if (!Modifier.isStatic(field.getModifiers()) || field.getType() != type) {
+                continue;
+            }
+            if (found != null) {
+                return null;
+            }
+            found = field;
+        }
+        if (found == null) {
+            return null;
+        }
+        try {
+            found.setAccessible(true);
+            return found;
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
     public static Object get(Field field, Object instance) {
         if (field == null) {
             return null;

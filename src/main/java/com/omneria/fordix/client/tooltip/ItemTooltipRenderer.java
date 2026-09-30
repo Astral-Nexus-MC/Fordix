@@ -45,6 +45,9 @@ public final class ItemTooltipRenderer {
     private static final int VALUE_WIDTH = 46;
     private static final int DELTA_WIDTH = 34;
     private static final int BAR_MIN_WIDTH = 60;
+    private static final int COMPACT_HEADER_HEIGHT = 22;
+    private static final int CHIP_ROW_HEIGHT = 13;
+    private static final int ENCHANT_SECTION = 0xFF8E77C8;
     private static final int ENCHANT_COLOR = 0xFFC9A8FF;
     private static final int UP = 0xFF5ED68A;
     private static final int DOWN = 0xFFE0524A;
@@ -64,9 +67,14 @@ public final class ItemTooltipRenderer {
 
     public static void onPre(RenderTooltipEvent.Pre event) {
         ItemStack stack = event.getItemStack();
-        if (stack.isEmpty() || !FordixConfig.VOIDFRAME_TOOLTIPS.get() || event.getComponents().isEmpty()) {
+        String style = FordixConfig.tooltipStyle();
+        if (stack.isEmpty() || style.equals(TooltipStyles.CLASSIC) || event.getComponents().isEmpty()) {
             return;
         }
+        boolean compact = style.equals(TooltipStyles.COMPACT);
+        int headerHeight = compact ? COMPACT_HEADER_HEIGHT : HEADER_HEIGHT;
+        int sectionHeight = compact ? 0 : SECTION_HEIGHT;
+        List<Chip> chips = compact ? List.of() : chipsOf(stack);
         Font font = event.getFont();
         List<ClientTooltipComponent> components = event.getComponents();
         ClientTooltipComponent title = components.get(0);
@@ -74,7 +82,10 @@ public final class ItemTooltipRenderer {
         List<Section> sections = sections(stack);
 
         String subLine = typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack);
-        int width = Math.max(title.getWidth(font) + 30, font.width(subLine) + 30);
+        int width = Math.max(title.getWidth(font) + 30, compact ? 0 : font.width(subLine) + 30);
+        for (Chip chip : chips) {
+            width = Math.max(width, chip.width(font) + 8 + font.width(chip.effect()));
+        }
         for (ClientTooltipComponent component : rest) {
             width = Math.max(width, component.getWidth(font));
         }
@@ -82,9 +93,12 @@ public final class ItemTooltipRenderer {
             width = Math.max(width, LABEL_WIDTH + VALUE_WIDTH + BAR_MIN_WIDTH + DELTA_WIDTH + 12);
         }
         boolean durability = stack.isDamageableItem();
-        int height = HEADER_HEIGHT + 2;
+        int height = headerHeight + 2;
         for (Section section : sections) {
-            height += SECTION_HEIGHT + section.rows().size() * ROW_HEIGHT + 2;
+            height += sectionHeight + section.rows().size() * ROW_HEIGHT + 2;
+        }
+        if (!chips.isEmpty()) {
+            height += SECTION_HEIGHT + chips.size() * CHIP_ROW_HEIGHT + 2;
         }
         for (ClientTooltipComponent component : rest) {
             height += component.getHeight();
@@ -108,24 +122,37 @@ public final class ItemTooltipRenderer {
         int accent = rarityColor(stack);
         guiGraphics.fill(x - 1, y - 1, x + totalWidth + 1, y + totalHeight + 1, accent);
         guiGraphics.fill(x, y, x + totalWidth, y + totalHeight, FordixPalette.TOOLTIP_FILL | 0xFF000000);
-        guiGraphics.fill(x, y, x + totalWidth, y + HEADER_HEIGHT, FordixPalette.TITLE_BAND);
-        guiGraphics.fill(x, y + HEADER_HEIGHT - 1, x + totalWidth, y + HEADER_HEIGHT, FordixPalette.TITLE_RULE);
+        guiGraphics.fill(x, y, x + totalWidth, y + headerHeight, FordixPalette.TITLE_BAND);
+        guiGraphics.fill(x, y + headerHeight - 1, x + totalWidth, y + headerHeight, FordixPalette.TITLE_RULE);
         guiGraphics.fill(x, y, x + 3, y + totalHeight, accent);
 
-        guiGraphics.renderItem(stack, x + PAD + 4, y + 7);
+        guiGraphics.renderItem(stack, x + PAD + 4, y + (compact ? 3 : 7));
         int textX = x + PAD + 26;
-        title.renderText(font, textX, y + 6, guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
-        guiGraphics.drawString(font, subLine, textX, y + 18, FordixPalette.TEXT, false);
+        title.renderText(font, textX, y + (compact ? 6 : 6), guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
+        if (!compact) {
+            guiGraphics.drawString(font, subLine, textX, y + 18, FordixPalette.TEXT, false);
+        }
 
-        int cursorY = y + HEADER_HEIGHT + 2;
+        int cursorY = y + headerHeight + 2;
         int contentX = x + PAD + 3;
         int contentWidth = width - 3;
         for (Section section : sections) {
-            guiGraphics.drawString(font, section.title(), contentX, cursorY + 2, FordixPalette.TEXT, false);
-            cursorY += SECTION_HEIGHT;
+            if (!compact) {
+                guiGraphics.drawString(font, section.title(), contentX, cursorY + 2, FordixPalette.TEXT, false);
+            }
+            cursorY += sectionHeight;
             for (Row row : section.rows()) {
                 drawRow(guiGraphics, font, row, contentX, cursorY, contentWidth);
                 cursorY += ROW_HEIGHT;
+            }
+            cursorY += 2;
+        }
+        if (!chips.isEmpty()) {
+            guiGraphics.drawString(font, "Enchantements", contentX, cursorY + 2, ENCHANT_SECTION, false);
+            cursorY += SECTION_HEIGHT;
+            for (Chip chip : chips) {
+                drawChip(guiGraphics, font, chip, contentX, cursorY);
+                cursorY += CHIP_ROW_HEIGHT;
             }
             cursorY += 2;
         }
@@ -140,6 +167,37 @@ public final class ItemTooltipRenderer {
         }
         guiGraphics.flush();
         guiGraphics.pose().popPose();
+    }
+
+    /** One enchantment: a pill named in its rarity's color, then what it does in numbers. */
+    private record Chip(String name, int color, String effect) {
+        int width(Font font) {
+            return font.width(name) + 14;
+        }
+    }
+
+    private static List<Chip> chipsOf(ItemStack stack) {
+        List<Chip> chips = new ArrayList<>();
+        for (var entry : TooltipStyle.enchantmentsOf(stack).entrySet()) {
+            var enchantment = entry.getKey();
+            String star = enchantment.isTreasureOnly() && !enchantment.isCurse() ? "★ " : "";
+            var key = ForgeRegistries.ENCHANTMENTS.getKey(enchantment);
+            String effect = key == null ? null : EnchantEffects.describe(key.toString(), entry.getValue());
+            chips.add(new Chip(star + enchantment.getFullname(entry.getValue()).getString(), TooltipStyle.colorOf(enchantment),
+                    effect == null ? "" : effect));
+        }
+        return chips;
+    }
+
+    private static void drawChip(GuiGraphics guiGraphics, Font font, Chip chip, int x, int y) {
+        int width = chip.width(font);
+        int height = CHIP_ROW_HEIGHT - 2;
+        int edge = 0xFF000000 | (Chevron.mix(chip.color(), 0xFF000000, 0.35F) & 0xFFFFFF);
+        guiGraphics.fill(x, y, x + width, y + height, edge);
+        guiGraphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, Chevron.mix(chip.color(), 0xFF0B1016, 0.82F));
+        guiGraphics.fill(x, y, x + 3, y + height, chip.color());
+        guiGraphics.drawString(font, chip.name(), x + 8, y + 1, chip.color(), false);
+        guiGraphics.drawString(font, chip.effect(), x + width + 6, y + 1, ENCHANT_COLOR, false);
     }
 
     private static void drawRow(GuiGraphics guiGraphics, Font font, Row row, int x, int y, int width) {

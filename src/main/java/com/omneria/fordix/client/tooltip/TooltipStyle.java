@@ -55,7 +55,8 @@ public final class TooltipStyle {
         }
         ItemStack stack = event.getItemStack();
         List<Component> lines = event.getToolTip();
-        if (FordixConfig.VOIDFRAME_TOOLTIPS.get()) {
+        String layout = FordixConfig.tooltipStyle();
+        if (!layout.equals(TooltipStyles.CLASSIC)) {
             removeVanillaModifierLines(stack, lines);
         }
         if (!lines.isEmpty() && !stack.isEmpty()) {
@@ -68,7 +69,11 @@ public final class TooltipStyle {
             String vanillaLine = enchantment.getFullname(level).getString();
             for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).getString().equals(vanillaLine)) {
-                    lines.set(i, styled(enchantment, level));
+                    if (layout.equals(TooltipStyles.FULL)) {
+                        lines.remove(i);
+                    } else {
+                        lines.set(i, styled(enchantment, level));
+                    }
                     break;
                 }
             }
@@ -111,7 +116,7 @@ public final class TooltipStyle {
     }
 
     /** Enchantments on the stack; books keep theirs under a different tag than tools and armor. */
-    private static Map<Enchantment, Integer> enchantmentsOf(ItemStack stack) {
+    public static Map<Enchantment, Integer> enchantmentsOf(ItemStack stack) {
         if (stack.getItem() instanceof EnchantedBookItem) {
             ListTag stored = EnchantedBookItem.getEnchantments(stack);
             return EnchantmentHelper.deserializeEnchantments(stored);

@@ -36,6 +36,10 @@ public final class TextureRecolor {
             new Target("textures/gui/recipe_book.png"),
             new Target("textures/gui/container/loom.png"),
             new Target("textures/gui/container/cartography_table.png"),
+            new Target("textures/gui/container/creative_inventory/tab_items.png"),
+            new Target("textures/gui/container/creative_inventory/tab_inventory.png"),
+            new Target("textures/gui/container/creative_inventory/tab_item_search.png"),
+            new Target("textures/gui/container/creative_inventory/tabs.png"),
             // Only the button rows of widgets.png: the hotbar and its selection frame share the file.
             new Target(new ResourceLocation("textures/gui/widgets.png"), 46, 106));
 

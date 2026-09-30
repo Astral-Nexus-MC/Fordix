@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
 import net.minecraft.client.gui.screens.inventory.CartographyTableScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.BrewingStandScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CraftingScreen;
@@ -93,6 +94,10 @@ public final class VanillaScreens {
         }
         if (type == InventoryScreen.class) {
             return new VoidframeScreens.PlayerInventory(player);
+        }
+        if (type == CreativeModeInventoryScreen.class && player.connection != null) {
+            return new VoidframeStations.Creative(player, player.connection.enabledFeatures(),
+                    Minecraft.getInstance().options.operatorItemsTab().get());
         }
         if (type == LoomScreen.class) {
             LoomScreen vanilla = (LoomScreen) screen;

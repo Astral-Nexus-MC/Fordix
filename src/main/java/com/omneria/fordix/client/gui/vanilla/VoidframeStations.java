@@ -14,9 +14,12 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.inventory.SmithingScreen;
 import net.minecraft.client.gui.screens.inventory.CartographyTableScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.LoomScreen;
 import net.minecraft.client.gui.screens.inventory.StonecutterScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -452,6 +455,31 @@ public final class VoidframeStations {
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
             VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+        }
+    }
+
+    /**
+     * The creative inventory keeps vanilla's tabs and grid; its textures are recolored by
+     * {@link TextureRecolor}. Vanilla draws the tab title dark grey, so it's redrawn in the theme's
+     * text color - the selected tab lives in a private static, read by type (vanilla's title stays if it's missing).
+     */
+    public static class Creative extends CreativeModeInventoryScreen implements VoidframeScreen {
+        private static final Field SELECTED_TAB = Reflect.uniqueStaticField(CreativeModeInventoryScreen.class, CreativeModeTab.class);
+
+        public Creative(Player player, FeatureFlagSet features, boolean operatorTab) {
+            super(player, features, operatorTab);
+            slotColor = FordixPalette.SLOT_HOVER;
+        }
+
+        @Override
+        protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+            if (SELECTED_TAB != null && Reflect.get(SELECTED_TAB, null) instanceof CreativeModeTab tab) {
+                if (tab.showTitle()) {
+                    VoidframeDraw.label(guiGraphics, font, tab.getDisplayName(), 8, 6);
+                }
+                return;
+            }
+            super.renderLabels(guiGraphics, mouseX, mouseY);
         }
     }
 }

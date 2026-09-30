@@ -107,6 +107,8 @@ public final class AutoNotifications {
         NotificationTemplate filled = template.filled(placeholders(player));
         FordixNotifications.send(player, filled.style(), Component.literal(filled.title()),
                 Component.literal(filled.message()), seconds);
+        NotificationSender.record("auto", filled.style(), filled.title(), filled.message(),
+                "joueur " + player.getGameProfile().getName(), List.of(player));
     }
 
     private static Map<String, String> placeholders(ServerPlayer player) {

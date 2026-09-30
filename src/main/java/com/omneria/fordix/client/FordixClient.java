@@ -13,6 +13,7 @@ import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
 import com.omneria.fordix.client.gui.vanilla.VoidframeDurability;
+import com.omneria.fordix.client.gui.vanilla.VoidframeGauges;
 import com.omneria.fordix.client.gui.vanilla.VoidframeHud;
 import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
@@ -188,9 +189,16 @@ public final class FordixClient {
             NotificationOverlay.onRenderGui(event);
         }
 
+        /** End of the frame: make sure the attack indicator setting was given back. */
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        static void onFrameEnd(RenderGuiEvent.Post event) {
+            VoidframeGauges.restoreAttackIndicator(Minecraft.getInstance());
+        }
+
         @SubscribeEvent
         static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
             RarityFrames.onOverlayPost(event);
+            VoidframeGauges.onOverlayPost(event);
         }
 
         @SubscribeEvent

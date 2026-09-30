@@ -7,15 +7,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.omneria.fordix.panel.PanelSpec;
-import com.omneria.fordix.panel.network.ClientboundOpenPanelPayload;
-import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Collection;
 import java.util.List;
@@ -101,12 +98,7 @@ public final class PanelCommand {
         }
         PanelSpec spec = draft.toSpec();
 
-        List<String> labels = spec.buttons().stream().map(PanelSpec.PanelButton::label).toList();
-        ClientboundOpenPanelPayload payload = new ClientboundOpenPanelPayload(spec.id(), spec.title(), spec.description(), labels);
-        for (ServerPlayer player : targets) {
-            PanelRegistry.markSent(player.getUUID(), spec);
-            PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
-        }
+        PanelSender.send(spec, targets);
 
         int count = targets.size();
         ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' envoye a " + count + " joueur(s)."), false);
