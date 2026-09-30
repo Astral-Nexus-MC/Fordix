@@ -58,6 +58,8 @@ public final class DevTest {
     private boolean started;
     private Path outDir;
 
+    private int idleTicks;
+
     public static boolean enabled() {
         return System.getenv("FORDIX_DEVTEST") != null;
     }
@@ -68,6 +70,9 @@ public final class DevTest {
             return;
         }
         Minecraft mc = Minecraft.getInstance();
+        if (++idleTicks % 200 == 0 && !started) {
+            Fordix.LOGGER.info("[devtest] waiting, screen={} level={}", mc.screen, mc.level != null);
+        }
         if (mc.level == null) {
             if (!worldRequested && mc.screen instanceof TitleScreen) {
                 worldRequested = true;
