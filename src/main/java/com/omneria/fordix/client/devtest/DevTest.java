@@ -209,10 +209,12 @@ public final class DevTest {
             guides.selectRow(2);
         }, 30, false));
         steps.add(new Step("11h-guides-mod", () -> ((GuidesScreen) mc.screen).selectRow(0), 25, false));
-        steps.add(new Step("11i-pause-guides", () -> {
+        steps.add(new Step("11i0-new-page", () -> {
             mc.setScreen(null);
-            mc.pauseGame(false);
-        }, 30, false));
+            com.omneria.fordix.panel.network.PanelNetwork.CHANNEL.sendToServer(new com.omneria.fordix.admin.ServerboundAdminPayload("page_save",
+                    java.util.List.of("evenement", "Evenement du week-end", "# Evenement\nDouble xp ce week-end.")));
+        }, 40, false));
+        steps.add(new Step("11i-pause-guides", () -> mc.pauseGame(false), 30, false));
         steps.add(new Step("11j-welcome-book-give", () -> {
             mc.setScreen(null);
             cmd(mc, "clear @s");

@@ -27,7 +27,6 @@ import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import com.omneria.fordix.client.gui.GuidesScreen;
-import com.omneria.fordix.client.gui.widget.FordixButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
@@ -261,8 +260,19 @@ public final class FordixClient {
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {
             if (event.getScreen() instanceof net.minecraft.client.gui.screens.PauseScreen screen) {
-                String label = ServerPages.hasUnread() ? "Guides *" : "Guides";
-                event.addListener(new FordixButton(6, 6, 80, 20, Component.literal(label),
+                int bottom = 0;
+                int left = screen.width / 2 - 102;
+                int width = 204;
+                for (net.minecraft.client.gui.components.events.GuiEventListener child : event.getListenersList()) {
+                    if (child instanceof net.minecraft.client.gui.components.AbstractWidget widget) {
+                        bottom = Math.max(bottom, widget.getY() + widget.getHeight());
+                    }
+                }
+                if (bottom == 0) {
+                    return;
+                }
+                boolean unread = ServerPages.hasUnread();
+                event.addListener(new GuidesPauseButton(left, bottom + 4, width, unread,
                         () -> Minecraft.getInstance().setScreen(new GuidesScreen(screen))));
             }
         }
@@ -286,6 +296,29 @@ public final class FordixClient {
         @SubscribeEvent
         static void onTooltipColor(RenderTooltipEvent.Color event) {
             VoidframeChrome.onTooltipColor(event);
+        }
+    }
+
+    /** Vanilla-styled pause-menu button carrying a small "New" flag. */
+    private static final class GuidesPauseButton extends net.minecraft.client.gui.components.Button {
+        private final boolean unread;
+
+        GuidesPauseButton(int x, int y, int width, boolean unread, Runnable onPress) {
+            super(x, y, width, 20, Component.literal("Guides"), b -> onPress.run(), DEFAULT_NARRATION);
+            this.unread = unread;
+        }
+
+        @Override
+        public void renderWidget(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float pt) {
+            super.renderWidget(g, mx, my, pt);
+            if (unread) {
+                var font = Minecraft.getInstance().font;
+                int w = font.width("New") + 6;
+                int x = getX() + getWidth() - w - 4;
+                int y = getY() + 5;
+                g.fill(x, y, x + w, y + 10, com.omneria.fordix.client.gui.FordixPalette.ACCENT | 0xFF000000);
+                g.drawString(font, "New", x + 3, y + 1, 0xFF101018, false);
+            }
         }
     }
 }
