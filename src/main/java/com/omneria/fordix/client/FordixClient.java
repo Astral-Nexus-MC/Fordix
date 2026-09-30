@@ -146,6 +146,7 @@ public final class FordixClient {
                 return;
             }
             Minecraft minecraft = Minecraft.getInstance();
+            TextureRecolor.onClientTick(minecraft);
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixDemoScreen());

@@ -22,8 +22,10 @@ import java.util.List;
  * player is an op and does the work - see {@code AdminHandler}.
  */
 public class FordixAdminScreen extends FordixScreen {
-    private static final int PANEL_WIDTH = 420;
-    private static final int PANEL_HEIGHT = 250;
+    private static final int MAX_PANEL_WIDTH = 420;
+    private static final int MAX_PANEL_HEIGHT = 250;
+    private int panelWidth = MAX_PANEL_WIDTH;
+    private int panelHeight = MAX_PANEL_HEIGHT;
     private static final int PADDING = 10;
     private static final List<String> STYLES = List.of("info", "success", "warning", "error");
     private static final int[] SECONDS = {3, 5, 8, 15, 30};
@@ -67,15 +69,17 @@ public class FordixAdminScreen extends FordixScreen {
 
     @Override
     protected void init() {
-        int left = centerX(PANEL_WIDTH);
-        int top = centerY(PANEL_HEIGHT);
-        this.panel = new Panel(left, top, PANEL_WIDTH, PANEL_HEIGHT);
+        panelWidth = Math.min(MAX_PANEL_WIDTH, this.width - 10);
+        panelHeight = Math.min(MAX_PANEL_HEIGHT, this.height - 10);
+        int left = centerX(panelWidth);
+        int top = centerY(panelHeight);
+        this.panel = new Panel(left, top, panelWidth, panelHeight);
         int x = left + PADDING;
-        int inner = PANEL_WIDTH - PADDING * 2;
+        int inner = panelWidth - PADDING * 2;
 
         addRenderableWidget(new FordixButton(x, top + 22, 100, 18, Component.literal("Notifications"), () -> switchTab(0)));
         addRenderableWidget(new FordixButton(x + 104, top + 22, 100, 18, Component.literal("Panels"), () -> switchTab(1)));
-        addRenderableWidget(new FordixButton(left + PANEL_WIDTH - PADDING - 70, top + 22, 70, 18, Component.literal("Fermer"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Component.literal("Fermer"), this::onClose));
         if (ClientAdminData.denied()) {
             return;
         }
@@ -217,10 +221,10 @@ public class FordixAdminScreen extends FordixScreen {
         int x = panel.getX() + PADDING;
         Font font = this.font;
         guiGraphics.drawString(font, this.title, x, panel.getY() + 8, FordixPalette.ACCENT, false);
-        int bottom = panel.getY() + PANEL_HEIGHT - 14;
+        int bottom = panel.getY() + panelHeight - 14;
         String status = ClientAdminData.status();
         if (!status.isEmpty()) {
-            guiGraphics.drawString(font, font.plainSubstrByWidth(status, PANEL_WIDTH - PADDING * 2), x, bottom,
+            guiGraphics.drawString(font, font.plainSubstrByWidth(status, panelWidth - PADDING * 2), x, bottom,
                     ClientAdminData.denied() ? FordixPalette.ERROR : FordixPalette.TEXT_BRIGHT, false);
         }
         if (tab == 0 && !ClientAdminData.denied()) {
@@ -228,7 +232,7 @@ public class FordixAdminScreen extends FordixScreen {
             guiGraphics.drawString(font, "Historique", x, y, FordixPalette.TEXT, false);
             y += 12;
             for (String line : ClientAdminData.history()) {
-                guiGraphics.drawString(font, font.plainSubstrByWidth(line, PANEL_WIDTH - PADDING * 2), x, y, FordixPalette.TEXT, false);
+                guiGraphics.drawString(font, font.plainSubstrByWidth(line, panelWidth - PADDING * 2), x, y, FordixPalette.TEXT, false);
                 y += 10;
                 if (y > bottom - 12) {
                     break;

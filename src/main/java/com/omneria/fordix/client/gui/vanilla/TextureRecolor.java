@@ -62,6 +62,24 @@ public final class TextureRecolor {
         }
     }
 
+    /**
+     * Vanilla preloads widgets.png and registers its own texture once the reload is over, which
+     * can be after our listener ran and wipes the recolor: put it back as soon as that happens.
+     */
+    public static void onClientTick(Minecraft minecraft) {
+        if (!ready || minecraft.getTextureManager() == null) {
+            return;
+        }
+        try {
+            if (FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()
+                    && !(minecraft.getTextureManager().getTexture(TARGETS.get(TARGETS.size() - 1).location()) instanceof DynamicTexture)) {
+                apply(minecraft);
+            }
+        } catch (IllegalStateException notLoadedYet) {
+            // Config not loaded yet: nothing to do.
+        }
+    }
+
     private static void apply(Minecraft minecraft) {
         if (!ready) {
             return;

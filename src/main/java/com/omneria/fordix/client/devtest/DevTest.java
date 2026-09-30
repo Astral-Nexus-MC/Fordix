@@ -59,6 +59,7 @@ public final class DevTest {
     private Path outDir;
 
     private int idleTicks;
+    private String pendingShot;
 
     public static boolean enabled() {
         return System.getenv("FORDIX_DEVTEST") != null;
@@ -192,11 +193,23 @@ public final class DevTest {
             hover(mc, screen, 0);
         }
         if (++frame == step.frames()) {
-            if (!step.name().startsWith("00") && !step.name().startsWith("13") && !step.name().startsWith("99")) {
-                shot(mc, step.name());
-            }
-            next(mc);
+            pendingShot = step.name();
         }
+    }
+
+    /** End of the frame: everything, notifications included, has been drawn by now. */
+    @SubscribeEvent
+    public void onRenderTickEnd(TickEvent.RenderTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || pendingShot == null) {
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        String name = pendingShot;
+        pendingShot = null;
+        if (!name.startsWith("00") && !name.startsWith("13") && !name.startsWith("99")) {
+            shot(mc, name);
+        }
+        next(mc);
     }
 
     /** Puts the mouse over the first hotbar slot's item (sword) - the slots are laid out at fixed offsets. */
