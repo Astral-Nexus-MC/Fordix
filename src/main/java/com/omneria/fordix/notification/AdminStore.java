@@ -20,6 +20,7 @@ public final class AdminStore {
     public static final int MAX_SCHEDULES = 50;
     public static final int MAX_TEMPLATES = 50;
     public static final int MAX_PAGES = 30;
+    public static final int MAX_BOOK_STEPS = 20;
 
     /** A notification to send at {@code nextAt} (epoch ms); repeats every {@code everyMs} when it is above 0. */
     public static final class Scheduled {
@@ -55,6 +56,10 @@ public final class AdminStore {
     public int nextId = 1;
     /** Guide pages shown to every player, by id. */
     public Map<String, GuidePage> pages = new LinkedHashMap<>();
+    /** Welcome book steps set from the admin screen (config-format lines); null keeps the server config's steps. */
+    public List<String> welcomeSteps;
+    /** Welcome book reward command set from the admin screen; null keeps the server config's. */
+    public String welcomeReward;
 
     /** Adds a schedule; returns it, or null when the list is full. */
     public Scheduled schedule(String style, int seconds, String title, String message, String kind, String value,
@@ -132,6 +137,22 @@ public final class AdminStore {
 
     public boolean deletePage(String id) {
         return pages.remove(id) != null;
+    }
+
+    /** Replaces the welcome book's steps and reward; false when there are too many steps. */
+    public boolean setWelcomeBook(List<String> steps, String reward) {
+        if (steps.size() > MAX_BOOK_STEPS) {
+            return false;
+        }
+        welcomeSteps = new ArrayList<>(steps);
+        welcomeReward = reward;
+        return true;
+    }
+
+    /** Goes back to the server config's steps and reward. */
+    public void resetWelcomeBook() {
+        welcomeSteps = null;
+        welcomeReward = null;
     }
 
     public String toJson() {

@@ -92,6 +92,14 @@ public final class AdminHandler {
                     status(player, removed ? "Page '" + id + "' supprimee." : "Page introuvable.");
                     pageList(player);
                 }
+                case "book" -> book(player);
+                case "book_save" -> bookSave(player, args);
+                case "book_reset" -> {
+                    NotificationScheduler.store().resetWelcomeBook();
+                    NotificationScheduler.save();
+                    status(player, "Livre : retour aux etapes du fichier de config.");
+                    book(player);
+                }
                 case "templates" -> templates(player);
                 case "template_save" -> templateSave(player, args);
                 case "template_delete" -> {
@@ -229,6 +237,37 @@ public final class AdminHandler {
         NotificationScheduler.store().templates.forEach((name, template) -> lines.add(String.join("\t", name, template.style,
                 Integer.toString(template.seconds), template.title, template.message)));
         reply(player, "templates", lines);
+    }
+
+    /** Reply: the reward command, then one config-format line per step. */
+    private static void book(ServerPlayer player) {
+        List<String> lines = new ArrayList<>();
+        lines.add(com.omneria.fordix.welcome.WelcomeService.rewardCommand());
+        lines.addAll(com.omneria.fordix.welcome.WelcomeService.stepLines());
+        reply(player, "book", lines);
+    }
+
+    /** Args: the reward command, then one config-format line per step. */
+    private static void bookSave(ServerPlayer player, List<String> args) {
+        List<String> steps = new ArrayList<>();
+        for (int i = 1; i < args.size(); i++) {
+            String line = args.get(i).strip();
+            if (line.isEmpty()) {
+                continue;
+            }
+            if (com.omneria.fordix.welcome.WelcomeStep.parse(line) == null) {
+                status(player, "Etape invalide : " + clip(line));
+                return;
+            }
+            steps.add(line);
+        }
+        if (!NotificationScheduler.store().setWelcomeBook(steps, arg(args, 0).strip())) {
+            status(player, "Trop d'etapes (" + com.omneria.fordix.notification.AdminStore.MAX_BOOK_STEPS + " max).");
+            return;
+        }
+        NotificationScheduler.save();
+        status(player, "Livre de bienvenue enregistre (" + steps.size() + " etape(s)).");
+        book(player);
     }
 
     private static void pageList(ServerPlayer player) {

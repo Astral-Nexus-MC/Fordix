@@ -202,6 +202,10 @@ public final class DevTest {
             admin.switchTab(4);
         }, 50, false));
         steps.add(new Step("11f-admin-page-edit", () -> ((FordixAdminScreen) mc.screen).pickPage("regles"), 40, false));
+        steps.add(new Step("11f2-admin-book", () -> {
+            FordixAdminScreen admin = (FordixAdminScreen) mc.screen;
+            admin.pickStep(1);
+        }, 40, false));
         steps.add(new Step("11g-guides-screen", () -> {
             GuidesScreen guides = new GuidesScreen(null);
             mc.setScreen(guides);
@@ -275,6 +279,12 @@ public final class DevTest {
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("21-singleplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(null)), 40, false));
+        steps.add(new Step("22-stats", () -> mc.setScreen(new net.minecraft.client.gui.screens.achievement.StatsScreen(null, mc.player.getStats())), 30, false));
+        steps.add(new Step("23-multiplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen(null)), 30, false));
+        steps.add(new Step("24-sounds", () -> mc.setScreen(new net.minecraft.client.gui.screens.SoundOptionsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("25-death", () -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(net.minecraft.network.chat.Component.literal("Tu es tombe de haut"), false)), 30, false));
+        steps.add(new Step("26-title", () -> mc.setScreen(new net.minecraft.client.gui.screens.TitleScreen()), 40, false));
+        steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
             mc.stop();

@@ -2,6 +2,7 @@ package com.omneria.fordix.welcome;
 
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.FordixServerConfig;
+import com.omneria.fordix.notification.server.NotificationScheduler;
 import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.nbt.CompoundTag;
@@ -39,9 +40,20 @@ public final class WelcomeService {
     private WelcomeService() {
     }
 
+    /** The steps as config lines: the ones saved from the admin screen when there are some, else the server config's. */
+    public static List<String> stepLines() {
+        List<String> override = NotificationScheduler.store().welcomeSteps;
+        return override != null ? override : new ArrayList<>(FordixServerConfig.WELCOME_BOOK_STEPS.get());
+    }
+
+    public static String rewardCommand() {
+        String override = NotificationScheduler.store().welcomeReward;
+        return (override != null ? override : FordixServerConfig.WELCOME_BOOK_REWARD.get()).strip();
+    }
+
     public static List<WelcomeStep> steps() {
         List<WelcomeStep> steps = new ArrayList<>();
-        for (String line : FordixServerConfig.WELCOME_BOOK_STEPS.get()) {
+        for (String line : stepLines()) {
             WelcomeStep step = WelcomeStep.parse(line);
             if (step != null) {
                 steps.add(step);
@@ -107,7 +119,7 @@ public final class WelcomeService {
     }
 
     private static void maybeReward(ServerPlayer player) {
-        String reward = FordixServerConfig.WELCOME_BOOK_REWARD.get().strip();
+        String reward = rewardCommand();
         if (reward.isEmpty() || data(player).getBoolean(REWARDED) || !allDone(player, steps())) {
             return;
         }
@@ -127,7 +139,7 @@ public final class WelcomeService {
             steps.add(new ClientboundWelcomePayload.Step(keys.contains(step.key()), step.kind() == WelcomeStep.Kind.MANUAL,
                     step.label(), step.action()));
         }
-        boolean rewardPending = !FordixServerConfig.WELCOME_BOOK_REWARD.get().isBlank() && !data(player).getBoolean(REWARDED);
+        boolean rewardPending = !rewardCommand().isBlank() && !data(player).getBoolean(REWARDED);
         PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundWelcomePayload(open, rewardPending, steps));
     }
 

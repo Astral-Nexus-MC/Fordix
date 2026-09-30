@@ -86,4 +86,18 @@ class AdminStoreTest {
         assertEquals("#2 toutes les 2 h : Vote (equipe rouge)", every.describe(0));
         assertEquals(List.of(once, every), store.schedules);
     }
+
+    @Test
+    void welcomeBookOverrideSurvivesJsonAndResets() {
+        AdminStore store = new AdminStore();
+        assertNull(store.welcomeSteps);
+        assertTrue(store.setWelcomeBook(List.of("Lire | manual"), "give %player% minecraft:diamond"));
+        AdminStore loaded = AdminStore.fromJson(store.toJson());
+        assertEquals(List.of("Lire | manual"), loaded.welcomeSteps);
+        assertEquals("give %player% minecraft:diamond", loaded.welcomeReward);
+        loaded.resetWelcomeBook();
+        assertNull(loaded.welcomeSteps);
+        assertNull(loaded.welcomeReward);
+        assertFalse(store.setWelcomeBook(java.util.Collections.nCopies(AdminStore.MAX_BOOK_STEPS + 1, "a | manual"), ""));
+    }
 }

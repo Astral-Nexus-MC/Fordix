@@ -29,7 +29,7 @@ public class FordixAdminScreen extends FordixScreen {
     private static final List<String> STYLES = List.of("info", "success", "warning", "error");
     private static final int[] SECONDS = {3, 5, 8, 15, 30};
     private static final List<String> KINDS = List.of("tous", "joueur", "equipe", "tag", "permission");
-    private static final List<String> TAB_NAMES = List.of("Envoi", "Plan", "Modeles", "Panels", "Pages");
+    private static final List<String> TAB_NAMES = List.of("Envoi", "Plan", "Modeles", "Panels", "Pages", "Livre");
     private static final int MAX_LIST_ROWS = 7;
     private static final int SCHEDULE_ROWS = 5;
     private static final int BUTTON_ROWS = 4;
@@ -39,6 +39,8 @@ public class FordixAdminScreen extends FordixScreen {
     private static final int TAB_TEMPLATES = 2;
     private static final int TAB_PANELS = 3;
     private static final int TAB_PAGES = 4;
+    private static final int TAB_BOOK = 5;
+    private static final List<String> STEP_KINDS = List.of("advancement", "command", "guides", "manual");
 
     private int panelWidth = MAX_PANEL_WIDTH;
     private int panelHeight = MAX_PANEL_HEIGHT;
@@ -85,6 +87,13 @@ public class FordixAdminScreen extends FordixScreen {
     private String pageBody = "";
     private boolean awaitingPage;
 
+    // Welcome book: each step is {label, kind, argument, action}.
+    private final List<String[]> bookSteps = new ArrayList<>();
+    private int bookOffset;
+    private int selectedStep = -1;
+    private String bookReward = "";
+    private List<String> lastBook = List.of();
+
     public FordixAdminScreen(Screen parent) {
         super(Component.literal("FORDIX // ADMINISTRATION"));
         this.parent = parent;
@@ -94,6 +103,7 @@ public class FordixAdminScreen extends FordixScreen {
         send("schedules");
         send("templates");
         send("pages");
+        send("book");
     }
 
     private static void send(String action, String... args) {
@@ -130,6 +140,7 @@ public class FordixAdminScreen extends FordixScreen {
             case TAB_SCHEDULE -> initSchedule(x, y, inner);
             case TAB_TEMPLATES -> initTemplates(x, y, inner);
             case TAB_PAGES -> initPages(x, y, inner);
+            case TAB_BOOK -> initBook(x, y, inner);
             default -> initPanels(x, y, inner);
         }
     }
@@ -327,6 +338,106 @@ public class FordixAdminScreen extends FordixScreen {
         rebuildWidgets();
     }
 
+    // ---- Welcome book ---------------------------------------------------------------------------
+
+    private static String[] parseStep(String line) {
+        String[] parts = line.split("\\|", 3);
+        String label = parts[0].strip();
+        String condition = parts.length > 1 ? parts[1].strip() : "manual";
+        String action = parts.length > 2 ? parts[2].strip() : "";
+        int colon = condition.indexOf(':');
+        String kind = colon < 0 ? condition : condition.substring(0, colon);
+        String argument = colon < 0 ? "" : condition.substring(colon + 1).strip();
+        return new String[]{label, STEP_KINDS.contains(kind) ? kind : "manual", argument, action};
+    }
+
+    private static String stepLine(String[] step) {
+        boolean needsArgument = step[1].equals("advancement") || step[1].equals("command");
+        String line = step[0] + " | " + (needsArgument ? step[1] + ":" + step[2] : step[1]);
+        return step[3].isBlank() ? line : line + " | " + step[3];
+    }
+
+    private void initBook(int x, int y, int inner) {
+        addRenderableWidget(new FordixButton(x, y, 120, 18, Component.literal("+ Etape"), () -> {
+            bookSteps.add(new String[]{"Nouvelle etape", "manual", "", ""});
+            selectedStep = bookSteps.size() - 1;
+            bookOffset = Math.max(0, bookSteps.size() - listRows());
+            rebuildWidgets();
+        }));
+        int listY = y + 24;
+        for (int i = 0; i < listRows() - 1; i++) {
+            int index = bookOffset + i;
+            if (index >= bookSteps.size()) {
+                break;
+            }
+            addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18,
+                    Component.literal((index == selectedStep ? "> " : "") + this.font.plainSubstrByWidth(bookSteps.get(index)[0], 100)),
+                    () -> {
+                        selectedStep = index;
+                        rebuildWidgets();
+                    }));
+        }
+        int pagerY = listY + (listRows() - 1) * 20;
+        addRenderableWidget(new FordixButton(x, pagerY, 58, 16, Component.literal("▲"), () -> {
+            bookOffset = Math.max(0, bookOffset - (listRows() - 1));
+            rebuildWidgets();
+        }));
+        addRenderableWidget(new FordixButton(x + 62, pagerY, 58, 16, Component.literal("▼"), () -> {
+            if (bookOffset + listRows() - 1 < bookSteps.size()) {
+                bookOffset += listRows() - 1;
+                rebuildWidgets();
+            }
+        }));
+        int ex = x + 130;
+        int ew = inner - 130;
+        if (selectedStep >= 0 && selectedStep < bookSteps.size()) {
+            String[] step = bookSteps.get(selectedStep);
+            addRenderableWidget(edit(ex, y, ew, "Libelle de l'etape", step[0], 80, text -> step[0] = text));
+            addRenderableWidget(cycle(ex, y + 24, 100, "", STEP_KINDS, () -> STEP_KINDS.indexOf(step[1]), value -> {
+                step[1] = STEP_KINDS.get(value);
+                rebuildWidgets();
+            }));
+            if (step[1].equals("advancement") || step[1].equals("command")) {
+                addRenderableWidget(edit(ex + 106, y + 24, ew - 106, step[1].equals("advancement") ? "minecraft:story/mine_stone" : "commande (sans /)",
+                        step[2], 100, text -> step[2] = text));
+            }
+            addRenderableWidget(edit(ex, y + 48, ew, "Bouton facultatif : command:/spawn ou url:https://...", step[3], 200, text -> step[3] = text));
+            addRenderableWidget(new FordixButton(ex, y + 72, 60, 18, Component.literal("Monter"), () -> moveStep(-1)));
+            addRenderableWidget(new FordixButton(ex + 64, y + 72, 60, 18, Component.literal("Descendre"), () -> moveStep(1)));
+            addRenderableWidget(new FordixButton(ex + 128, y + 72, 60, 18, Component.literal("Supprimer"), () -> {
+                bookSteps.remove(selectedStep);
+                selectedStep = Math.min(selectedStep, bookSteps.size() - 1);
+                rebuildWidgets();
+            }));
+        }
+        addRenderableWidget(edit(ex, y + 104, ew, "Recompense : commande (vide = aucune)", bookReward, 200, text -> bookReward = text));
+        addRenderableWidget(new FordixButton(ex, y + 128, 110, 18, Component.literal("Enregistrer"), this::saveBook));
+        addRenderableWidget(new FordixButton(ex + 114, y + 128, 110, 18, Component.literal("Fichier config"), () -> send("book_reset")));
+    }
+
+    private void moveStep(int by) {
+        int target = selectedStep + by;
+        if (selectedStep >= 0 && target >= 0 && target < bookSteps.size()) {
+            java.util.Collections.swap(bookSteps, selectedStep, target);
+            selectedStep = target;
+            rebuildWidgets();
+        }
+    }
+
+    private void saveBook() {
+        List<String> args = new ArrayList<>();
+        args.add(bookReward);
+        bookSteps.forEach(step -> args.add(stepLine(step)));
+        send("book_save", args.toArray(new String[0]));
+    }
+
+    /** Opens the welcome book tab (also used by the dev test). */
+    public void pickStep(int index) {
+        tab = TAB_BOOK;
+        selectedStep = index;
+        rebuildWidgets();
+    }
+
     // ---- Panels ---------------------------------------------------------------------------------
 
     private void initPanels(int x, int y, int inner) {
@@ -512,6 +623,20 @@ public class FordixAdminScreen extends FordixScreen {
                 guiGraphics.drawString(font, font.plainSubstrByWidth("# titre · @button Libelle | command:/x · ligne vide = paragraphe",
                         panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, FordixPalette.BEVEL_HIGHLIGHT, false);
             }
+        } else if (tab == TAB_BOOK) {
+            int hy = panel.getY() + 48 + 24 + (listRows() - 1) * 20 + 20;
+            guiGraphics.drawString(font, bookSteps.size() + " etape(s)" + (selectedStep < 0 ? " - choisis-en une" : ""), x, hy, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, "Recompense : %player% = nom du joueur", x + 130, panel.getY() + 48 + 150, FordixPalette.BEVEL_HIGHLIGHT, false);
+            if (selectedStep >= 0 && selectedStep < bookSteps.size()) {
+                String kind = bookSteps.get(selectedStep)[1];
+                String help = switch (kind) {
+                    case "advancement" -> "Cochee quand le joueur obtient ce progres";
+                    case "command" -> "Cochee quand le joueur lance cette commande";
+                    case "guides" -> "Cochee quand le joueur ouvre l'ecran Guides";
+                    default -> "Le joueur la coche lui-meme";
+                };
+                guiGraphics.drawString(font, font.plainSubstrByWidth(help, panelWidth - 150), x + 130, panel.getY() + 48 + 94, FordixPalette.BEVEL_HIGHLIGHT, false);
+            }
         } else if (selectedId.isEmpty()) {
             guiGraphics.drawString(font, "Choisis un panel, ou cree-en un.", x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
         } else if (editButtons.isEmpty()) {
@@ -535,6 +660,16 @@ public class FordixAdminScreen extends FordixScreen {
         scheduleLines = ClientAdminData.schedules();
         templateLines = ClientAdminData.templates();
         pageLines = ClientAdminData.pages();
+        List<String> bookData = ClientAdminData.book();
+        if (!bookData.isEmpty() && bookData != lastBook) {
+            lastBook = bookData;
+            bookReward = bookData.get(0);
+            bookSteps.clear();
+            for (int i = 1; i < bookData.size(); i++) {
+                bookSteps.add(parseStep(bookData.get(i)));
+            }
+            selectedStep = Math.min(selectedStep, bookSteps.size() - 1);
+        }
         List<String> pageData = ClientAdminData.page();
         if (awaitingPage && pageData.size() >= 3 && pageData.get(0).equals(selectedPage)) {
             awaitingPage = false;

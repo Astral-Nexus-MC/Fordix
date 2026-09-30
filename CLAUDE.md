@@ -57,6 +57,8 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `ClientboundGuidePagesPayload`), indice Maj + G dans l'infobulle des objets d'un mod avec guide (`GuideHints`).
 - Livre de bienvenue (item `fordix:welcome_book`, `welcome/`) : liste d'étapes `[welcomeBook] steps` de `fordix-common.toml`
   (advancement, command, guides, manual), récompense facultative, donné à la première connexion ou par `/fordix book`.
+  L'onglet Livre de l'écran d'administration remplace ces étapes et la récompense (`AdminStore.welcomeSteps/welcomeReward`, sans
+  redémarrage) ; « Fichier config » revient à `fordix-common.toml`.
 - Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`).
 - Le serveur peut imposer la liste des onglets Guides (`[guides] tabs` dans `fordix-common.toml`).
 

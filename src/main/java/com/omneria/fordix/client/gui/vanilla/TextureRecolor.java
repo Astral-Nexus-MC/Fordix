@@ -42,6 +42,9 @@ public final class TextureRecolor {
             new Target("textures/gui/slider.png"),
             // The tiled backdrop of the options, world list and mod list screens.
             new Target(new ResourceLocation("textures/gui/options_background.png"), 0, Integer.MAX_VALUE, true),
+            // Header behind the tabs of the create-world screen, and the tab buttons themselves.
+            new Target(new ResourceLocation("textures/gui/tab_header_background.png"), 0, Integer.MAX_VALUE, true),
+            new Target("textures/gui/tab_button.png"),
             new Target("textures/gui/container/loom.png"),
             new Target("textures/gui/container/cartography_table.png"),
             new Target("textures/gui/container/creative_inventory/tab_items.png"),
