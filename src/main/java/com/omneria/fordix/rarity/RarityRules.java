@@ -18,6 +18,8 @@ public final class RarityRules {
             "minecraft:dragon_head | LEGENDARY",
             // Twilight Forest's giant tools and blocks.
             "twilightforest:giant_* | EPIC",
+            // Twilight Forest's banner patterns have a custom vanilla rarity that maps to no tier.
+            "twilightforest:*_banner_pattern | RARE",
             // Netherite and its modded peers.
             "minecraft:netherite_* | EPIC",
             "minecraft:ancient_debris | EPIC",

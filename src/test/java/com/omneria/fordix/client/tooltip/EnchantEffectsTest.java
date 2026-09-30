@@ -45,4 +45,13 @@ class EnchantEffectsTest {
         assertEquals("0,25", EnchantEffects.fmt(0.25));
         assertEquals("7", EnchantEffects.fmt(7.0));
     }
+
+    @Test
+    void describesMoreVanillaAndModdedEnchantments() {
+        assertEquals("-5 s d'attente du poisson", EnchantEffects.describe("minecraft:lure", 1));
+        assertEquals("ralentissement dans l'eau -100 %", EnchantEffects.describe("minecraft:depth_strider", 3));
+        assertEquals("+40,5 % vitesse (sable des âmes)", EnchantEffects.describe("minecraft:soul_speed", 1));
+        assertEquals("ralentit les attaquants", EnchantEffects.describe("twilightforest:chill_aura", 2));
+        assertNull(EnchantEffects.describe("somemod:unknown", 1));
+    }
 }

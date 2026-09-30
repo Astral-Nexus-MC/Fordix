@@ -38,6 +38,8 @@ public final class TextureRecolor {
 
     private static final List<Target> TARGETS = List.of(
             new Target("textures/gui/recipe_book.png"),
+            // Track and handle of the option sliders (FOV, volume...).
+            new Target("textures/gui/slider.png"),
             // The tiled backdrop of the options, world list and mod list screens.
             new Target(new ResourceLocation("textures/gui/options_background.png"), 0, Integer.MAX_VALUE, true),
             new Target("textures/gui/container/loom.png"),

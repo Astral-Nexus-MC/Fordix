@@ -44,6 +44,17 @@ public final class EnchantEffects {
             case "minecraft:infinity" -> "flèches infinies";
             case "minecraft:flame" -> "flèches enflammées";
             case "minecraft:channeling" -> "invoque la foudre";
+            case "minecraft:depth_strider" -> "ralentissement dans l'eau -" + fmt(100.0 * level / 3.0) + " %";
+            case "minecraft:soul_speed" -> "+" + fmt(30.0 + 10.5 * level) + " % vitesse (sable des âmes)";
+            case "minecraft:punch" -> "recul des flèches +" + level;
+            case "minecraft:luck_of_the_sea" -> "+" + level + " chance de trésor en pêchant";
+            case "minecraft:lure" -> "-" + 5 * level + " s d'attente du poisson";
+            case "minecraft:loyalty" -> "le trident revient (vitesse " + level + ")";
+            case "minecraft:riptide" -> "propulsion sous l'eau ou la pluie (" + level + ")";
+            case "create:capacity" -> "réservoir d'air : capacité accrue";
+            case "create:potato_recovery" -> "chance de récupérer la pomme de terre";
+            case "twilightforest:fire_react" -> "chance d'enflammer l'attaquant";
+            case "twilightforest:chill_aura" -> "ralentit les attaquants";
             case "minecraft:binding_curse" -> "impossible à retirer";
             case "minecraft:vanishing_curse" -> "disparaît à la mort";
             default -> null;
