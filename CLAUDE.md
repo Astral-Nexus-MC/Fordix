@@ -19,6 +19,12 @@ Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur 
   `net.neoforged.moddev.legacyforge` : utiliser les API `net.minecraftforge.*` de Forge 47.
 - La CI (`.github/workflows/build.yml`) compile à chaque push et publie le jar du mod comme
   artefact `fordix-jar`, à télécharger depuis le run GitHub Actions pour tester en jeu.
+- Test en jeu : `client/devtest/DevTest` (actif seulement si la variable `FORDIX_DEVTEST` est definie) ouvre un
+  monde plat, parcourt HUD, ecrans et infobulles et enregistre une capture de chacun dans `run/fordix-shots`.
+  En local : `xvfb-run -a -s "-screen 0 1280x720x24" env FORDIX_DEVTEST=1 LIBGL_ALWAYS_SOFTWARE=1
+  MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLSL_VERSION_OVERRIDE=450 ./gradlew runClient` (mettre
+  `onboardAccessibility:false` dans `run/options.txt`). La CI le lance (job `ingame-test`) et publie les
+  captures en artefact `ingame-screenshots` ; il echoue si le jeu plante. Ajouter un `Step` pour tout nouvel ecran.
 - Dans un conteneur cloud Claude, les dépôts Maven de Forge sont souvent bloqués et seul
   Java 21 est installé : si le build local échoue pour ces raisons, s'appuyer sur la CI.
 
