@@ -42,7 +42,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
 ## Interface Voidframe (client)
 
 - `client/gui/vanilla` : écrans de conteneurs redessinés (`VoidframeScreens`, `VoidframeStations`), HUD
-  (`VoidframeHud` vie/faim, `VoidframeGauges` XP/armure/air/boss, `VoidframeDurability`), forme commune des
+  (`VoidframeHud` vie/faim, placement par glisser-deposer dans `HudLayoutScreen` avec aimant `HudSnap`, `VoidframeGauges` XP/armure/air/boss, `VoidframeDurability`), forme commune des
   barres (`Chevron`, `BarShape`), recoloration des textures vanilla (`TextureRecolor`, `Duotone`).
 - `client/tooltip` : infobulles d'objets (`ItemTooltipRenderer`, `TooltipStyle`, `EnchantEffects`,
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).

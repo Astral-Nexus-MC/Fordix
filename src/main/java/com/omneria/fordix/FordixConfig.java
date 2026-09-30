@@ -50,8 +50,8 @@ public final class FordixConfig {
                 .push("hud");
         for (String element : HUD_ELEMENTS) {
             builder.push(element);
-            ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -400, 400);
-            ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -400, 400);
+            ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -1000, 1000);
+            ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -1000, 1000);
             builder.pop();
             HUD_OFFSETS.put(element, new ForgeConfigSpec.IntValue[]{x, y});
         }

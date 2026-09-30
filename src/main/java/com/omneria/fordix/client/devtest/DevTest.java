@@ -150,8 +150,22 @@ public final class DevTest {
             cmd(mc, "gamemode survival");
             mc.setScreen(new FordixSettingsScreen(null));
         }, 30, false));
-        steps.add(new Step("10-hud-layout", () -> mc.setScreen(new HudLayoutScreen(null)), 30, false));
-        steps.add(new Step("11-admin", () -> mc.setScreen(new FordixAdminScreen(null)), 50, false));
+        steps.add(new Step("10-hud-layout", () -> {
+            HudLayoutScreen layout = new HudLayoutScreen(null);
+            mc.setScreen(layout);
+            // Grab the hunger bar and drag it up and to the left, toward the center line.
+            double grabX = layout.width / 2.0 + 50;
+            double grabY = layout.height - 35;
+            layout.mouseClicked(grabX, grabY, 0);
+            layout.mouseDragged(grabX - 30, grabY - 30, 0, -30, -30);
+        }, 30, false));
+        steps.add(new Step("11-admin", () -> {
+            for (String element : com.omneria.fordix.FordixConfig.HUD_ELEMENTS) {
+                com.omneria.fordix.FordixConfig.hudOffsetX(element).set(0);
+                com.omneria.fordix.FordixConfig.hudOffsetY(element).set(0);
+            }
+            mc.setScreen(new FordixAdminScreen(null));
+        }, 50, false));
         steps.add(new Step("12-chat", () -> mc.setScreen(new ChatScreen("/fordix notify")), 30, false));
         steps.add(new Step("13-pause", () -> mc.setScreen(null), 10, false));
         steps.add(new Step("14-pause-menu", () -> mc.pauseGame(false), 30, false));
