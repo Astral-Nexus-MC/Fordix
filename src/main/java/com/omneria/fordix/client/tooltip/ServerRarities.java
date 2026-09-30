@@ -22,7 +22,7 @@ public final class ServerRarities {
     }
 
     public static void set(List<String> lines) {
-        rules = RarityRules.parse(lines.isEmpty() ? RarityRules.DEFAULT_LINES : lines);
+        rules = RarityRules.parse(lines.isEmpty() ? RarityRules.DEFAULT_LINES : RarityRules.withBuiltins(lines));
         CACHE.clear();
     }
 

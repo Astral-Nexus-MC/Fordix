@@ -25,6 +25,10 @@ Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur 
   MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLSL_VERSION_OVERRIDE=450 ./gradlew runClient` (mettre
   `onboardAccessibility:false` dans `run/options.txt`). La CI le lance (job `ingame-test`) et publie les
   captures en artefact `ingame-screenshots` ; il echoue si le jeu plante. Ajouter un `Step` pour tout nouvel ecran.
+- Avec Twilight Forest et Create dans le client de dev : `./gradlew runClient -PdevMods` (télécharge les deux mods
+  via cursemaven/Modrinth, uniquement pour ce test local ; jamais utilisé par la CI ni la release).
+- Règles de rareté : les règles par défaut de `RarityRules` complètent toujours celles du serveur (`withBuiltins`) ;
+  les règles du serveur passent en premier, donc une règle explicite garde la main.
 - Dans un conteneur cloud Claude, les dépôts Maven de Forge sont souvent bloqués et seul
   Java 21 est installé : si le build local échoue pour ces raisons, s'appuyer sur la CI.
 

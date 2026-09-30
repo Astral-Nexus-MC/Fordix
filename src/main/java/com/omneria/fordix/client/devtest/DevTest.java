@@ -58,6 +58,7 @@ public final class DevTest {
     private boolean started;
     private Path outDir;
 
+    private int hoverIndex;
     private int idleTicks;
     private String pendingShot;
 
@@ -213,6 +214,28 @@ public final class DevTest {
             cmd(mc, "give @s minecraft:enchanted_book{StoredEnchantments:[{id:\"minecraft:protection\",lvl:4},{id:\"minecraft:silk_touch\",lvl:1}]}");
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, false));
+        // Items of Twilight Forest and Create (only there when those mods sit in run/mods; /give just fails otherwise).
+        steps.add(new Step("17b-modded", () -> {
+            cmd(mc, "clear @s");
+            cmd(mc, "give @s twilightforest:giant_pickaxe");
+            cmd(mc, "give @s twilightforest:naga_trophy");
+            cmd(mc, "give @s twilightforest:fiery_ingot");
+            cmd(mc, "give @s twilightforest:steeleaf_ingot");
+            cmd(mc, "give @s twilightforest:ironwood_ingot");
+            cmd(mc, "give @s twilightforest:naga_banner_pattern");
+            cmd(mc, "give @s twilightforest:knightmetal_chestplate{Enchantments:[{id:\"twilightforest:chill_aura\",lvl:2},{id:\"twilightforest:fire_react\",lvl:1}]}");
+            cmd(mc, "give @s create:brass_ingot 16");
+            cmd(mc, "give @s create:copper_backtank{Enchantments:[{id:\"create:capacity\",lvl:2}]}");
+            cmd(mc, "give @s create:potato_cannon{Enchantments:[{id:\"create:potato_recovery\",lvl:3}]}");
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 40, true));
+        steps.add(new Step("17b2-modded-armor", () -> hoverIndex = 6, 25, true));
+        steps.add(new Step("17b3-modded-backtank", () -> hoverIndex = 8, 25, true));
+        steps.add(new Step("17b4-modded-trophy", () -> hoverIndex = 1, 25, true));
+        steps.add(new Step("17c-modded-advancements", () -> {
+            hoverIndex = 0;
+            mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements()));
+        }, 40, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
@@ -252,7 +275,7 @@ public final class DevTest {
         }
         Step step = steps.get(index);
         if (step.hoverSlot() && mc.screen instanceof InventoryScreen screen) {
-            hover(mc, screen, 0);
+            hover(mc, screen, hoverIndex);
         }
         if (++frame == step.frames()) {
             pendingShot = step.name();

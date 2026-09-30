@@ -61,6 +61,22 @@ public final class RarityRules {
         this.rules = rules;
     }
 
+    /**
+     * The server's lines followed by the built-in defaults it doesn't already list: a server keeps the
+     * rule list it saved long ago, so a rule added to the defaults later (Twilight Forest's giant
+     * tools, say) still applies. A server's own rule always wins, being first: to keep an item's vanilla
+     * rarity, give it an explicit rule.
+     */
+    public static List<String> withBuiltins(List<? extends String> serverLines) {
+        List<String> all = new ArrayList<>(serverLines);
+        for (String line : DEFAULT_LINES) {
+            if (!all.contains(line)) {
+                all.add(line);
+            }
+        }
+        return all;
+    }
+
     /** Parses lines, skipping invalid ones. */
     public static RarityRules parse(List<? extends String> lines) {
         List<Rule> rules = new ArrayList<>();

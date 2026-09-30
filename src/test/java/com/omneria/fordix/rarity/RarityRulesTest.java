@@ -99,4 +99,16 @@ class RarityRulesTest {
         assertEquals(0.0, EnchantPower.score(List.of(new EnchantPower.Entry("VERY_RARE", 1, 1, false, true))), 1e-9);
         assertEquals(3.0, EnchantPower.score(List.of(new EnchantPower.Entry("UNCOMMON", 1, 1, true, false))), 1e-9);
     }
+
+    @Test
+    void oldServerListsStillGetNewBuiltinRules() {
+        // A list saved before the giant tools rule existed, with one custom rule for a diamond item.
+        java.util.List<String> old = java.util.List.of("minecraft:diamond_sword | LEGENDARY", "minecraft:*diamond* | RARE");
+        RarityRules rules = RarityRules.parse(RarityRules.withBuiltins(old));
+        assertEquals(RarityTier.EPIC, rules.tierOf("twilightforest:giant_pickaxe"));
+        assertEquals(RarityTier.LEGENDARY, rules.tierOf("minecraft:diamond_sword"));
+        assertEquals(RarityTier.RARE, rules.tierOf("minecraft:diamond_helmet"));
+        // Lines already there are not repeated.
+        assertEquals(1, RarityRules.withBuiltins(old).stream().filter("minecraft:*diamond* | RARE"::equals).count());
+    }
 }

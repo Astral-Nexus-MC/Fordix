@@ -19,6 +19,17 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+    // Only for the optional local test with other mods (-PdevMods): never needed to build or release.
+    if (project.hasProperty('devMods')) {
+        maven {
+            url 'https://cursemaven.com'
+            content { includeGroup 'curse.maven' }
+        }
+        maven {
+            url 'https://api.modrinth.com/maven'
+            content { includeGroup 'maven.modrinth' }
+        }
+    }
 }
 
 base {
@@ -140,6 +151,13 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // Twilight Forest and Create in the dev client, to see their items in the in-game test:
+    // ./gradlew runClient -PdevMods (remapped by the plugin, like any mod* dependency).
+    if (project.hasProperty('devMods')) {
+        modLocalRuntime 'curse.maven:the-twilight-forest-227639:5468648'
+        modLocalRuntime 'maven.modrinth:create:1.20.1-0.5.1.j'
+    }
 
     // Plain JUnit 5 tests for Minecraft-independent logic (layout math, etc).
     // These run with `./gradlew test` and do not boot Minecraft at all.
