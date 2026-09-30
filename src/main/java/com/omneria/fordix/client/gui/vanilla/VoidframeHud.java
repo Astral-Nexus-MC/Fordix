@@ -68,13 +68,17 @@ public final class VoidframeHud {
         if (health) {
             int y = screenHeight - gui.leftHeight;
             gui.leftHeight += 10;
-            int[] offset = FordixConfig.hudOffset("health");
-            drawHealthBar(guiGraphics, minecraft.font, player, centerX - 91 + offset[0], y + offset[1]);
+            int[] offset = HudPlacement.delta("health");
+            if (!HudPlacement.hidden("health")) {
+                drawHealthBar(guiGraphics, minecraft.font, player, centerX - 91 + offset[0], y + offset[1]);
+            }
         } else {
             int y = screenHeight - gui.rightHeight;
             gui.rightHeight += 10;
-            int[] offset = FordixConfig.hudOffset("hunger");
-            drawHungerBar(guiGraphics, minecraft.font, player, centerX + 91 - BAR_WIDTH + offset[0], y + offset[1]);
+            int[] offset = HudPlacement.delta("hunger");
+            if (!HudPlacement.hidden("hunger")) {
+                drawHungerBar(guiGraphics, minecraft.font, player, centerX + 91 - BAR_WIDTH + offset[0], y + offset[1]);
+            }
         }
     }
 

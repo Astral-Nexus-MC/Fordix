@@ -62,16 +62,18 @@ public final class VoidframeGauges {
             if (gui.shouldDrawSurvivalElements() && minecraft.player != null && minecraft.player.jumpableVehicle() == null
                     && minecraft.gameMode != null && minecraft.gameMode.hasExperience()) {
                 event.setCanceled(true);
-                int[] offset = FordixConfig.hudOffset("experience");
-                drawExperience(guiGraphics, minecraft.font, player, width + 2 * offset[0], height + offset[1]);
+                int[] offset = HudPlacement.delta("experience");
+                if (!HudPlacement.hidden("experience")) {
+                    drawExperience(guiGraphics, minecraft.font, player, width + 2 * offset[0], height + offset[1]);
+                }
             }
         } else if (overlay == VanillaGuiOverlay.ARMOR_LEVEL.type()) {
             if (gui.shouldDrawSurvivalElements()) {
                 event.setCanceled(true);
                 int top = height - gui.leftHeight;
                 gui.leftHeight += 10;
-                if (player.getArmorValue() > 0) {
-                    int[] offset = FordixConfig.hudOffset("armor");
+                if (player.getArmorValue() > 0 && !HudPlacement.hidden("armor")) {
+                    int[] offset = HudPlacement.delta("armor");
                     drawArmor(guiGraphics, minecraft.font, player, width / 2 - 91 + offset[0], top + 1 + offset[1]);
                 }
             }
@@ -82,32 +84,40 @@ public final class VoidframeGauges {
                 event.setCanceled(true);
                 int top = height - gui.rightHeight;
                 gui.rightHeight += 10;
-                int[] offset = FordixConfig.hudOffset("air");
-                drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH + offset[0], top + 1 + offset[1]);
+                int[] offset = HudPlacement.delta("air");
+                if (!HudPlacement.hidden("air")) {
+                    drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH + offset[0], top + 1 + offset[1]);
+                }
             }
         } else if (overlay == VanillaGuiOverlay.JUMP_BAR.type()) {
             if (minecraft.player != null && minecraft.player.jumpableVehicle() != null) {
                 event.setCanceled(true);
-                int[] offset = FordixConfig.hudOffset("experience");
-                drawJump(guiGraphics, minecraft.player.getJumpRidingScale(), width + 2 * offset[0], height + offset[1]);
+                int[] offset = HudPlacement.delta("experience");
+                if (!HudPlacement.hidden("experience")) {
+                    drawJump(guiGraphics, minecraft.player.getJumpRidingScale(), width + 2 * offset[0], height + offset[1]);
+                }
             }
         } else if (overlay == VanillaGuiOverlay.MOUNT_HEALTH.type()) {
             if (gui.shouldDrawSurvivalElements() && player.getVehicle() instanceof LivingEntity mount) {
                 event.setCanceled(true);
                 int top = height - gui.rightHeight;
                 gui.rightHeight += 10;
-                int[] offset = FordixConfig.hudOffset("hunger");
-                drawMountHealth(guiGraphics, minecraft.font, mount, width / 2 + 91 - MOUNT_WIDTH + offset[0], top + offset[1]);
+                int[] offset = HudPlacement.delta("hunger");
+                if (!HudPlacement.hidden("hunger")) {
+                    drawMountHealth(guiGraphics, minecraft.font, mount, width / 2 + 91 - MOUNT_WIDTH + offset[0], top + offset[1]);
+                }
             }
         } else if (overlay == VanillaGuiOverlay.CROSSHAIR.type()) {
             suppressVanillaAttackIndicator(minecraft);
         } else if (overlay == VanillaGuiOverlay.BOSS_EVENT_PROGRESS.type()) {
             if (Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events) {
                 event.setCanceled(true);
-                int[] offset = FordixConfig.hudOffset("boss");
+                int[] offset = HudPlacement.delta("boss");
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(offset[0], offset[1], 0.0F);
-                drawBosses(guiGraphics, minecraft.font, events, width, height);
+                if (!HudPlacement.hidden("boss")) {
+                    drawBosses(guiGraphics, minecraft.font, events, width, height);
+                }
                 guiGraphics.pose().popPose();
             }
         }

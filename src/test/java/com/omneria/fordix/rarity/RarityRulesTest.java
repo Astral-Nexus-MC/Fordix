@@ -60,6 +60,8 @@ class RarityRulesTest {
         assertEquals(RarityTier.RARE, rules.tierOf("twilightforest:steeleaf_axe"));
         assertEquals(RarityTier.LEGENDARY, rules.tierOf("twilightforest:naga_trophy"));
         assertEquals(RarityTier.LEGENDARY, rules.tierOf("minecraft:dragon_head"));
+        assertEquals(RarityTier.EPIC, rules.tierOf("twilightforest:giant_pickaxe"));
+        assertEquals(RarityTier.EPIC, rules.tierOf("twilightforest:giant_cobblestone"));
         assertEquals(RarityTier.COMMON, rules.tierOf("minecraft:wooden_sword"));
         assertNull(rules.tierOf("create:zinc_ingot"));
         assertEquals(RarityTier.UNCOMMON, rules.tierOf("twilightforest:ironwood_boots"));

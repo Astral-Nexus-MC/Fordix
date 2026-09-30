@@ -16,6 +16,8 @@ public final class RarityRules {
             // Boss trophies and heads.
             "twilightforest:*_trophy | LEGENDARY",
             "minecraft:dragon_head | LEGENDARY",
+            // Twilight Forest's giant tools and blocks.
+            "twilightforest:giant_* | EPIC",
             // Netherite and its modded peers.
             "minecraft:netherite_* | EPIC",
             "minecraft:ancient_debris | EPIC",

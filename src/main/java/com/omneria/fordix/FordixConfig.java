@@ -1,6 +1,7 @@
 package com.omneria.fordix;
 
 import com.omneria.fordix.client.gui.Theme;
+import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.tooltip.TooltipStyles;
 import com.omneria.fordix.client.notification.NotificationCorner;
 import com.omneria.fordix.client.guide.GuideEntry;
@@ -25,6 +26,8 @@ public final class FordixConfig {
     /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
     public static final List<String> HUD_ELEMENTS = List.of("health", "hunger", "armor", "air", "experience", "boss");
     private static final Map<String, ForgeConfigSpec.IntValue[]> HUD_OFFSETS = new LinkedHashMap<>();
+    private static final Map<String, ForgeConfigSpec.ConfigValue<String>> HUD_ANCHORS = new LinkedHashMap<>();
+    private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_HIDDEN = new LinkedHashMap<>();
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -50,10 +53,17 @@ public final class FordixConfig {
                 .push("hud");
         for (String element : HUD_ELEMENTS) {
             builder.push(element);
+            ForgeConfigSpec.ConfigValue<String> anchor = builder
+                    .comment("Screen point the element is pinned to: default (its usual spot), top_left, top_center, top_right,",
+                            "middle_left, center, middle_right, bottom_left, bottom_center or bottom_right.")
+                    .define("anchor", "default", value -> value instanceof String text && HudAnchors.Anchor.byId(text) != null);
+            ForgeConfigSpec.BooleanValue hidden = builder.define("hidden", false);
             ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -1000, 1000);
             ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -1000, 1000);
             builder.pop();
             HUD_OFFSETS.put(element, new ForgeConfigSpec.IntValue[]{x, y});
+            HUD_ANCHORS.put(element, anchor);
+            HUD_HIDDEN.put(element, hidden);
         }
         builder.pop();
         THEME = builder
@@ -90,7 +100,32 @@ public final class FordixConfig {
         return HUD_OFFSETS.get(element)[1];
     }
 
-    /** {x, y} offset of a HUD element; zero before the config has loaded. */
+    public static ForgeConfigSpec.ConfigValue<String> hudAnchorValue(String element) {
+        return HUD_ANCHORS.get(element);
+    }
+
+    public static ForgeConfigSpec.BooleanValue hudHiddenValue(String element) {
+        return HUD_HIDDEN.get(element);
+    }
+
+    public static HudAnchors.Anchor hudAnchor(String element) {
+        try {
+            HudAnchors.Anchor anchor = HudAnchors.Anchor.byId(HUD_ANCHORS.get(element).get());
+            return anchor != null ? anchor : HudAnchors.Anchor.DEFAULT;
+        } catch (IllegalStateException notLoadedYet) {
+            return HudAnchors.Anchor.DEFAULT;
+        }
+    }
+
+    public static boolean hudHidden(String element) {
+        try {
+            return HUD_HIDDEN.get(element).get();
+        } catch (IllegalStateException notLoadedYet) {
+            return false;
+        }
+    }
+
+    /** Raw {x, y} offset of a HUD element (from its anchor); zero before the config has loaded. */
     public static int[] hudOffset(String element) {
         try {
             return new int[]{hudOffsetX(element).get(), hudOffsetY(element).get()};
