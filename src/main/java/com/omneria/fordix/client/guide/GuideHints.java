@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.guide;
 
+import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.FordixClient;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
@@ -44,13 +45,18 @@ public final class GuideHints {
     }
 
     public static void onItemTooltip(ItemTooltipEvent event) {
+        if (!FordixConfig.GUIDE_HINTS.get()) {
+            return;
+        }
         GuideEntry entry = entryFor(event.getItemStack());
         if (entry == null) {
             return;
         }
         List<Component> lines = event.getToolTip();
         String text = entry.action() == GuideEntry.Action.PONDER && PonderScenes.hasScene(event.getItemStack())
-                ? "Voir la scene Ponder de cet objet" : "Ouvrir le guide : " + entry.label();
+                ? "Voir la scene Ponder de cet objet"
+                : entry.action() == GuideEntry.Action.URL && entry.target().contains("{objet}")
+                ? "Ouvrir sa page du wiki" : "Ouvrir le guide : " + entry.label();
         lines.add(Component.literal("[" + keyLabel() + "] ").withStyle(ChatFormatting.AQUA)
                 .append(Component.literal(text).withStyle(ChatFormatting.GRAY)));
     }
@@ -71,7 +77,7 @@ public final class GuideHints {
             if (entry.action() == GuideEntry.Action.PONDER && PonderScenes.open(slot.getItem())) {
                 return;
             }
-            GuideActions.run(entry);
+            GuideActions.run(entry, slot.getItem());
         }
     }
 }

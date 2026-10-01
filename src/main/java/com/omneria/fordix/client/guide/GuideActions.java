@@ -26,11 +26,19 @@ public final class GuideActions {
     }
 
     public static void run(GuideEntry entry) {
+        run(entry, net.minecraft.world.item.ItemStack.EMPTY);
+    }
+
+    /** Runs the entry's action; {@code stack} is the item the player was on (a link can name its wiki page). */
+    public static void run(GuideEntry entry, net.minecraft.world.item.ItemStack stack) {
         Minecraft minecraft = Minecraft.getInstance();
         switch (entry.action()) {
             case PONDER -> openPonder(minecraft, entry);
             case PATCHOULI -> openPatchouli(minecraft, entry);
-            case URL -> openUrl(minecraft, entry.target());
+            case URL -> {
+                ResourceLocation id = stack.isEmpty() ? null : net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem());
+                openUrl(minecraft, GuideEntry.resolveUrl(entry.target(), id == null ? null : id.getPath()));
+            }
             case COMMAND -> {
                 if (minecraft.player != null) {
                     minecraft.player.connection.sendCommand(entry.target());

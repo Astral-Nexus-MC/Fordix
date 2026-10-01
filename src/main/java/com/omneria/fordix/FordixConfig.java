@@ -22,6 +22,7 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
+    public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
     public static final ForgeConfigSpec.ConfigValue<String> TOOLTIP_STYLE;
     /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
     public static final List<String> HUD_ELEMENTS = List.of("health", "hunger", "armor", "air", "experience", "boss");
@@ -73,6 +74,9 @@ public final class FordixConfig {
                 .comment("Optional accent color override as #RRGGBB, e.g. \"#FF5577\". Leave empty to keep the theme's accent.")
                 .define("accentColor", "", value -> value instanceof String text
                         && (text.isEmpty() || Theme.parseHex(text) != null));
+        GUIDE_HINTS = builder
+                .comment("Add the \"[Shift + G] open the guide\" line to the tooltip of items that have a guide (the key keeps working when off).")
+                .define("guideHints", true);
         GUIDES = builder
                 .comment("Guide tabs along the right edge of the survival inventory, one per line: \"modid | Label | icon item | action\".",
                         "A tab only shows when its mod is installed (\"minecraft\" always is). Actions: ponder (Create's",

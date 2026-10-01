@@ -80,6 +80,8 @@ public class FordixSettingsScreen extends FordixScreen {
         });
         addRenderableWidget(accent);
 
+        addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, "Indice Maj+G", FordixConfig.GUIDE_HINTS));
+
         addRenderableWidget(new FordixButton(left, y + ROW * 6 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
                 Component.literal("Fermer"), this::onClose));
     }

@@ -34,6 +34,10 @@ public final class GuideTabs {
     private static final int SPACING = 22;
     private static final int GAP_TO_PANEL = 2;
 
+    /** Added when the list has no "minecraft" entry of its own, so vanilla items also point to their wiki page. */
+    private static final GuideEntry VANILLA_WIKI = GuideEntry.parse(
+            "minecraft | Minecraft : Wiki | minecraft:knowledge_book | url:https://minecraft.wiki/w/{objet}");
+
     private GuideTabs() {
     }
 
@@ -56,6 +60,9 @@ public final class GuideTabs {
             if (entry != null && isInstalled(entry.modId())) {
                 entries.add(entry);
             }
+        }
+        if (entries.stream().noneMatch(entry -> entry.modId().equals("minecraft"))) {
+            entries.add(VANILLA_WIKI);
         }
         return entries;
     }

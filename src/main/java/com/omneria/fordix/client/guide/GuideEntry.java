@@ -7,7 +7,8 @@ package com.omneria.fordix.client.guide;
  * <ul>
  *     <li>{@code ponder} - Create's Ponder index;</li>
  *     <li>{@code patchouli:<book id>} - a Patchouli guide book;</li>
- *     <li>{@code url:<https link>} - a web page, after vanilla's link confirmation;</li>
+ *     <li>{@code url:<https link>} - a web page, after vanilla's link confirmation; {@code {objet}} in the link is
+ *     replaced by the wiki page of the item the player was on (e.g. "Iron_Sword"), or by "Minecraft_Wiki" without an item;</li>
  *     <li>{@code command:<command>} - a command run as the player, without the slash.</li>
  * </ul>
  * Plain Java, unit tested.
@@ -58,5 +59,25 @@ public record GuideEntry(String modId, String label, String icon, Action action,
                     target.startsWith("/") ? target.substring(1) : target);
             default -> null;
         };
+    }
+
+    /** "iron_sword" becomes the wiki page title "Iron_Sword". */
+    public static String wikiPage(String itemPath) {
+        StringBuilder title = new StringBuilder();
+        for (String word : itemPath.split("_")) {
+            if (word.isEmpty()) {
+                continue;
+            }
+            if (title.length() > 0) {
+                title.append('_');
+            }
+            title.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        return title.toString();
+    }
+
+    /** The link to open: {@code {objet}} replaced by the item's wiki page, or by the wiki's main page when null. */
+    public static String resolveUrl(String template, String itemPath) {
+        return template.replace("{objet}", itemPath == null || itemPath.isBlank() ? "Minecraft_Wiki" : wikiPage(itemPath));
     }
 }

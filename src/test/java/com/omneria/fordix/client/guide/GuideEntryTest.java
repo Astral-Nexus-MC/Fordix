@@ -42,4 +42,13 @@ class GuideEntryTest {
         assertNull(GuideEntry.parse("create | Create | create:wrench | url:"));
         assertNull(GuideEntry.parse(null));
     }
+
+    @Test
+    void wikiLinkNamesTheItemPage() {
+        GuideEntry entry = GuideEntry.parse("minecraft | Wiki | minecraft:book | url:https://minecraft.wiki/w/{objet}");
+        assertEquals("https://minecraft.wiki/w/Iron_Sword", GuideEntry.resolveUrl(entry.target(), "iron_sword"));
+        assertEquals("https://minecraft.wiki/w/Minecraft_Wiki", GuideEntry.resolveUrl(entry.target(), null));
+        assertEquals("Oak_Log", GuideEntry.wikiPage("oak_log"));
+        assertEquals("https://exemple.fr/", GuideEntry.resolveUrl("https://exemple.fr/", "iron_sword"));
+    }
 }
