@@ -263,14 +263,29 @@ public final class DevTest {
             cmd(mc, "give @s twilightforest:ironwood_ingot");
             cmd(mc, "give @s twilightforest:naga_banner_pattern");
             cmd(mc, "give @s twilightforest:knightmetal_chestplate{Enchantments:[{id:\"twilightforest:chill_aura\",lvl:2},{id:\"twilightforest:fire_react\",lvl:1}]}");
-            cmd(mc, "give @s create:brass_ingot 16");
+            cmd(mc, "give @s create:cogwheel 16");
             cmd(mc, "give @s create:copper_backtank{Enchantments:[{id:\"create:capacity\",lvl:2}]}");
             cmd(mc, "give @s create:potato_cannon{Enchantments:[{id:\"create:potato_recovery\",lvl:3}]}");
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, true));
         steps.add(new Step("17b2-modded-armor", () -> hoverIndex = 6, 25, true));
         steps.add(new Step("17b3-modded-backtank", () -> hoverIndex = 8, 25, true));
+        steps.add(new Step("17b3b-modded-cogwheel", () -> hoverIndex = 7, 25, true));
         steps.add(new Step("17b4-modded-trophy", () -> hoverIndex = 1, 25, true));
+        steps.add(new Step("17b5-modded-ponder", () -> {
+            try {
+                var all = (java.util.Map<?, ?>) Class.forName("com.simibubi.create.foundation.ponder.PonderRegistry").getField("ALL").get(null);
+                Fordix.LOGGER.info("[devtest] ponder registry: {} items, backtank={}, cogwheel={}", all.size(),
+                        all.containsKey(new net.minecraft.resources.ResourceLocation("create:copper_backtank")),
+                        all.containsKey(new net.minecraft.resources.ResourceLocation("create:cogwheel")));
+            } catch (ReflectiveOperationException e) {
+                Fordix.LOGGER.info("[devtest] ponder registry unreadable: {}", e.toString());
+            }
+            if (!com.omneria.fordix.client.guide.PonderScenes.open(new net.minecraft.world.item.ItemStack(
+                    net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation("create:cogwheel"))))) {
+                Fordix.LOGGER.info("[devtest] no Ponder scene (Create not installed?)");
+            }
+        }, 80, false));
         steps.add(new Step("17c-modded-advancements", () -> {
             hoverIndex = 0;
             mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements()));

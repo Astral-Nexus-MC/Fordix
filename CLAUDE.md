@@ -54,7 +54,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `NotificationScheduler`, sauvegardée dans `fordix-admin.json` du monde), modèles et éditeur de panels.
 - Guides : onglets de l'inventaire (`GuideTabs`), écran Guides ouvert depuis le menu pause (`GuidesScreen` : guides des mods
   + pages du serveur `GuidePage`/`PageMarkup`, stockées dans `AdminStore`, édités dans l'onglet Pages de l'admin, envoyées par
-  `ClientboundGuidePagesPayload`), indice Maj + G dans l'infobulle des objets d'un mod avec guide (`GuideHints`).
+  `ClientboundGuidePagesPayload`), indice Maj + G dans l'infobulle des objets d'un mod avec guide (`GuideHints`) ; pour Create 0.5.x la touche ouvre la scène Ponder de l'objet (`PonderScenes`, par réflexion) quand il en a une, sinon l'index.
 - Livre de bienvenue (item `fordix:welcome_book`, `welcome/`) : liste d'étapes `[welcomeBook] steps` de `fordix-common.toml`
   (advancement, command, guides, manual), récompense facultative, donné à la première connexion ou par `/fordix book`.
   L'onglet Livre de l'écran d'administration remplace ces étapes et la récompense (`AdminStore.welcomeSteps/welcomeReward`, sans

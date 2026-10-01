@@ -49,8 +49,10 @@ public final class GuideHints {
             return;
         }
         List<Component> lines = event.getToolTip();
+        String text = entry.action() == GuideEntry.Action.PONDER && PonderScenes.hasScene(event.getItemStack())
+                ? "Voir la scene Ponder de cet objet" : "Ouvrir le guide : " + entry.label();
         lines.add(Component.literal("[" + keyLabel() + "] ").withStyle(ChatFormatting.AQUA)
-                .append(Component.literal("Ouvrir le guide : " + entry.label()).withStyle(ChatFormatting.GRAY)));
+                .append(Component.literal(text).withStyle(ChatFormatting.GRAY)));
     }
 
     /** Shift + the guide key over an item in a container screen. */
@@ -66,6 +68,9 @@ public final class GuideHints {
         GuideEntry entry = entryFor(slot.getItem());
         if (entry != null) {
             event.setCanceled(true);
+            if (entry.action() == GuideEntry.Action.PONDER && PonderScenes.open(slot.getItem())) {
+                return;
+            }
             GuideActions.run(entry);
         }
     }
