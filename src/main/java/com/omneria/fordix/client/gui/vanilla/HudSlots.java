@@ -32,6 +32,11 @@ public final class HudSlots {
         return !isBuiltin(id) && !isJourneyMap(id);
     }
 
+    /** The chat's text field is always shown: hiding it would leave you typing blind. */
+    public static boolean canHide(String id) {
+        return !id.equals(ExtraHud.CHAT_INPUT);
+    }
+
     public static String label(String id) {
         if (isBuiltin(id)) {
             return Tr.s("hud.element." + id);
@@ -43,7 +48,7 @@ public final class HudSlots {
         String namespace = id.substring(0, colon);
         String path = id.substring(colon + 1);
         String key = "fordix.hud.overlay." + path;
-        if (namespace.equals("minecraft") && I18n.exists(key)) {
+        if (I18n.exists(key)) {
             return I18n.get(key);
         }
         String words = path.replace('_', ' ').replace('/', ' ');

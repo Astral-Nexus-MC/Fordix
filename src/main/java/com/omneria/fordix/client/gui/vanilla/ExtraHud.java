@@ -13,8 +13,11 @@ import com.omneria.fordix.client.gui.layout.HudSlot;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.GuiOverlayManager;
 import net.minecraftforge.client.gui.overlay.NamedGuiOverlay;
@@ -49,6 +52,10 @@ public final class ExtraHud {
             VanillaGuiOverlay.POTION_ICONS.id(), VanillaGuiOverlay.ITEM_NAME.id(), VanillaGuiOverlay.TITLE_TEXT.id(),
             VanillaGuiOverlay.SUBTITLES.id(), VanillaGuiOverlay.RECORD_OVERLAY.id());
 
+    /** The chat's text field: not an overlay but part of the chat screen, so it has its own slot. */
+    public static final String CHAT_INPUT = "fordix:chat_input";
+    private static final java.lang.reflect.Field CHAT_INPUT_FIELD = Reflect.uniqueField(ChatScreen.class, EditBox.class);
+    private static boolean chatShifted;
     private static Map<String, HudSlot> slots;
     private static final Set<ResourceLocation> shifted = new HashSet<>();
 
@@ -104,7 +111,8 @@ public final class ExtraHud {
             case "chat_panel" -> new HudSnap.Rect(0, height - 130, 320, 90);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);
             case "potion_icons" -> new HudSnap.Rect(width - 25, 1, 24, 24);
-            case "item_name" -> new HudSnap.Rect(center - 60, height - 72, 120, 10);
+            case "item_name" -> new HudSnap.Rect(center - 80, height - 74, 160, 22);
+            case "chat_input" -> new HudSnap.Rect(2, height - 14, Math.max(1, width - 4), 12);
             case "title_text" -> new HudSnap.Rect(center - 80, height / 2 - 30, 160, 40);
             case "subtitles" -> new HudSnap.Rect(width - 120, height - 70, 118, 30);
             case "record_overlay" -> new HudSnap.Rect(center - 80, height - 68, 160, 12);
@@ -146,6 +154,59 @@ public final class ExtraHud {
         if (shifted.remove(event.getOverlay().id())) {
             event.getGuiGraphics().pose().popPose();
         }
+    }
+
+    // ---- the chat's text field (drawn by the chat screen)
+
+    /** Highest priority: shifts and sizes the whole chat screen, which draws only the text field, its bar and suggestions. */
+    public static void onChatRenderPre(ScreenEvent.Render.Pre event) {
+        if (!(event.getScreen() instanceof ChatScreen screen)) {
+            return;
+        }
+        HudSlot slot = slots().get(CHAT_INPUT);
+        if (slot == null || !slot.customized()) {
+            return;
+        }
+        HudSnap.Rect base = defaults(CHAT_INPUT, screen.width, screen.height);
+        HudSnap.Rect placed = slot.placed(base, screen.width, screen.height);
+        float scale = slot.scaleValue();
+        if (placed.x() != base.x() || placed.y() != base.y() || scale != 1.0F) {
+            var pose = event.getGuiGraphics().pose();
+            pose.pushPose();
+            pose.translate(placed.x(), placed.y(), 0.0F);
+            pose.scale(scale, scale, 1.0F);
+            pose.translate(-base.x(), -base.y(), 0.0F);
+            chatShifted = true;
+        }
+    }
+
+    public static void onChatRenderPost(ScreenEvent.Render.Post event) {
+        if (chatShifted && event.getScreen() instanceof ChatScreen) {
+            chatShifted = false;
+            event.getGuiGraphics().pose().popPose();
+        }
+    }
+
+    /** A click on the moved text field is handed to it in its own coordinates, so the caret lands where you clicked. */
+    public static void onChatMousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (!(event.getScreen() instanceof ChatScreen screen) || CHAT_INPUT_FIELD == null) {
+            return;
+        }
+        HudSlot slot = slots().get(CHAT_INPUT);
+        if (slot == null || !slot.customized()) {
+            return;
+        }
+        HudSnap.Rect base = defaults(CHAT_INPUT, screen.width, screen.height);
+        HudSnap.Rect placed = slot.placed(base, screen.width, screen.height);
+        double mouseX = event.getMouseX();
+        double mouseY = event.getMouseY();
+        if (mouseX < placed.x() || mouseX >= placed.right() || mouseY < placed.y() || mouseY >= placed.bottom()
+                || !(Reflect.get(CHAT_INPUT_FIELD, screen) instanceof EditBox input)) {
+            return;
+        }
+        float scale = slot.scaleValue();
+        input.mouseClicked((mouseX - placed.x()) / scale + base.x(), (mouseY - placed.y()) / scale + base.y(), event.getButton());
+        event.setCanceled(true);
     }
 
     // ---- discovery
@@ -196,6 +257,7 @@ public final class ExtraHud {
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
         }
+        ids.add(CHAT_INPUT);
         return ids;
     }
 

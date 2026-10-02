@@ -168,6 +168,7 @@
     "fordix.hud.hidden_suffix": " (masqué)",
     "fordix.hud.hide": "Masquer",
     "fordix.hud.magnet": "Aimant : %s",
+    "fordix.hud.overlay.chat_input": "Barre de texte du chat",
     "fordix.hud.overlay.chat_panel": "Chat",
     "fordix.hud.overlay.hotbar": "Barre d'objets",
     "fordix.hud.overlay.item_name": "Nom de l'objet tenu",

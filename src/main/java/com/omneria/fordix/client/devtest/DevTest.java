@@ -173,6 +173,7 @@ public final class DevTest {
             com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layout.listed());
             layout.nudge("minecraft:chat_panel", layout.width - 330, -(layout.height - 140));
             layout.nudge("minecraft:hotbar", 0, -60);
+            layout.nudge("fordix:chat_input", 150, -140);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:hotbar", 1.5F);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:chat_panel", 0.7F);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("health", 1.6F);
@@ -180,13 +181,19 @@ public final class DevTest {
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("boss", 1.4F);
         }, 30, false));
         steps.add(new Step("10d-hud-extras-live", () -> mc.setScreen(null), 30, false));
+        steps.add(new Step("10d2-chat-input-moved", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("bonjour")), 20, false));
         steps.add(new Step("10e-hud-extras-reset", () -> {
+            mc.setScreen(null);
             for (String id : layoutForExtras.listed()) {
                 com.omneria.fordix.client.gui.vanilla.HudSlots.reset(id);
             }
             com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
             com.omneria.fordix.FordixConfig.hudOffsetX("health").save();
         }, 10, false));
+        steps.add(new Step("10j-hud-held-item", () -> {
+            // Switching the held item shows its name line with the turning 3D model beside it.
+            mc.player.getInventory().selected = 3;
+        }, 8, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

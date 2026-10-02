@@ -24,8 +24,14 @@ public final class JourneyMapHud {
         return ModList.get().isLoaded("journeymap") && properties() != null;
     }
 
+    /** The settings the live minimap reads (its current preset), falling back to the active preset's. */
     private static Object properties() {
         try {
+            Object map = minimap();
+            Object current = map == null ? null : map.getClass().getMethod("getCurrentMinimapProperties").invoke(map);
+            if (current != null) {
+                return current;
+            }
             Object client = Class.forName("journeymap.client.JourneymapClient").getMethod("getInstance").invoke(null);
             return client == null ? null : client.getClass().getMethod("getActiveMiniMapProperties").invoke(client);
         } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
@@ -65,14 +71,15 @@ public final class JourneyMapHud {
             double scale = Minecraft.getInstance().getWindow().getGuiScale();
             int w = 100;
             int h = 100;
-            Object displayVars = minimap().getClass().getMethod("getDisplayVars").invoke(minimap());
+            Object map = minimap();
+            Object displayVars = map.getClass().getMethod("getDisplayVars").invoke(map);
             if (displayVars != null) {
                 w = displayVars.getClass().getField("minimapWidth").getInt(displayVars);
                 h = displayVars.getClass().getField("minimapHeight").getInt(displayVars);
             }
             w = Math.max(8, (int) Math.round(w / scale));
             h = Math.max(8, (int) Math.round(h / scale));
-            String position = String.valueOf(value(field(props, "position")));
+            String position = ((Enum<?>) value(field(props, "position"))).name();
             float px = (Float) value(field(props, "positionX"));
             float py = (Float) value(field(props, "positionY"));
             return switch (position) {

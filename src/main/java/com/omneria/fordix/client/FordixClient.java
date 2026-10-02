@@ -22,6 +22,7 @@ import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
+import com.omneria.fordix.client.gui.vanilla.HeldItemHud;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.AnalysisCommand;
 import com.omneria.fordix.client.tooltip.ItemTooltipRenderer;
@@ -238,6 +239,33 @@ public final class FordixClient {
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onExtraOverlayPre(RenderGuiOverlayEvent.Pre event) {
             ExtraHud.onOverlayPre(event);
+        }
+
+        /** Highest priority: the chat screen is shifted before anything else draws on it. */
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatInputRenderPre(ScreenEvent.Render.Pre event) {
+            ExtraHud.onChatRenderPre(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        static void onChatInputRenderPost(ScreenEvent.Render.Post event) {
+            ExtraHud.onChatRenderPost(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatInputMousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
+            ExtraHud.onChatMousePressed(event);
+        }
+
+        @SubscribeEvent
+        static void onHeldItemTick(TickEvent.ClientTickEvent event) {
+            HeldItemHud.onClientTick(event);
+        }
+
+        /** Normal priority, so it runs before the lowest-priority pop: the model moves with the held item's name line. */
+        @SubscribeEvent
+        static void onHeldItemOverlayPost(RenderGuiOverlayEvent.Post event) {
+            HeldItemHud.onOverlayPost(event);
         }
 
         /** Lowest priority: the rarity frames drawn after the hotbar follow it when it was moved. */
