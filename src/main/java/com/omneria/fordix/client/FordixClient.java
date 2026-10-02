@@ -21,6 +21,8 @@ import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ServerPages;
+import com.omneria.fordix.client.chat.ChatLog;
+import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HeldItemHud;
 import com.omneria.fordix.client.notification.NotificationOverlay;
@@ -241,6 +243,55 @@ public final class FordixClient {
             ExtraHud.onOverlayPre(event);
         }
 
+        /** Lowest priority, cancelled events included: balances the pose pushed for an overlay that got cancelled. */
+        @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+        static void onExtraOverlayPreCancelled(RenderGuiOverlayEvent.Pre event) {
+            ExtraHud.onOverlayPreCancelled(event);
+        }
+
+        /** Normal priority: after the layout shift, replaces vanilla's chat overlay with the Voidframe chat. */
+        @SubscribeEvent
+        static void onChatOverlayPre(RenderGuiOverlayEvent.Pre event) {
+            ChatPanel.onOverlayPre(event);
+        }
+
+        @SubscribeEvent
+        static void onChatScreenRenderPre(ScreenEvent.Render.Pre event) {
+            ChatPanel.onScreenRenderPre(event);
+        }
+
+        @SubscribeEvent
+        static void onChatScreenInit(ScreenEvent.Init.Post event) {
+            ChatPanel.onScreenInit(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatScreenMouse(ScreenEvent.MouseButtonPressed.Pre event) {
+            ChatPanel.onMousePressed(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatScreenScroll(ScreenEvent.MouseScrolled.Pre event) {
+            ChatPanel.onMouseScrolled(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatScreenKey(ScreenEvent.KeyPressed.Pre event) {
+            ChatPanel.onKeyPressed(event);
+        }
+
+        @SubscribeEvent
+        static void onChatTick(TickEvent.ClientTickEvent event) {
+            if (event.phase == TickEvent.Phase.END) {
+                ChatLog.tick(Minecraft.getInstance());
+            }
+        }
+
+        @SubscribeEvent
+        static void onChatLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+            ChatLog.clear();
+        }
+
         /** Highest priority: the chat screen is shifted before anything else draws on it. */
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatInputRenderPre(ScreenEvent.Render.Pre event) {
@@ -250,11 +301,6 @@ public final class FordixClient {
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onChatInputRenderPost(ScreenEvent.Render.Post event) {
             ExtraHud.onChatRenderPost(event);
-        }
-
-        @SubscribeEvent(priority = EventPriority.HIGHEST)
-        static void onChatInputMousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
-            ExtraHud.onChatMousePressed(event);
         }
 
         @SubscribeEvent

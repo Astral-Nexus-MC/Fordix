@@ -193,6 +193,19 @@ public final class DevTest {
             // Switching the held item shows its name line with the turning 3D model beside it.
             mc.player.getInventory().selected = 3;
         }, 8, false));
+        steps.add(new Step("12c-chat-closed", () -> {
+            cmd(mc, "say Redemarrage dans 10 minutes");
+            cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Ana\",\"on se retrouve au spawn ? Dev tu as le kit ?\"]}");
+            cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Kiro\",\"ok, j'arrive\"]}");
+            cmd(mc, "gamemode creative");
+        }, 25, false));
+        steps.add(new Step("12d-chat-open", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("/tp An")), 25, false));
+        steps.add(new Step("12e-chat-tab-server", () ->
+                com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.SERVER), 15, false));
+        steps.add(new Step("12f-chat-tab-reset", () -> {
+            com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.ALL);
+            mc.setScreen(null);
+        }, 10, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

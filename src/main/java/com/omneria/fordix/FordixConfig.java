@@ -21,6 +21,7 @@ public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
+    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_CHAT;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
     public static final ForgeConfigSpec.ConfigValue<String> TOOLTIP_STYLE;
@@ -43,6 +44,9 @@ public final class FordixConfig {
         VOIDFRAME_HUD = builder
                 .comment("Replace the health hearts with a Voidframe bar showing the exact value.")
                 .define("voidframeHud", true);
+        VOIDFRAME_CHAT = builder
+                .comment("Replace the chat with the Voidframe one: tabs, player heads, times and a styled text field.")
+                .define("voidframeChat", true);
         VOIDFRAME_TOOLTIPS = builder
                 .comment("Draw item tooltips with a header, attribute bars and rarity colors.")
                 .define("voidframeTooltips", true);

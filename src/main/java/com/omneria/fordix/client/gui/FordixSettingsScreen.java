@@ -43,7 +43,7 @@ public class FordixSettingsScreen extends FordixScreen {
 
     @Override
     protected void init() {
-        int panelHeight = 28 + ROW * 6 + 6 + BUTTON_HEIGHT + PADDING;
+        int panelHeight = 28 + ROW * 7 + 6 + BUTTON_HEIGHT + PADDING;
         int panelX = centerX(PANEL_WIDTH);
         int panelY = centerY(panelHeight);
         this.panel = new Panel(panelX, panelY, PANEL_WIDTH, panelHeight);
@@ -83,7 +83,9 @@ public class FordixSettingsScreen extends FordixScreen {
 
         addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, Tr.s("settings.guide_hints"), FordixConfig.GUIDE_HINTS));
 
-        addRenderableWidget(new FordixButton(left, y + ROW * 6 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
+        addRenderableWidget(toggle(left, y + ROW * 6, COLUMN_WIDTH, Tr.s("settings.chat"), FordixConfig.VOIDFRAME_CHAT));
+
+        addRenderableWidget(new FordixButton(left, y + ROW * 7 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
                 Tr.c("common.close"), this::onClose));
     }
 

@@ -9,6 +9,8 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.client.chat.ChatLayout;
+import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.gui.layout.HudSlot;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import net.minecraft.client.Minecraft;
@@ -100,7 +102,10 @@ public final class ExtraHud {
     public static HudSnap.Rect defaults(String id, int width, int height) {
         HudSlot slot = slot(id);
         HudSnap.Rect own = slot.measured ? slot.base(width, height) : fallback(id, width, height);
-        return id.equals(CHAT_PANEL) ? withTextField(own, width, height) : own;
+        if (!id.equals(CHAT_PANEL)) {
+            return own;
+        }
+        return ChatPanel.enabled() ? ChatLayout.block(width, height, ChatPanel.panelWidth(width)) : withTextField(own, width, height);
     }
 
     /** The history and, under it, a slice of the text field as wide as the history (the field itself runs the screen's width). */
@@ -156,6 +161,16 @@ public final class ExtraHud {
         }
     }
 
+    /**
+     * Lowest priority, even for a cancelled overlay: Forge sends no Post event when the Pre one was cancelled (the
+     * Voidframe chat does exactly that), so the pose pushed above is popped here instead.
+     */
+    public static void onOverlayPreCancelled(RenderGuiOverlayEvent.Pre event) {
+        if (event.isCanceled() && shifted.remove(event.getOverlay().id())) {
+            event.getGuiGraphics().pose().popPose();
+        }
+    }
+
     /** Lowest priority: other listeners drawing on this overlay (the hotbar's rarity frames) move with it. */
     public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
         if (shifted.remove(event.getOverlay().id())) {
@@ -165,24 +180,36 @@ public final class ExtraHud {
 
     // ---- the chat screen (text field, suggestions): same shift and size as the history
 
+    /** The chat block as it sits on this screen: its default rectangle, where it was put, and its size factor. */
+    public record ChatFrame(HudSnap.Rect base, HudSnap.Rect placed, float scale) {
+        /** A screen position mapped back into the block's own (default) coordinates. */
+        public double toBlockX(double x) {
+            return (x - placed.x()) / scale + base.x();
+        }
+
+        public double toBlockY(double y) {
+            return (y - placed.y()) / scale + base.y();
+        }
+    }
+
+    public static ChatFrame chatFrame(int width, int height) {
+        HudSlot slot = slot(CHAT_PANEL);
+        HudSnap.Rect base = defaults(CHAT_PANEL, width, height);
+        return new ChatFrame(base, slot.placed(base, width, height), slot.scaleValue());
+    }
+
     /** Highest priority: shifts and sizes the whole chat screen, which draws only the text field, its bar and suggestions. */
     public static void onChatRenderPre(ScreenEvent.Render.Pre event) {
         if (!(event.getScreen() instanceof ChatScreen screen)) {
             return;
         }
-        HudSlot slot = slots().get(CHAT_PANEL);
-        if (slot == null || !slot.customized()) {
-            return;
-        }
-        HudSnap.Rect base = defaults(CHAT_PANEL, screen.width, screen.height);
-        HudSnap.Rect placed = slot.placed(base, screen.width, screen.height);
-        float scale = slot.scaleValue();
-        if (placed.x() != base.x() || placed.y() != base.y() || scale != 1.0F) {
+        ChatFrame frame = chatFrame(screen.width, screen.height);
+        if (frame.placed().x() != frame.base().x() || frame.placed().y() != frame.base().y() || frame.scale() != 1.0F) {
             var pose = event.getGuiGraphics().pose();
             pose.pushPose();
-            pose.translate(placed.x(), placed.y(), 0.0F);
-            pose.scale(scale, scale, 1.0F);
-            pose.translate(-base.x(), -base.y(), 0.0F);
+            pose.translate(frame.placed().x(), frame.placed().y(), 0.0F);
+            pose.scale(frame.scale(), frame.scale(), 1.0F);
+            pose.translate(-frame.base().x(), -frame.base().y(), 0.0F);
             chatShifted = true;
         }
     }
@@ -192,27 +219,6 @@ public final class ExtraHud {
             chatShifted = false;
             event.getGuiGraphics().pose().popPose();
         }
-    }
-
-    /** A click on the moved chat is handed to the screen in the chat's own coordinates: links and the caret land where you clicked. */
-    public static void onChatMousePressed(ScreenEvent.MouseButtonPressed.Pre event) {
-        if (!(event.getScreen() instanceof ChatScreen screen)) {
-            return;
-        }
-        HudSlot slot = slots().get(CHAT_PANEL);
-        if (slot == null || !slot.customized()) {
-            return;
-        }
-        HudSnap.Rect base = defaults(CHAT_PANEL, screen.width, screen.height);
-        HudSnap.Rect placed = slot.placed(base, screen.width, screen.height);
-        double mouseX = event.getMouseX();
-        double mouseY = event.getMouseY();
-        if (mouseX < placed.x() || mouseX >= placed.right() || mouseY < placed.y() || mouseY >= placed.bottom()) {
-            return;
-        }
-        float scale = slot.scaleValue();
-        screen.mouseClicked((mouseX - placed.x()) / scale + base.x(), (mouseY - placed.y()) / scale + base.y(), event.getButton());
-        event.setCanceled(true);
     }
 
     // ---- discovery
@@ -239,6 +245,10 @@ public final class ExtraHud {
                 ResourceLocation id = named.id();
                 boolean vanilla = id.getNamespace().equals("minecraft");
                 if (vanilla && !MOVABLE_VANILLA.contains(id)) {
+                    continue;
+                }
+                if (id.toString().equals(CHAT_PANEL) && ChatPanel.enabled()) {
+                    ids.add(id.toString());
                     continue;
                 }
                 HudSnap.Rect rect = measure(minecraft, gui, named, target, image, guiWidth, guiHeight);
