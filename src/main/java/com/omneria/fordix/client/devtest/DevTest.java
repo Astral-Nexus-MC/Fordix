@@ -171,9 +171,8 @@ public final class DevTest {
         steps.add(new Step("10c-hud-extras-moved", () -> {
             HudLayoutScreen layout = layoutForExtras;
             com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layout.listed());
-            layout.nudge("minecraft:chat_panel", layout.width - 330, -(layout.height - 140));
+            layout.nudge("minecraft:chat_panel", layout.width - 330, -(layout.height - 160));
             layout.nudge("minecraft:hotbar", 0, -60);
-            layout.nudge("fordix:chat_input", 150, -140);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:hotbar", 1.5F);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:chat_panel", 0.7F);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("health", 1.6F);

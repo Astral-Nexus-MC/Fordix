@@ -199,7 +199,7 @@ public class HudLayoutScreen extends FordixScreen {
             drawTag(guiGraphics, selected);
         }
         hideButton.setMessage(Tr.c(selected >= 0 && HudSlots.hidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
-        hideButton.active = selected >= 0 && HudSlots.canHide(elements.get(selected));
+        hideButton.active = selected >= 0;
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         drawHelp(guiGraphics);
     }
