@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.guide.GuideActions;
 import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.client.guide.GuideTabs;
@@ -59,7 +60,7 @@ public class GuidesScreen extends FordixScreen {
     private int panelHeight;
 
     public GuidesScreen(Screen parent) {
-        super(Component.literal("FORDIX // GUIDES"));
+        super(Tr.c("guides.title"));
         this.parent = parent;
         // Ticks the welcome book's "open the Guides" step, if the server has one.
         PanelNetwork.CHANNEL.sendToServer(new ServerboundWelcomePayload("guides_opened", 0));
@@ -72,15 +73,15 @@ public class GuidesScreen extends FordixScreen {
         left = centerX(panelWidth);
         top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
-        search = new EditBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Component.literal("Rechercher"));
-        search.setHint(Component.literal("rechercher..."));
+        search = new EditBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("guides.search"));
+        search.setHint(Tr.c("guides.search_hint"));
         search.setValue(query);
         search.setResponder(text -> {
             query = text;
             rebuildRows();
         });
         addRenderableWidget(search);
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 60, top + 4, 60, 14, Component.literal("Fermer"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 60, top + 4, 60, 14, Tr.c("common.close"), this::onClose));
         rebuildRows();
     }
 
@@ -90,12 +91,12 @@ public class GuidesScreen extends FordixScreen {
         for (GuideEntry entry : GuideTabs.installedEntries()) {
             String title = ModNames.of(entry.modId()) + " : " + entry.label();
             if (needle.isEmpty() || title.toLowerCase(Locale.ROOT).contains(needle)) {
-                rows.add(new Row("MODS", entry.label(), GuideTabs.iconFor(entry.icon()), entry, null));
+                rows.add(new Row(Tr.s("guides.section.mods"), entry.label(), GuideTabs.iconFor(entry.icon()), entry, null));
             }
         }
         for (GuidePage page : ServerPages.pages()) {
             if (needle.isEmpty() || page.title.toLowerCase(Locale.ROOT).contains(needle) || page.body.toLowerCase(Locale.ROOT).contains(needle)) {
-                rows.add(new Row("SERVEUR", page.title, new ItemStack(Items.WRITABLE_BOOK), null, page));
+                rows.add(new Row(Tr.s("guides.section.server"), page.title, new ItemStack(Items.WRITABLE_BOOK), null, page));
             }
         }
         selected = Math.max(0, Math.min(selected, rows.size() - 1));
@@ -139,7 +140,7 @@ public class GuidesScreen extends FordixScreen {
         int detailX = left + PADDING + LIST_WIDTH + 8;
         guiGraphics.fill(detailX - 5, top + 24, detailX - 4, top + panelHeight - PADDING, FordixPalette.BEVEL_HIGHLIGHT);
         if (rows.isEmpty()) {
-            guiGraphics.drawString(this.font, "Aucun guide ne correspond.", detailX, top + 30, FordixPalette.TEXT, false);
+            guiGraphics.drawString(this.font, Tr.s("guides.none"), detailX, top + 30, FordixPalette.TEXT, false);
         } else {
             drawDetail(guiGraphics, rows.get(selected), detailX, mouseX, mouseY);
         }
@@ -170,7 +171,7 @@ public class GuidesScreen extends FordixScreen {
             if (row.isNew()) {
                 int bx = x + LIST_WIDTH - 32;
                 guiGraphics.fill(bx, y + 4, bx + 30, y + 14, FordixPalette.ACCENT);
-                guiGraphics.drawString(this.font, "new", bx + 6, y + 5, 0xFF05070A, false);
+                guiGraphics.drawString(this.font, Tr.s("guides.new_short"), bx + 6, y + 5, 0xFF05070A, false);
             }
             y += ROW;
             section = row.section();
@@ -189,14 +190,13 @@ public class GuidesScreen extends FordixScreen {
                 y += 10;
             }
             y += 8;
-            drawButton(guiGraphics, x, y, 130, "Ouvrir", mouseX, mouseY);
+            drawButton(guiGraphics, x, y, 130, Tr.s("guides.open"), mouseX, mouseY);
             return;
         }
         GuidePage page = row.page();
         guiGraphics.drawString(this.font, page.title, x, y, FordixPalette.TEXT_BRIGHT, false);
         if (!page.author.isEmpty()) {
-            String meta = "mis a jour " + java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(new java.util.Date(page.updatedAt))
-                    + " par " + page.author;
+            String meta = Tr.s("guides.updated", java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(new java.util.Date(page.updatedAt)), page.author);
             guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(meta, right - x), x, y + 11, FordixPalette.BEVEL_HIGHLIGHT, false);
         }
         int viewTop = y + 24;
@@ -259,10 +259,10 @@ public class GuidesScreen extends FordixScreen {
 
     private static String describe(GuideEntry entry) {
         return switch (entry.action()) {
-            case PONDER -> "Ouvre l'index de Ponder, les animations qui expliquent chaque machine.";
-            case PATCHOULI -> "Ouvre son livre Patchouli.";
-            case URL -> "Ouvre son wiki : " + entry.target() + " (une confirmation est demandee avant).";
-            case COMMAND -> "Lance la commande /" + entry.target() + ".";
+            case PONDER -> Tr.s("guides.describe.ponder");
+            case PATCHOULI -> Tr.s("guides.describe.patchouli");
+            case URL -> Tr.s("guides.describe.url", entry.target());
+            case COMMAND -> Tr.s("guides.describe.command", entry.target());
         };
     }
 

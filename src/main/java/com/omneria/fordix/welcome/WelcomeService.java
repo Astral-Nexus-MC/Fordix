@@ -1,5 +1,6 @@
 package com.omneria.fordix.welcome;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.FordixServerConfig;
 import com.omneria.fordix.notification.server.NotificationScheduler;
@@ -127,7 +128,7 @@ public final class WelcomeService {
         String command = reward.replace("%player%", player.getGameProfile().getName());
         var server = player.server;
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), command);
-        player.sendSystemMessage(Component.literal("Livre de bienvenue termine : une recompense t'attend !"));
+        player.sendSystemMessage(Tr.c("welcome.reward_done"));
     }
 
     /** Sends the checklist; {@code open} makes the client show the book's screen. */

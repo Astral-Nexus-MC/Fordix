@@ -1,5 +1,6 @@
 package com.omneria.fordix.panel.server;
 
+import com.omneria.fordix.Tr;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -66,7 +67,7 @@ public final class PanelCommand {
         String id = StringArgumentType.getString(ctx, "id");
         String title = StringArgumentType.getString(ctx, "title");
         PanelRegistry.draft(ctx.getSource().getServer(), id).setTitle(title);
-        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : titre mis a jour."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.title", id), false);
         return 1;
     }
 
@@ -74,7 +75,7 @@ public final class PanelCommand {
         String id = StringArgumentType.getString(ctx, "id");
         String description = StringArgumentType.getString(ctx, "description");
         PanelRegistry.draft(ctx.getSource().getServer(), id).setDescription(description);
-        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : description mise a jour."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.description", id), false);
         return 1;
     }
 
@@ -83,7 +84,7 @@ public final class PanelCommand {
         String label = StringArgumentType.getString(ctx, "label");
         String command = StringArgumentType.getString(ctx, "command");
         PanelRegistry.draft(ctx.getSource().getServer(), id).addButton(label, command);
-        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' : bouton '" + label + "' ajoute."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.button", id, label), false);
         return 1;
     }
 
@@ -93,7 +94,7 @@ public final class PanelCommand {
 
         PanelDraft draft = PanelRegistry.find(ctx.getSource().getServer(), id);
         if (draft == null) {
-            ctx.getSource().sendFailure(Component.literal("Panel '" + id + "' introuvable."));
+            ctx.getSource().sendFailure(Tr.c("msg.panel.missing", id));
             return 0;
         }
         PanelSpec spec = draft.toSpec();
@@ -101,16 +102,16 @@ public final class PanelCommand {
         PanelSender.send(spec, targets);
 
         int count = targets.size();
-        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' envoye a " + count + " joueur(s)."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.sent", id, count), false);
         return count;
     }
 
     private static int list(CommandContext<CommandSourceStack> ctx) {
         List<String> ids = PanelRegistry.ids(ctx.getSource().getServer());
         if (ids.isEmpty()) {
-            ctx.getSource().sendSuccess(() -> Component.literal("Aucun panel enregistre."), false);
+            ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.none"), false);
         } else {
-            ctx.getSource().sendSuccess(() -> Component.literal(ids.size() + " panel(s) : " + String.join(", ", ids)), false);
+            ctx.getSource().sendSuccess(() -> Tr.c("cmd.panel.list", ids.size(), String.join(", ", ids)), false);
         }
         return ids.size();
     }
@@ -118,10 +119,10 @@ public final class PanelCommand {
     private static int delete(CommandContext<CommandSourceStack> ctx) {
         String id = StringArgumentType.getString(ctx, "id");
         if (!PanelRegistry.delete(ctx.getSource().getServer(), id)) {
-            ctx.getSource().sendFailure(Component.literal("Panel '" + id + "' introuvable."));
+            ctx.getSource().sendFailure(Tr.c("msg.panel.missing", id));
             return 0;
         }
-        ctx.getSource().sendSuccess(() -> Component.literal("Panel '" + id + "' supprime."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("msg.panel.deleted", id), false);
         return 1;
     }
 }

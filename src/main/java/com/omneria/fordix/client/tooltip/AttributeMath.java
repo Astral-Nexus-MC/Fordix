@@ -43,13 +43,16 @@ public final class AttributeMath {
         return (float) Math.max(0.0, Math.min(1.0, ratio));
     }
 
-    /** Numbers as the game shows them: up to two decimals, comma, no trailing zeros ("1,6", "7"). */
+    /** The decimal separator of the game language: set by the client, a comma until then. */
+    public static volatile java.util.function.Supplier<Character> separator = () -> ',';
+
+    /** Numbers as the game shows them: up to two decimals, the language's separator, no trailing zeros ("1,6", "7"). */
     public static String number(double value) {
         if (value == Math.rint(value)) {
             return String.valueOf((long) value);
         }
         String text = String.format(Locale.ROOT, "%.2f", value).replaceAll("0+$", "").replaceAll("\\.$", "");
-        return text.replace('.', ',');
+        return text.replace('.', separator.get());
     }
 
     /** A signed difference: "+2", "-0,4", or "=" when there is none. */

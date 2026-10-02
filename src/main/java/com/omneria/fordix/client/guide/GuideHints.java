@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.guide;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.FordixClient;
 import com.omneria.fordix.client.gui.ItemSheetScreen;
@@ -47,7 +48,7 @@ public final class GuideHints {
     }
 
     private static String keyLabel() {
-        return "Maj + " + FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString().toUpperCase();
+        return Tr.s("guides.hint.shift") + " + " + FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString().toUpperCase();
     }
 
     public static void onItemTooltip(ItemTooltipEvent event) {
@@ -59,7 +60,7 @@ public final class GuideHints {
         }
         List<Component> lines = event.getToolTip();
         String text = PonderScenes.hasScene(event.getItemStack()) && isPonder(entryFor(event.getItemStack()))
-                ? "Voir la scene Ponder de cet objet" : "Voir la fiche de l'objet";
+                ? Tr.s("guides.hint.ponder") : Tr.s("guides.hint.sheet");
         lines.add(Component.literal("[" + keyLabel() + "] ").withStyle(ChatFormatting.AQUA)
                 .append(Component.literal(text).withStyle(ChatFormatting.GRAY)));
     }

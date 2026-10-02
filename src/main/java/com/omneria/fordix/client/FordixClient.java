@@ -1,5 +1,6 @@
 package com.omneria.fordix.client;
 
+import com.omneria.fordix.Tr;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.FordixConfig;
@@ -126,6 +127,8 @@ public final class FordixClient {
         /** The "Config" button of the Mods list opens Fordix's settings screen. */
         @SubscribeEvent
         static void onClientSetup(FMLClientSetupEvent event) {
+            com.omneria.fordix.client.tooltip.AttributeMath.separator = () ->
+                    Minecraft.getInstance().getLanguageManager().getSelected().startsWith("fr") ? ',' : '.';
             ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
                     () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> new FordixSettingsScreen(parent)));
         }
@@ -323,7 +326,7 @@ public final class FordixClient {
         private final boolean unread;
 
         GuidesPauseButton(int x, int y, int width, boolean unread, Runnable onPress) {
-            super(x, y, width, 20, Component.literal("Guides"), b -> onPress.run(), DEFAULT_NARRATION);
+            super(x, y, width, 20, Tr.c("guides.button"), b -> onPress.run(), DEFAULT_NARRATION);
             this.unread = unread;
         }
 
@@ -332,11 +335,11 @@ public final class FordixClient {
             super.renderWidget(g, mx, my, pt);
             if (unread) {
                 var font = Minecraft.getInstance().font;
-                int w = font.width("New") + 6;
+                int w = font.width(Tr.s("guides.new_badge")) + 6;
                 int x = getX() + getWidth() - w - 4;
                 int y = getY() + 5;
                 g.fill(x, y, x + w, y + 10, com.omneria.fordix.client.gui.FordixPalette.ACCENT | 0xFF000000);
-                g.drawString(font, "New", x + 3, y + 1, 0xFF101018, false);
+                g.drawString(font, Tr.s("guides.new_badge"), x + 3, y + 1, 0xFF101018, false);
             }
         }
     }

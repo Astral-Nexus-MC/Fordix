@@ -1,62 +1,76 @@
 package com.omneria.fordix.client.tooltip;
 
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * What an enchantment actually does, in numbers, for the item tooltip. Formulas are Minecraft
- * 1.20.1's; enchantments it doesn't know (other mods') return null and show as a plain line.
- * Plain Java, unit tested.
+ * 1.20.1's; enchantments it doesn't know (other mods') return null and show as a plain line. The
+ * description is a language key (under {@code fordix.}) with its numbers, so it follows the game
+ * language. Plain Java, unit tested.
  */
 public final class EnchantEffects {
     private EnchantEffects() {
     }
 
-    /** A short French description of the effect at this level, or null when unknown. */
-    public static String describe(String id, int level) {
+    /** A language key and the numbers to put in it. */
+    public record Effect(String key, List<String> args) {
+    }
+
+    private static Effect effect(String key, Object... args) {
+        List<String> list = new ArrayList<>();
+        for (Object arg : args) {
+            list.add(String.valueOf(arg));
+        }
+        return new Effect(key, list);
+    }
+
+    /** The effect at this level, or null when unknown. */
+    public static Effect describe(String id, int level) {
         return switch (id) {
-            case "minecraft:sharpness" -> "+" + fmt(0.5 * level + 0.5) + " dégâts";
-            case "minecraft:smite" -> "+" + fmt(2.5 * level) + " dégâts (morts-vivants)";
-            case "minecraft:bane_of_arthropods" -> "+" + fmt(2.5 * level) + " dégâts (arthropodes)";
-            case "minecraft:impaling" -> "+" + fmt(2.5 * level) + " dégâts (aquatiques)";
-            case "minecraft:fire_aspect" -> "brûle " + 4 * level + " s";
-            case "minecraft:knockback" -> "recul accru";
-            case "minecraft:sweeping" -> "balayage à " + fmt(100.0 * level / (level + 1)) + " %";
-            case "minecraft:looting" -> "jusqu'à +" + level + " butin";
-            case "minecraft:protection" -> "-" + 4 * level + " % dégâts subis";
-            case "minecraft:fire_protection" -> "-" + 8 * level + " % dégâts de feu";
-            case "minecraft:blast_protection" -> "-" + 8 * level + " % explosions";
-            case "minecraft:projectile_protection" -> "-" + 8 * level + " % projectiles";
-            case "minecraft:feather_falling" -> "-" + 12 * level + " % dégâts de chute";
-            case "minecraft:thorns" -> 15 * level + " % · renvoie 1–4 dégâts";
-            case "minecraft:respiration" -> "+" + 15 * level + " s d'air";
-            case "minecraft:swift_sneak" -> "+" + 15 * level + " % vitesse accroupi";
-            case "minecraft:frost_walker" -> "gèle l'eau sur " + Math.min(16, level + 2) + " blocs";
-            case "minecraft:efficiency" -> "+" + (level * level + 1) + " vitesse de minage";
-            case "minecraft:fortune" -> "butin moyen ×" + fmt(fortuneAverage(level));
-            case "minecraft:unbreaking" -> "durabilité ×" + (level + 1);
-            case "minecraft:power" -> "+" + 25 * (level + 1) + " % dégâts d'arc";
-            case "minecraft:quick_charge" -> "-" + fmt(0.25 * level) + " s de chargement";
-            case "minecraft:piercing" -> "traverse " + level + " cible" + (level > 1 ? "s" : "");
-            case "minecraft:multishot" -> "3 flèches";
-            case "minecraft:mending" -> "se répare avec l'XP";
-            case "minecraft:silk_touch" -> "récolte les blocs intacts";
-            case "minecraft:aqua_affinity" -> "minage normal sous l'eau";
-            case "minecraft:infinity" -> "flèches infinies";
-            case "minecraft:flame" -> "flèches enflammées";
-            case "minecraft:channeling" -> "invoque la foudre";
-            case "minecraft:depth_strider" -> "ralentissement dans l'eau -" + fmt(100.0 * level / 3.0) + " %";
-            case "minecraft:soul_speed" -> "+" + fmt(30.0 + 10.5 * level) + " % vitesse (sable des âmes)";
-            case "minecraft:punch" -> "recul des flèches +" + level;
-            case "minecraft:luck_of_the_sea" -> "+" + level + " chance de trésor en pêchant";
-            case "minecraft:lure" -> "-" + 5 * level + " s d'attente du poisson";
-            case "minecraft:loyalty" -> "le trident revient (vitesse " + level + ")";
-            case "minecraft:riptide" -> "propulsion sous l'eau ou la pluie (" + level + ")";
-            case "create:capacity" -> "réservoir d'air : capacité accrue";
-            case "create:potato_recovery" -> "chance de récupérer la pomme de terre";
-            case "twilightforest:fire_react" -> "chance d'enflammer l'attaquant";
-            case "twilightforest:chill_aura" -> "ralentit les attaquants";
-            case "minecraft:binding_curse" -> "impossible à retirer";
-            case "minecraft:vanishing_curse" -> "disparaît à la mort";
+            case "minecraft:sharpness" -> effect("enchant.minecraft.sharpness", fmt(0.5 * level + 0.5));
+            case "minecraft:smite" -> effect("enchant.minecraft.smite", fmt(2.5 * level));
+            case "minecraft:bane_of_arthropods" -> effect("enchant.minecraft.bane_of_arthropods", fmt(2.5 * level));
+            case "minecraft:impaling" -> effect("enchant.minecraft.impaling", fmt(2.5 * level));
+            case "minecraft:fire_aspect" -> effect("enchant.minecraft.fire_aspect", 4 * level);
+            case "minecraft:knockback" -> effect("enchant.minecraft.knockback");
+            case "minecraft:sweeping" -> effect("enchant.minecraft.sweeping", fmt(100.0 * level / (level + 1)));
+            case "minecraft:looting" -> effect("enchant.minecraft.looting", level);
+            case "minecraft:protection" -> effect("enchant.minecraft.protection", 4 * level);
+            case "minecraft:fire_protection" -> effect("enchant.minecraft.fire_protection", 8 * level);
+            case "minecraft:blast_protection" -> effect("enchant.minecraft.blast_protection", 8 * level);
+            case "minecraft:projectile_protection" -> effect("enchant.minecraft.projectile_protection", 8 * level);
+            case "minecraft:feather_falling" -> effect("enchant.minecraft.feather_falling", 12 * level);
+            case "minecraft:thorns" -> effect("enchant.minecraft.thorns", 15 * level);
+            case "minecraft:respiration" -> effect("enchant.minecraft.respiration", 15 * level);
+            case "minecraft:swift_sneak" -> effect("enchant.minecraft.swift_sneak", 15 * level);
+            case "minecraft:frost_walker" -> effect("enchant.minecraft.frost_walker", Math.min(16, level + 2));
+            case "minecraft:efficiency" -> effect("enchant.minecraft.efficiency", level * level + 1);
+            case "minecraft:fortune" -> effect("enchant.minecraft.fortune", fmt(fortuneAverage(level)));
+            case "minecraft:unbreaking" -> effect("enchant.minecraft.unbreaking", level + 1);
+            case "minecraft:power" -> effect("enchant.minecraft.power", 25 * (level + 1));
+            case "minecraft:quick_charge" -> effect("enchant.minecraft.quick_charge", fmt(0.25 * level));
+            case "minecraft:piercing" -> effect(level > 1 ? "enchant.minecraft.piercing.many" : "enchant.minecraft.piercing", level);
+            case "minecraft:multishot" -> effect("enchant.minecraft.multishot");
+            case "minecraft:mending" -> effect("enchant.minecraft.mending");
+            case "minecraft:silk_touch" -> effect("enchant.minecraft.silk_touch");
+            case "minecraft:aqua_affinity" -> effect("enchant.minecraft.aqua_affinity");
+            case "minecraft:infinity" -> effect("enchant.minecraft.infinity");
+            case "minecraft:flame" -> effect("enchant.minecraft.flame");
+            case "minecraft:channeling" -> effect("enchant.minecraft.channeling");
+            case "minecraft:depth_strider" -> effect("enchant.minecraft.depth_strider", fmt(100.0 * level / 3.0));
+            case "minecraft:soul_speed" -> effect("enchant.minecraft.soul_speed", fmt(30.0 + 10.5 * level));
+            case "minecraft:punch" -> effect("enchant.minecraft.punch", level);
+            case "minecraft:luck_of_the_sea" -> effect("enchant.minecraft.luck_of_the_sea", level);
+            case "minecraft:lure" -> effect("enchant.minecraft.lure", 5 * level);
+            case "minecraft:loyalty" -> effect("enchant.minecraft.loyalty", level);
+            case "minecraft:riptide" -> effect("enchant.minecraft.riptide", level);
+            case "create:capacity" -> effect("enchant.create.capacity");
+            case "create:potato_recovery" -> effect("enchant.create.potato_recovery");
+            case "twilightforest:fire_react" -> effect("enchant.twilightforest.fire_react");
+            case "twilightforest:chill_aura" -> effect("enchant.twilightforest.chill_aura");
+            case "minecraft:binding_curse" -> effect("enchant.minecraft.binding_curse");
+            case "minecraft:vanishing_curse" -> effect("enchant.minecraft.vanishing_curse");
             default -> null;
         };
     }
@@ -69,13 +83,8 @@ public final class EnchantEffects {
         return (1.0 + (level + 1) * (level + 2) / 2.0) / (level + 2);
     }
 
-    /** Whole numbers without decimals, others with a decimal comma: 3, 2,5, 1,75. */
+    /** Whole numbers without decimals, others with the game language's decimal separator: 3, 2,5, 1,75. */
     static String fmt(double value) {
-        if (value == Math.rint(value)) {
-            return String.valueOf((long) value);
-        }
-        String text = String.format(Locale.ROOT, "%.2f", value);
-        text = text.replaceAll("0+$", "").replaceAll("\\.$", "");
-        return text.replace('.', ',');
+        return AttributeMath.number(value);
     }
 }

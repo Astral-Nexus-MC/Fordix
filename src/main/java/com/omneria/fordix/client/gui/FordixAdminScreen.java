@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.admin.ServerboundAdminPayload;
 import com.omneria.fordix.client.admin.ClientAdminData;
 import com.omneria.fordix.client.gui.widget.FordixButton;
@@ -29,7 +30,7 @@ public class FordixAdminScreen extends FordixScreen {
     private static final List<String> STYLES = List.of("info", "success", "warning", "error");
     private static final int[] SECONDS = {3, 5, 8, 15, 30};
     private static final List<String> KINDS = List.of("tous", "joueur", "equipe", "tag", "permission");
-    private static final List<String> TAB_NAMES = List.of("Envoi", "Plan", "Modeles", "Panels", "Pages", "Livre");
+    private static final List<String> TAB_NAMES = List.of("send", "schedule", "templates", "panels", "pages", "book");
     private static final int MAX_LIST_ROWS = 7;
     private static final int SCHEDULE_ROWS = 5;
     private static final int BUTTON_ROWS = 4;
@@ -95,7 +96,7 @@ public class FordixAdminScreen extends FordixScreen {
     private List<String> lastBook = List.of();
 
     public FordixAdminScreen(Screen parent) {
-        super(Component.literal("FORDIX // ADMINISTRATION"));
+        super(Tr.c("admin.title"));
         this.parent = parent;
         ClientAdminData.reset();
         send("panels");
@@ -124,10 +125,10 @@ public class FordixAdminScreen extends FordixScreen {
         for (int i = 0; i < TAB_NAMES.size(); i++) {
             int index = i;
             FordixButton button = new FordixButton(x + i * (tabWidth + 4), top + 22, tabWidth, 18,
-                    Component.literal((tab == i ? "> " : "") + TAB_NAMES.get(i)), () -> switchTab(index));
+                    Component.literal((tab == i ? "> " : "") + Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index));
             addRenderableWidget(button);
         }
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Component.literal("Fermer"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Tr.c("common.close"), this::onClose));
         if (ClientAdminData.denied()) {
             return;
         }
@@ -135,7 +136,7 @@ public class FordixAdminScreen extends FordixScreen {
         switch (tab) {
             case TAB_NOTIFY -> {
                 int next = initForm(x, y, inner);
-                addRenderableWidget(new FordixButton(x, next, 130, 18, Component.literal("Envoyer"), this::sendNotification));
+                addRenderableWidget(new FordixButton(x, next, 130, 18, Tr.c("admin.send"), this::sendNotification));
             }
             case TAB_SCHEDULE -> initSchedule(x, y, inner);
             case TAB_TEMPLATES -> initTemplates(x, y, inner);
@@ -168,11 +169,11 @@ public class FordixAdminScreen extends FordixScreen {
             rebuildWidgets();
         }));
         if (kindIndex != 0) {
-            String hint = kindIndex == 4 ? "niveau 0-4" : KINDS.get(kindIndex);
+            String hint = kindIndex == 4 ? Tr.s("admin.hint.level") : KINDS.get(kindIndex);
             addRenderableWidget(edit(x + 268, y, inner - 268, hint, targetValue, 32, text -> targetValue = text));
         }
-        addRenderableWidget(edit(x, y + 24, inner, "Titre", notifTitle, 64, text -> notifTitle = text));
-        addRenderableWidget(edit(x, y + 48, inner, "Message (optionnel)", notifMessage, 128, text -> notifMessage = text));
+        addRenderableWidget(edit(x, y + 24, inner, Tr.s("common.title"), notifTitle, 64, text -> notifTitle = text));
+        addRenderableWidget(edit(x, y + 48, inner, Tr.s("admin.field.message"), notifMessage, 128, text -> notifMessage = text));
         return y + 72;
     }
 
@@ -185,19 +186,39 @@ public class FordixAdminScreen extends FordixScreen {
 
     private void initSchedule(int x, int y, int inner) {
         int next = initForm(x, y, inner);
-        addRenderableWidget(new FordixButton(x, next, 96, 18, Component.literal(repeating ? "Toutes les" : "Dans"), () -> {
+        addRenderableWidget(new FordixButton(x, next, 96, 18, Tr.c(repeating ? "admin.sched.every" : "admin.sched.in"), () -> {
             repeating = !repeating;
             rebuildWidgets();
         }));
         addRenderableWidget(edit(x + 100, next, 44, "min", minutes, 5, text -> minutes = text.replaceAll("[^0-9]", "")));
         addRenderableWidget(new FordixButton(x + 148, next, 34, 18, Component.literal("min"), () -> {
         }));
-        addRenderableWidget(new FordixButton(x + 186, next, 110, 18, Component.literal("Programmer"), this::schedule));
+        addRenderableWidget(new FordixButton(x + 186, next, 110, 18, Tr.c("admin.sched.add"), this::schedule));
         int listY = next + 40;
         for (int i = 0; i < scheduleLines.size() && i < SCHEDULE_ROWS; i++) {
             String[] parts = scheduleLines.get(i).split("\t", 2);
             String id = parts[0];
             addRenderableWidget(new FordixButton(x + inner - 18, listY + i * 14 - 2, 18, 13, Component.literal("x"), () -> send("schedule_delete", id)));
+        }
+    }
+
+    /** A schedule line from the server ("id TAB once|every TAB minutes TAB title TAB kind TAB value") as one readable line. */
+    private static String scheduleText(String line) {
+        String[] p = line.split("\t", -1);
+        if (p.length < 6) {
+            return line;
+        }
+        long minutes = parseMinutes(p[2]);
+        String delay = minutes >= 60 && minutes % 60 == 0 ? Tr.s("admin.hour", minutes / 60) : Tr.s("admin.min", minutes);
+        String target = p[4].equals("tous") ? Tr.s("admin.target.tous") : Tr.s("admin.target." + p[4]) + " " + p[5];
+        return Tr.s(p[1].equals("every") ? "admin.sched.line.every" : "admin.sched.line.once", p[0], delay, p[3], target);
+    }
+
+    private static long parseMinutes(String text) {
+        try {
+            return Long.parseLong(text);
+        } catch (NumberFormatException e) {
+            return 1;
         }
     }
 
@@ -209,8 +230,8 @@ public class FordixAdminScreen extends FordixScreen {
     // ---- Templates ------------------------------------------------------------------------------
 
     private void initTemplates(int x, int y, int inner) {
-        addRenderableWidget(edit(x, y, inner - 190, "Nom du modele", templateName, 32, text -> templateName = text));
-        addRenderableWidget(new FordixButton(x + inner - 186, y, 186, 18, Component.literal("Enregistrer le formulaire"), () -> {
+        addRenderableWidget(edit(x, y, inner - 190, Tr.s("admin.template.name"), templateName, 32, text -> templateName = text));
+        addRenderableWidget(new FordixButton(x + inner - 186, y, 186, 18, Tr.c("admin.template.save"), () -> {
             if (!templateName.isBlank()) {
                 send("template_save", templateName.trim(), STYLES.get(styleIndex), String.valueOf(SECONDS[secondsIndex]),
                         notifTitle, notifMessage);
@@ -270,8 +291,8 @@ public class FordixAdminScreen extends FordixScreen {
     // ---- Guide pages ----------------------------------------------------------------------------
 
     private void initPages(int x, int y, int inner) {
-        addRenderableWidget(edit(x, y, 80, "nouvel-id", newPageId, 32, text -> newPageId = text.toLowerCase()));
-        addRenderableWidget(new FordixButton(x + 84, y, 36, 18, Component.literal("Creer"), () -> {
+        addRenderableWidget(edit(x, y, 80, Tr.s("admin.page.newid"), newPageId, 32, text -> newPageId = text.toLowerCase()));
+        addRenderableWidget(new FordixButton(x + 84, y, 36, 18, Tr.c("common.create"), () -> {
             if (!newPageId.isBlank()) {
                 selectedPage = newPageId;
                 pageTitle = newPageId;
@@ -309,17 +330,17 @@ public class FordixAdminScreen extends FordixScreen {
         }
         int ex = x + 130;
         int ew = inner - 130;
-        addRenderableWidget(edit(ex, y, ew, "Titre de la page", pageTitle, 64, text -> pageTitle = text));
+        addRenderableWidget(edit(ex, y, ew, Tr.s("admin.page.title"), pageTitle, 64, text -> pageTitle = text));
         int boxHeight = Math.max(50, panelHeight - 48 - 24 - 14 - 20 - 26 - 22);
         MultiLineEditBox body = new MultiLineEditBox(this.font, ex, y + 24, ew, boxHeight,
-                Component.literal("# Titre | texte | @button Libelle | command:/spawn"), Component.literal("Contenu"));
+                Tr.c("admin.page.hint"), Tr.c("admin.page.content"));
         body.setValue(pageBody);
         body.setValueListener(text -> pageBody = text);
         addRenderableWidget(body);
         int by = y + 24 + boxHeight + 4;
-        addRenderableWidget(new FordixButton(ex, by, 100, 18, Component.literal("Enregistrer"),
+        addRenderableWidget(new FordixButton(ex, by, 100, 18, Tr.c("common.save"),
                 () -> send("page_save", selectedPage, pageTitle, pageBody)));
-        addRenderableWidget(new FordixButton(ex + 104, by, 100, 18, Component.literal("Supprimer"), () -> {
+        addRenderableWidget(new FordixButton(ex + 104, by, 100, 18, Tr.c("common.delete"), () -> {
             send("page_delete", selectedPage);
             selectedPage = "";
             rebuildWidgets();
@@ -358,8 +379,8 @@ public class FordixAdminScreen extends FordixScreen {
     }
 
     private void initBook(int x, int y, int inner) {
-        addRenderableWidget(new FordixButton(x, y, 120, 18, Component.literal("+ Etape"), () -> {
-            bookSteps.add(new String[]{"Nouvelle etape", "manual", "", ""});
+        addRenderableWidget(new FordixButton(x, y, 120, 18, Tr.c("admin.book.add"), () -> {
+            bookSteps.add(new String[]{Tr.s("admin.book.newstep"), "manual", "", ""});
             selectedStep = bookSteps.size() - 1;
             bookOffset = Math.max(0, bookSteps.size() - listRows());
             rebuildWidgets();
@@ -392,27 +413,27 @@ public class FordixAdminScreen extends FordixScreen {
         int ew = inner - 130;
         if (selectedStep >= 0 && selectedStep < bookSteps.size()) {
             String[] step = bookSteps.get(selectedStep);
-            addRenderableWidget(edit(ex, y, ew, "Libelle de l'etape", step[0], 80, text -> step[0] = text));
+            addRenderableWidget(edit(ex, y, ew, Tr.s("admin.book.label"), step[0], 80, text -> step[0] = text));
             addRenderableWidget(cycle(ex, y + 24, 100, "", STEP_KINDS, () -> STEP_KINDS.indexOf(step[1]), value -> {
                 step[1] = STEP_KINDS.get(value);
                 rebuildWidgets();
             }));
             if (step[1].equals("advancement") || step[1].equals("command")) {
-                addRenderableWidget(edit(ex + 106, y + 24, ew - 106, step[1].equals("advancement") ? "minecraft:story/mine_stone" : "commande (sans /)",
+                addRenderableWidget(edit(ex + 106, y + 24, ew - 106, step[1].equals("advancement") ? "minecraft:story/mine_stone" : Tr.s("admin.book.command"),
                         step[2], 100, text -> step[2] = text));
             }
-            addRenderableWidget(edit(ex, y + 48, ew, "Bouton facultatif : command:/spawn ou url:https://...", step[3], 200, text -> step[3] = text));
-            addRenderableWidget(new FordixButton(ex, y + 72, 60, 18, Component.literal("Monter"), () -> moveStep(-1)));
-            addRenderableWidget(new FordixButton(ex + 64, y + 72, 60, 18, Component.literal("Descendre"), () -> moveStep(1)));
-            addRenderableWidget(new FordixButton(ex + 128, y + 72, 60, 18, Component.literal("Supprimer"), () -> {
+            addRenderableWidget(edit(ex, y + 48, ew, Tr.s("admin.book.action"), step[3], 200, text -> step[3] = text));
+            addRenderableWidget(new FordixButton(ex, y + 72, 60, 18, Tr.c("admin.book.up"), () -> moveStep(-1)));
+            addRenderableWidget(new FordixButton(ex + 64, y + 72, 60, 18, Tr.c("admin.book.down"), () -> moveStep(1)));
+            addRenderableWidget(new FordixButton(ex + 128, y + 72, 60, 18, Tr.c("common.delete"), () -> {
                 bookSteps.remove(selectedStep);
                 selectedStep = Math.min(selectedStep, bookSteps.size() - 1);
                 rebuildWidgets();
             }));
         }
-        addRenderableWidget(edit(ex, y + 104, ew, "Recompense : commande (vide = aucune)", bookReward, 200, text -> bookReward = text));
-        addRenderableWidget(new FordixButton(ex, y + 128, 110, 18, Component.literal("Enregistrer"), this::saveBook));
-        addRenderableWidget(new FordixButton(ex + 114, y + 128, 110, 18, Component.literal("Fichier config"), () -> send("book_reset")));
+        addRenderableWidget(edit(ex, y + 104, ew, Tr.s("admin.book.reward"), bookReward, 200, text -> bookReward = text));
+        addRenderableWidget(new FordixButton(ex, y + 128, 110, 18, Tr.c("common.save"), this::saveBook));
+        addRenderableWidget(new FordixButton(ex + 114, y + 128, 110, 18, Tr.c("admin.book.config"), () -> send("book_reset")));
     }
 
     private void moveStep(int by) {
@@ -441,8 +462,8 @@ public class FordixAdminScreen extends FordixScreen {
     // ---- Panels ---------------------------------------------------------------------------------
 
     private void initPanels(int x, int y, int inner) {
-        addRenderableWidget(edit(x, y, 80, "nouveau-id", newId, 32, text -> newId = text.toLowerCase()));
-        addRenderableWidget(new FordixButton(x + 84, y, 36, 18, Component.literal("Creer"), () -> {
+        addRenderableWidget(edit(x, y, 80, Tr.s("admin.panel.newid"), newId, 32, text -> newId = text.toLowerCase()));
+        addRenderableWidget(new FordixButton(x + 84, y, 36, 18, Tr.c("common.create"), () -> {
             if (!newId.isBlank()) {
                 selectedId = newId;
                 editTitle = newId;
@@ -480,8 +501,8 @@ public class FordixAdminScreen extends FordixScreen {
         }
         int ex = x + 130;
         int ew = inner - 130;
-        addRenderableWidget(edit(ex, y, ew, "Titre", editTitle, 64, text -> editTitle = text));
-        addRenderableWidget(edit(ex, y + 24, ew, "Description", editDescription, 200, text -> editDescription = text));
+        addRenderableWidget(edit(ex, y, ew, Tr.s("common.title"), editTitle, 64, text -> editTitle = text));
+        addRenderableWidget(edit(ex, y + 24, ew, Tr.s("admin.panel.description"), editDescription, 200, text -> editDescription = text));
 
         // One row per button: label, command, remove.
         int rowY = y + 50;
@@ -493,8 +514,8 @@ public class FordixAdminScreen extends FordixScreen {
             }
             String[] row = editButtons.get(index);
             int yy = rowY + i * 20;
-            addRenderableWidget(edit(ex, yy, labelWidth, "Libelle", row[0], 48, text -> row[0] = text));
-            addRenderableWidget(edit(ex + labelWidth + 3, yy, ew - labelWidth - 25, "Commande (ex. /spawn)", row[1], 200, text -> row[1] = text));
+            addRenderableWidget(edit(ex, yy, labelWidth, Tr.s("admin.panel.label"), row[0], 48, text -> row[0] = text));
+            addRenderableWidget(edit(ex + labelWidth + 3, yy, ew - labelWidth - 25, Tr.s("admin.panel.command"), row[1], 200, text -> row[1] = text));
             addRenderableWidget(new FordixButton(ex + ew - 18, yy, 18, 18, Component.literal("x"), () -> {
                 editButtons.remove(index);
                 buttonOffset = Math.max(0, Math.min(buttonOffset, Math.max(0, editButtons.size() - BUTTON_ROWS)));
@@ -502,7 +523,7 @@ public class FordixAdminScreen extends FordixScreen {
             }));
         }
         int controlsY = rowY + BUTTON_ROWS * 20 + 2;
-        addRenderableWidget(new FordixButton(ex, controlsY, 84, 16, Component.literal("+ Bouton"), () -> {
+        addRenderableWidget(new FordixButton(ex, controlsY, 84, 16, Tr.c("admin.panel.addbutton"), () -> {
             if (editButtons.size() < MAX_BUTTONS) {
                 editButtons.add(new String[]{"", ""});
                 buttonOffset = Math.max(0, editButtons.size() - BUTTON_ROWS);
@@ -520,9 +541,9 @@ public class FordixAdminScreen extends FordixScreen {
             }
         }));
         int by = controlsY + 22;
-        addRenderableWidget(new FordixButton(ex, by, 84, 18, Component.literal("Enregistrer"), this::savePanel));
-        addRenderableWidget(new FordixButton(ex + 88, by, 84, 18, Component.literal("M'envoyer"), () -> send("send_panel", selectedId)));
-        addRenderableWidget(new FordixButton(ex + 176, by, 84, 18, Component.literal("Supprimer"), () -> {
+        addRenderableWidget(new FordixButton(ex, by, 84, 18, Tr.c("common.save"), this::savePanel));
+        addRenderableWidget(new FordixButton(ex + 88, by, 84, 18, Tr.c("admin.panel.sendme"), () -> send("send_panel", selectedId)));
+        addRenderableWidget(new FordixButton(ex + 176, by, 84, 18, Tr.c("common.delete"), () -> {
             send("delete_panel", selectedId);
             selectedId = "";
             editButtons.clear();
@@ -557,7 +578,9 @@ public class FordixAdminScreen extends FordixScreen {
 
     private FordixButton cycle(int x, int y, int width, String prefix, List<String> values, java.util.function.IntSupplier current,
                                java.util.function.IntConsumer setter) {
-        return new FordixButton(x, y, width, 18, Component.literal(prefix + values.get(current.getAsInt())),
+        String value = values.get(current.getAsInt());
+        String group = values == STYLES ? "admin.style." : values == KINDS ? "admin.target." : values == STEP_KINDS ? "admin.step." : null;
+        return new FordixButton(x, y, width, 18, Component.literal(prefix + (group == null ? value : Tr.s(group + value))),
                 () -> setter.accept((current.getAsInt() + 1) % values.size()));
     }
 
@@ -593,7 +616,7 @@ public class FordixAdminScreen extends FordixScreen {
         int width = panelWidth - PADDING * 2;
         if (tab == TAB_NOTIFY) {
             int y = panel.getY() + 48 + 100;
-            guiGraphics.drawString(font, "Historique", x, y, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, Tr.s("admin.history"), x, y, FordixPalette.TEXT, false);
             y += 12;
             for (String line : ClientAdminData.history()) {
                 guiGraphics.drawString(font, font.plainSubstrByWidth(line, width), x, y, FordixPalette.TEXT, false);
@@ -604,43 +627,43 @@ public class FordixAdminScreen extends FordixScreen {
             }
         } else if (tab == TAB_SCHEDULE) {
             int y = panel.getY() + 48 + 72 + 40 - 12;
-            guiGraphics.drawString(font, scheduleLines.isEmpty() ? "Aucune programmation" : "Programmations", x, y, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, Tr.s(scheduleLines.isEmpty() ? "admin.sched.none" : "admin.sched.list"), x, y, FordixPalette.TEXT, false);
             y += 12;
             for (int i = 0; i < scheduleLines.size() && i < SCHEDULE_ROWS; i++) {
                 String[] parts = scheduleLines.get(i).split("\t", 2);
-                guiGraphics.drawString(font, font.plainSubstrByWidth(parts.length > 1 ? parts[1] : parts[0], width - 24), x, y, FordixPalette.TEXT_BRIGHT, false);
+                guiGraphics.drawString(font, font.plainSubstrByWidth(scheduleText(scheduleLines.get(i)), width - 24), x, y, FordixPalette.TEXT_BRIGHT, false);
                 y += 14;
             }
         } else if (tab == TAB_TEMPLATES) {
             if (templateLines.isEmpty()) {
-                guiGraphics.drawString(font, "Aucun modele : remplis le formulaire (onglet Notifications), puis donne-lui un nom.",
+                guiGraphics.drawString(font, Tr.s("admin.template.none"),
                         x, panel.getY() + 48 + 30, FordixPalette.TEXT, false);
             }
         } else if (tab == TAB_PAGES) {
             if (selectedPage.isEmpty()) {
-                guiGraphics.drawString(font, "Choisis une page, ou cree-en une.", x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
+                guiGraphics.drawString(font, Tr.s("admin.page.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
             } else {
-                guiGraphics.drawString(font, font.plainSubstrByWidth("# titre · @button Libelle | command:/x · ligne vide = paragraphe",
+                guiGraphics.drawString(font, font.plainSubstrByWidth(Tr.s("admin.page.help"),
                         panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, FordixPalette.BEVEL_HIGHLIGHT, false);
             }
         } else if (tab == TAB_BOOK) {
             int hy = panel.getY() + 48 + 24 + (listRows() - 1) * 20 + 20;
-            guiGraphics.drawString(font, bookSteps.size() + " etape(s)" + (selectedStep < 0 ? " - choisis-en une" : ""), x, hy, FordixPalette.TEXT, false);
-            guiGraphics.drawString(font, "Recompense : %player% = nom du joueur", x + 130, panel.getY() + 48 + 150, FordixPalette.BEVEL_HIGHLIGHT, false);
+            guiGraphics.drawString(font, Tr.s(selectedStep < 0 ? "admin.book.count_pick" : "admin.book.count", bookSteps.size()), x, hy, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, Tr.s("admin.book.player"), x + 130, panel.getY() + 48 + 150, FordixPalette.BEVEL_HIGHLIGHT, false);
             if (selectedStep >= 0 && selectedStep < bookSteps.size()) {
                 String kind = bookSteps.get(selectedStep)[1];
                 String help = switch (kind) {
-                    case "advancement" -> "Cochee quand le joueur obtient ce progres";
-                    case "command" -> "Cochee quand le joueur lance cette commande";
-                    case "guides" -> "Cochee quand le joueur ouvre l'ecran Guides";
-                    default -> "Le joueur la coche lui-meme";
+                    case "advancement" -> Tr.s("admin.book.help.advancement");
+                    case "command" -> Tr.s("admin.book.help.command");
+                    case "guides" -> Tr.s("admin.book.help.guides");
+                    default -> Tr.s("admin.book.help.manual");
                 };
                 guiGraphics.drawString(font, font.plainSubstrByWidth(help, panelWidth - 150), x + 130, panel.getY() + 48 + 94, FordixPalette.BEVEL_HIGHLIGHT, false);
             }
         } else if (selectedId.isEmpty()) {
-            guiGraphics.drawString(font, "Choisis un panel, ou cree-en un.", x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, Tr.s("admin.panel.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
         } else if (editButtons.isEmpty()) {
-            guiGraphics.drawString(font, "Aucun bouton : ajoute-en avec + Bouton.", x + 130, panel.getY() + 48 + 56, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, Tr.s("admin.panel.nobutton"), x + 130, panel.getY() + 48 + 56, FordixPalette.TEXT, false);
         }
     }
 

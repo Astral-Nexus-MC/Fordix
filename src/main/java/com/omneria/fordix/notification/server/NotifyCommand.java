@@ -1,5 +1,6 @@
 package com.omneria.fordix.notification.server;
 
+import com.omneria.fordix.Tr;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -83,7 +84,7 @@ public final class NotifyCommand {
         String styleId = StringArgumentType.getString(ctx, "style");
         NotificationStyle style = NotificationStyle.byId(styleId);
         if (style == null) {
-            ctx.getSource().sendFailure(Component.literal("Style '" + styleId + "' inconnu (info, success, warning, error)."));
+            ctx.getSource().sendFailure(Tr.c("cmd.notify.bad_style", styleId));
             return 0;
         }
         String text = StringArgumentType.getString(ctx, "text");
@@ -96,14 +97,14 @@ public final class NotifyCommand {
 
         int count = NotificationSender.send(ctx.getSource().getTextName(), style, seconds, title, message,
                 target.label(), target.players());
-        ctx.getSource().sendSuccess(() -> Component.literal("Notification envoyee a " + count + " joueur(s) (" + target.label() + ")."), false);
+        ctx.getSource().sendSuccess(() -> Tr.c("cmd.notify.sent", count, target.label()), false);
         return count;
     }
 
     private static int history(CommandContext<CommandSourceStack> ctx, int count) {
         List<NotificationHistory.Entry> entries = NotificationSender.HISTORY.latest(count);
         if (entries.isEmpty()) {
-            ctx.getSource().sendSuccess(() -> Component.literal("Aucune notification envoyee depuis le demarrage."), false);
+            ctx.getSource().sendSuccess(() -> Tr.c("cmd.notify.none"), false);
             return 0;
         }
         for (NotificationHistory.Entry entry : entries) {

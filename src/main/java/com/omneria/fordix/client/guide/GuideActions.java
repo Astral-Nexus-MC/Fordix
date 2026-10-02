@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.guide;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.Fordix;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -90,7 +91,7 @@ public final class GuideActions {
 
     private static void unavailable(Minecraft minecraft, GuideEntry entry) {
         if (minecraft.player != null) {
-            minecraft.player.displayClientMessage(Component.literal("Guide '" + entry.label() + "' indisponible."), true);
+            minecraft.player.displayClientMessage(Tr.c("guides.unavailable", entry.label()), true);
         }
     }
 }

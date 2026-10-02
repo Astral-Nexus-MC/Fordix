@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.guide.GuideActions;
 import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.client.gui.vanilla.Chevron;
@@ -33,7 +34,7 @@ public class WelcomeScreen extends FordixScreen {
     private int panelHeight;
 
     public WelcomeScreen(ClientboundWelcomePayload payload) {
-        super(Component.literal("FORDIX // BIENVENUE"));
+        super(Tr.c("welcome.title"));
         this.steps = payload.steps();
         this.rewardPending = payload.rewardPending();
     }
@@ -51,7 +52,7 @@ public class WelcomeScreen extends FordixScreen {
         left = centerX(panelWidth);
         top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 60, top + 6, 60, 14, Component.literal("Fermer"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 60, top + 6, 60, 14, Tr.c("common.close"), this::onClose));
         for (int i = 0; i < steps.size(); i++) {
             ClientboundWelcomePayload.Step step = steps.get(i);
             int y = rowY(i);
@@ -59,7 +60,7 @@ public class WelcomeScreen extends FordixScreen {
                 GuideEntry entry = GuideEntry.parse("minecraft | " + step.label() + " | minecraft:book | " + step.action());
                 if (entry != null) {
                     addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, y + 2, 70, 16,
-                            Component.literal(entry.action() == GuideEntry.Action.URL ? "Ouvrir" : "Lancer"), () -> GuideActions.run(entry)));
+                            Tr.c(entry.action() == GuideEntry.Action.URL ? "guides.open" : "welcome.run"), () -> GuideActions.run(entry)));
                 }
             }
         }
@@ -76,8 +77,8 @@ public class WelcomeScreen extends FordixScreen {
         long done = steps.stream().filter(ClientboundWelcomePayload.Step::done).count();
         float progress = steps.isEmpty() ? 0 : done / (float) steps.size();
         Chevron.draw(guiGraphics, left + PADDING, top + 26, panelWidth - PADDING * 2, 7, true, 3, progress, 0xFF7DFFB0, 0xFF2BB56A, false);
-        String summary = done + " etape" + (done > 1 ? "s" : "") + " sur " + steps.size()
-                + (done == steps.size() && !steps.isEmpty() ? (rewardPending ? " - une recompense t'attend" : " - bravo !") : "");
+        String summary = Tr.s("welcome.summary", done, steps.size())
+                + (done == steps.size() && !steps.isEmpty() ? Tr.s(rewardPending ? "welcome.summary.reward" : "welcome.summary.done") : "");
         guiGraphics.drawString(this.font, summary, left + PADDING, top + 37, FordixPalette.TEXT, false);
         for (int i = 0; i < steps.size(); i++) {
             ClientboundWelcomePayload.Step step = steps.get(i);
@@ -100,7 +101,7 @@ public class WelcomeScreen extends FordixScreen {
                     left + PADDING + 20, y + 6, step.done() ? FordixPalette.TEXT : FordixPalette.TEXT_BRIGHT, false);
         }
         if (steps.isEmpty()) {
-            guiGraphics.drawString(this.font, "Aucune etape n'est configuree sur ce serveur.", left + PADDING, top + 54, FordixPalette.TEXT, false);
+            guiGraphics.drawString(this.font, Tr.s("welcome.none"), left + PADDING, top + 54, FordixPalette.TEXT, false);
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }

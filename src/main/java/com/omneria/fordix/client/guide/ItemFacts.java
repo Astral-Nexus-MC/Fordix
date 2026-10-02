@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.guide;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.ModNames;
 import com.omneria.fordix.client.tooltip.AttributeMath;
 import com.omneria.fordix.client.tooltip.ItemRarity;
@@ -84,7 +85,7 @@ public final class ItemFacts {
                     cells.add(index < ingredients.size() ? alternatives(ingredients.get(index)) : List.of());
                 }
             }
-            return new RecipeView("Table de craft", shaped.getWidth(), shaped.getHeight(), cells, result.copy(), "");
+            return new RecipeView(Tr.s("sheet.station.crafting"), shaped.getWidth(), shaped.getHeight(), cells, result.copy(), "");
         }
         if (recipe instanceof AbstractCookingRecipe cooking) {
             return new RecipeView(cookingStation(recipe.getType()), 1, 1,
@@ -92,7 +93,7 @@ public final class ItemFacts {
                     (cooking.getCookingTime() / 20) + " s");
         }
         if (recipe instanceof StonecutterRecipe) {
-            return new RecipeView("Tailleur de pierre", 1, 1,
+            return new RecipeView(Tr.s("sheet.station.stonecutter"), 1, 1,
                     List.of(alternatives(ingredients.isEmpty() ? Ingredient.EMPTY : ingredients.get(0))), result.copy(), "");
         }
         List<List<ItemStack>> cells = new ArrayList<>();
@@ -103,21 +104,21 @@ public final class ItemFacts {
         int rows = Math.max(1, (cells.size() + columns - 1) / columns);
         String type = ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()) == null ? "?"
                 : ForgeRegistries.RECIPE_TYPES.getKey(recipe.getType()).getPath();
-        String station = recipe.getType() == RecipeType.CRAFTING ? "Sans forme" : type.replace('_', ' ');
+        String station = recipe.getType() == RecipeType.CRAFTING ? Tr.s("sheet.station.shapeless") : type.replace('_', ' ');
         return new RecipeView(station, columns, rows, cells, result.copy(), "");
     }
 
     private static String cookingStation(RecipeType<?> type) {
         if (type == RecipeType.BLASTING) {
-            return "Haut fourneau";
+            return Tr.s("sheet.station.blasting");
         }
         if (type == RecipeType.SMOKING) {
-            return "Fumoir";
+            return Tr.s("sheet.station.smoking");
         }
         if (type == RecipeType.CAMPFIRE_COOKING) {
-            return "Feu de camp";
+            return Tr.s("sheet.station.campfire");
         }
-        return "Four";
+        return Tr.s("sheet.station.furnace");
     }
 
     private static List<ItemStack> alternatives(Ingredient ingredient) {
@@ -133,10 +134,10 @@ public final class ItemFacts {
 
     private static List<Fact> facts(ItemStack stack) {
         List<Fact> facts = new ArrayList<>();
-        facts.add(new Fact("Rarete", ItemRarity.label(stack), ItemRarity.color(stack)));
-        facts.add(new Fact("Pile maximale", String.valueOf(stack.getMaxStackSize()), 0));
+        facts.add(new Fact(Tr.s("sheet.fact.rarity"), ItemRarity.label(stack), ItemRarity.color(stack)));
+        facts.add(new Fact(Tr.s("sheet.fact.stack"), String.valueOf(stack.getMaxStackSize()), 0));
         if (stack.getMaxDamage() > 0) {
-            facts.add(new Fact("Durabilite", String.valueOf(stack.getMaxDamage()), 0));
+            facts.add(new Fact(Tr.s("sheet.fact.durability"), String.valueOf(stack.getMaxDamage()), 0));
         }
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             for (Map.Entry<Attribute, AttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
@@ -158,26 +159,26 @@ public final class ItemFacts {
         var player = Minecraft.getInstance().player;
         FoodProperties food = player == null ? null : stack.getFoodProperties(player);
         if (food != null) {
-            facts.add(new Fact("Nourriture", food.getNutrition() + " (satiete " + AttributeMath.number(food.getSaturationModifier() * food.getNutrition() * 2) + ")", 0));
+            facts.add(new Fact(Tr.s("sheet.fact.food"), Tr.s("sheet.food_value", food.getNutrition(), AttributeMath.number(food.getSaturationModifier() * food.getNutrition() * 2)), 0));
         }
         int burn = ForgeHooks.getBurnTime(stack, RecipeType.SMELTING);
         if (burn > 0) {
-            facts.add(new Fact("Combustible", (burn / 20) + " s (" + AttributeMath.number(burn / 200.0) + " objets)", 0));
+            facts.add(new Fact(Tr.s("sheet.fact.fuel"), Tr.s("sheet.fuel_value", burn / 20, AttributeMath.number(burn / 200.0)), 0));
         }
         if (stack.getEnchantmentValue() > 0) {
-            facts.add(new Fact("Enchantabilite", String.valueOf(stack.getEnchantmentValue()), 0));
+            facts.add(new Fact(Tr.s("sheet.fact.enchantability"), String.valueOf(stack.getEnchantmentValue()), 0));
         }
         return facts;
     }
 
     private static String slotName(EquipmentSlot slot) {
         return switch (slot) {
-            case MAINHAND -> "main";
-            case OFFHAND -> "main gauche";
-            case HEAD -> "tete";
-            case CHEST -> "torse";
-            case LEGS -> "jambes";
-            case FEET -> "pieds";
+            case MAINHAND -> Tr.s("sheet.slot.mainhand");
+            case OFFHAND -> Tr.s("sheet.slot.offhand");
+            case HEAD -> Tr.s("sheet.slot.head");
+            case CHEST -> Tr.s("sheet.slot.chest");
+            case LEGS -> Tr.s("sheet.slot.legs");
+            case FEET -> Tr.s("sheet.slot.feet");
         };
     }
 }

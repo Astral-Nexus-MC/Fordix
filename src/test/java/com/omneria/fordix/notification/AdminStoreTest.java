@@ -78,12 +78,13 @@ class AdminStoreTest {
     }
 
     @Test
-    void describeReadsNaturally() {
+    void minutesIsThePeriodOrTheTimeLeft() {
         AdminStore store = new AdminStore();
         AdminStore.Scheduled once = store.schedule("info", 5, "Redemarrage", "", "tous", "", 10 * MINUTE, 0, "a");
         AdminStore.Scheduled every = store.schedule("info", 5, "Vote", "", "equipe", "rouge", 0, 120 * MINUTE, "a");
-        assertEquals("#1 dans 10 min : Redemarrage (tous)", once.describe(0));
-        assertEquals("#2 toutes les 2 h : Vote (equipe rouge)", every.describe(0));
+        assertEquals(10, once.minutes(0));
+        assertEquals(120, every.minutes(0));
+        assertEquals(1, once.minutes(10 * MINUTE));
         assertEquals(List.of(once, every), store.schedules);
     }
 

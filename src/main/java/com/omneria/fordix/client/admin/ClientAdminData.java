@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.admin;
 
+import com.omneria.fordix.Tr;
 import java.util.List;
 
 /**
@@ -32,10 +33,10 @@ public final class ClientAdminData {
             case "page" -> page = List.copyOf(lines);
             case "book" -> book = List.copyOf(lines);
             case "templates" -> templates = List.copyOf(lines);
-            case "status" -> status = lines.isEmpty() ? "" : lines.get(0);
+            case "status" -> status = lines.isEmpty() ? "" : Tr.decode(lines.get(0));
             case "denied" -> {
                 denied = true;
-                status = lines.isEmpty() ? "" : lines.get(0);
+                status = lines.isEmpty() ? "" : Tr.decode(lines.get(0));
             }
             default -> {
             }

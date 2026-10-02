@@ -1,5 +1,6 @@
 package com.omneria.fordix.welcome;
 
+import com.omneria.fordix.Tr;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -26,7 +27,7 @@ public final class WelcomeCommand {
 
     private static int give(CommandSourceStack source, Collection<ServerPlayer> players) {
         players.forEach(WelcomeService::give);
-        source.sendSuccess(() -> Component.literal("Livre de bienvenue donne a " + players.size() + " joueur(s)."), true);
+        source.sendSuccess(() -> Tr.c("cmd.book.given", players.size()), true);
         return players.size();
     }
 }

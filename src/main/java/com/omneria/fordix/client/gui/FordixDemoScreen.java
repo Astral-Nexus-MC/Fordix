@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,7 +14,7 @@ import net.minecraft.network.chat.Component;
 public class FordixDemoScreen extends FordixScreen {
     private static final int PANEL_WIDTH = 176;
     private static final int PANEL_HEIGHT = 90;
-    private static final Component DESCRIPTION = Component.literal("3 processus en attente de validation.");
+    private static final Component DESCRIPTION = Tr.c("demo.description");
 
     private Panel panel;
 
@@ -27,9 +28,9 @@ public class FordixDemoScreen extends FordixScreen {
         int panelY = centerY(PANEL_HEIGHT);
         this.panel = new Panel(panelX, panelY, PANEL_WIDTH, PANEL_HEIGHT);
 
-        FordixButton runButton = new FordixButton(0, 0, 156, 20, Component.literal("Exécuter"), () ->
+        FordixButton runButton = new FordixButton(0, 0, 156, 20, Tr.c("demo.run"), () ->
                 this.minecraft.player.displayClientMessage(Component.literal("Fordix says hi"), true));
-        FordixButton cancelButton = new FordixButton(0, 0, 156, 20, Component.literal("Annuler"), this::onClose);
+        FordixButton cancelButton = new FordixButton(0, 0, 156, 20, Tr.c("demo.cancel"), this::onClose);
 
         stackVertical(panelX + 10, panelY + 34, 6, runButton, cancelButton);
 

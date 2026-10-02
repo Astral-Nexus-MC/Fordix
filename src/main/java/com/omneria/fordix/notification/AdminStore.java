@@ -35,11 +35,10 @@ public final class AdminStore {
         public long everyMs;
         public String createdBy = "";
 
-        /** One line for the screen: "#3 toutes les 30 min : Titre (tous)". */
-        public String describe(long now) {
-            String when = everyMs > 0 ? "toutes les " + formatMinutes(everyMs) : "dans " + formatMinutes(Math.max(0, nextAt - now));
-            String target = kind.equals("tous") ? "tous" : kind + " " + value;
-            return "#" + id + " " + when + " : " + title + " (" + target + ")";
+        /** The delay shown for this schedule: the repeat period, or the time left before its single run; at least 1. */
+        public long minutes(long now) {
+            long millis = everyMs > 0 ? everyMs : Math.max(0, nextAt - now);
+            return Math.max(1, Math.round(millis / 60000.0));
         }
     }
 
@@ -182,13 +181,5 @@ public final class AdminStore {
         } catch (RuntimeException e) {
             return new AdminStore();
         }
-    }
-
-    static String formatMinutes(long millis) {
-        long minutes = Math.max(1, Math.round(millis / 60000.0));
-        if (minutes >= 60 && minutes % 60 == 0) {
-            return (minutes / 60) + " h";
-        }
-        return minutes + " min";
     }
 }

@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
@@ -48,7 +49,7 @@ public class HudLayoutScreen extends FordixScreen {
     private int presetIndex;
 
     public HudLayoutScreen(Screen parent) {
-        super(Component.literal("FORDIX // DISPOSITION DU HUD"));
+        super(Tr.c("hud.title"));
         this.parent = parent;
     }
 
@@ -69,22 +70,22 @@ public class HudLayoutScreen extends FordixScreen {
             presetIndex = (presetIndex + 1) % HudAnchors.PRESETS.size();
             presetButton.setMessage(presetLabel());
         }));
-        hideButton = addRenderableWidget(new FordixButton(x, y + 54, TOOLBAR_WIDTH, 16, Component.literal("Masquer"), () -> {
+        hideButton = addRenderableWidget(new FordixButton(x, y + 54, TOOLBAR_WIDTH, 16, Tr.c("hud.hide"), () -> {
             if (selected >= 0) {
                 FordixConfig.hudHiddenValue(elements.get(selected)).set(!FordixConfig.hudHidden(elements.get(selected)));
                 save();
             }
         }));
-        addRenderableWidget(new FordixButton(x, y + 72, TOOLBAR_WIDTH, 16, Component.literal("Tout remettre"), () -> {
+        addRenderableWidget(new FordixButton(x, y + 72, TOOLBAR_WIDTH, 16, Tr.c("hud.reset"), () -> {
             applyPreset(HudAnchors.PRESETS.get(0));
             presetIndex = 1;
             presetButton.setMessage(presetLabel());
         }));
-        addRenderableWidget(new FordixButton(x, y + 90, TOOLBAR_WIDTH, 16, Component.literal("Fermer"), this::onClose));
+        addRenderableWidget(new FordixButton(x, y + 90, TOOLBAR_WIDTH, 16, Tr.c("common.close"), this::onClose));
     }
 
     private Component presetLabel() {
-        return Component.literal("Modele : " + HudAnchors.PRESETS.get(presetIndex).name());
+        return Tr.c("hud.preset", Tr.s("hud.preset." + HudAnchors.PRESETS.get(presetIndex).name().toLowerCase(java.util.Locale.ROOT)));
     }
 
     private void applyPreset(HudAnchors.Preset preset) {
@@ -100,11 +101,11 @@ public class HudLayoutScreen extends FordixScreen {
     }
 
     private static Component gridLabel() {
-        return Component.literal("Grille : " + (showGrid ? "ON" : "OFF"));
+        return Tr.c("hud.grid", showGrid ? "ON" : "OFF");
     }
 
     private static Component magnetLabel() {
-        return Component.literal("Aimant : " + (magnet ? "ON" : "OFF"));
+        return Tr.c("hud.magnet", magnet ? "ON" : "OFF");
     }
 
     private HudSnap.Rect rectOf(int index) {
@@ -201,7 +202,7 @@ public class HudLayoutScreen extends FordixScreen {
         if (selected >= 0) {
             drawTag(guiGraphics, selected);
         }
-        hideButton.setMessage(Component.literal(selected >= 0 && FordixConfig.hudHidden(elements.get(selected)) ? "Afficher" : "Masquer"));
+        hideButton.setMessage(Tr.c(selected >= 0 && FordixConfig.hudHidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
         hideButton.active = selected >= 0;
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         drawHelp(guiGraphics);
@@ -228,7 +229,7 @@ public class HudLayoutScreen extends FordixScreen {
         guiGraphics.fill(rect.x(), rect.bottom() - 1, rect.right(), rect.bottom(), border);
         guiGraphics.fill(rect.x(), rect.y(), rect.x() + 1, rect.bottom(), border);
         guiGraphics.fill(rect.right() - 1, rect.y(), rect.right(), rect.bottom(), border);
-        String label = HudBounds.LABELS.get(index) + (hiddenElement ? " (masque)" : "");
+        String label = Tr.s("hud.element." + HudBounds.ELEMENTS.get(index)) + (hiddenElement ? Tr.s("hud.hidden_suffix") : "");
         int textWidth = this.font.width(label);
         int textY = rect.h() >= 10 ? rect.y() + (rect.h() - 8) / 2 : rect.y() - 9;
         guiGraphics.drawString(this.font, label, rect.x() + (rect.w() - textWidth) / 2, textY, FordixPalette.TEXT_BRIGHT, true);
@@ -247,8 +248,7 @@ public class HudLayoutScreen extends FordixScreen {
     }
 
     private void drawHelp(GuiGraphics guiGraphics) {
-        List<FormattedCharSequence> lines = this.font.split(Component.literal(
-                "Glisse un element pour le deplacer : il s'accroche au point de l'ecran le plus proche. Fleches : 1 px (Maj : 10). Double-clic ou Suppr : position par defaut."),
+        List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.help"),
                 TOOLBAR_WIDTH + 70);
         int y = 6 + 90 + 22;
         for (FormattedCharSequence line : lines) {

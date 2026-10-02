@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.guide.GuideActions;
 import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.client.guide.GuideHints;
@@ -39,7 +40,7 @@ public final class ItemSheetScreen extends FordixScreen {
     }
 
     public ItemSheetScreen(Screen parent, ItemStack stack) {
-        super(Component.literal("FICHE DE L'OBJET"));
+        super(Tr.c("sheet.title"));
         this.parent = parent;
         this.sheet = ItemFacts.of(stack);
         this.guide = GuideHints.entryFor(stack);
@@ -54,7 +55,7 @@ public final class ItemSheetScreen extends FordixScreen {
         panel = new Panel(left, top, panelWidth, panelHeight);
         int by = top + panelHeight - PADDING - 18;
         int x = left + PADDING;
-        addRenderableWidget(new FordixButton(x, by, 96, 18, Component.literal("Page du wiki"), () -> {
+        addRenderableWidget(new FordixButton(x, by, 96, 18, Tr.c("sheet.wiki"), () -> {
             ItemStack stack = sheet.stack();
             GuideActions.run(GuideEntry.parse("minecraft | Wiki | minecraft:book | url:https://minecraft.wiki/w/{objet}"), stack);
         }));
@@ -63,7 +64,7 @@ public final class ItemSheetScreen extends FordixScreen {
             String label = this.font.plainSubstrByWidth(guide.label(), 140);
             addRenderableWidget(new FordixButton(x, by, 150, 18, Component.literal(label), () -> GuideActions.run(guide, sheet.stack())));
         }
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, by, 70, 18, Component.literal("Retour"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, by, 70, 18, Tr.c("common.back"), this::onClose));
         if (sheet.makes().size() > 1) {
             addRenderableWidget(new FordixButton(left + PADDING + 150, top + 62, 16, 14, Component.literal("<"),
                     () -> recipeIndex = (recipeIndex + sheet.makes().size() - 1) % sheet.makes().size()));
@@ -95,10 +96,10 @@ public final class ItemSheetScreen extends FordixScreen {
 
         // Left column: how to make it.
         int columnWidth = (right - left) / 2 - 6;
-        g.drawString(this.font, "Fabrication", left, top + 48, FordixPalette.ACCENT, false);
+        g.drawString(this.font, Tr.s("sheet.make"), left, top + 48, FordixPalette.ACCENT, false);
         List<ItemFacts.RecipeView> makes = sheet.makes();
         if (makes.isEmpty()) {
-            g.drawString(this.font, "Pas de recette de fabrication.", left, top + 66, FordixPalette.TEXT, false);
+            g.drawString(this.font, Tr.s("sheet.nomake"), left, top + 66, FordixPalette.TEXT, false);
         } else {
             ItemFacts.RecipeView view = makes.get(Math.min(recipeIndex, makes.size() - 1));
             String head = view.station() + (makes.size() > 1 ? "  " + (recipeIndex + 1) + "/" + makes.size() : "");
@@ -108,7 +109,7 @@ public final class ItemSheetScreen extends FordixScreen {
 
         // Right column: figures.
         int fx = left + columnWidth + 12;
-        g.drawString(this.font, "Caracteristiques", fx, top + 48, FordixPalette.ACCENT, false);
+        g.drawString(this.font, Tr.s("sheet.facts"), fx, top + 48, FordixPalette.ACCENT, false);
         int fy = top + 62;
         for (ItemFacts.Fact fact : sheet.facts()) {
             if (fy > top + 150) {
@@ -125,7 +126,7 @@ public final class ItemSheetScreen extends FordixScreen {
         // Uses.
         int uy = top + 156;
         g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
-        g.drawString(this.font, sheet.uses().isEmpty() ? "Utilise dans : rien" : "Utilise dans", left, uy, FordixPalette.ACCENT, false);
+        g.drawString(this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy, FordixPalette.ACCENT, false);
         int shown = 0;
         for (ItemStack use : sheet.uses()) {
             int column = shown % USES_PER_ROW;

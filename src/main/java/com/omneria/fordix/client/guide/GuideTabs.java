@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.guide;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.vanilla.VoidframeScreens;
@@ -35,8 +36,10 @@ public final class GuideTabs {
     private static final int GAP_TO_PANEL = 2;
 
     /** Added when the list has no "minecraft" entry of its own, so vanilla items also point to their wiki page. */
-    private static final GuideEntry VANILLA_WIKI = GuideEntry.parse(
-            "minecraft | Minecraft : Wiki | minecraft:knowledge_book | url:https://minecraft.wiki/w/{objet}");
+    private static GuideEntry vanillaWiki() {
+        return GuideEntry.parse("minecraft | " + Tr.s("guides.vanilla_wiki")
+                + " | minecraft:knowledge_book | url:https://minecraft.wiki/w/{objet}");
+    }
 
     private GuideTabs() {
     }
@@ -62,7 +65,7 @@ public final class GuideTabs {
             }
         }
         if (entries.stream().noneMatch(entry -> entry.modId().equals("minecraft"))) {
-            entries.add(VANILLA_WIKI);
+            entries.add(vanillaWiki());
         }
         return entries;
     }

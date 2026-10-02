@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.tooltip;
 
+import com.omneria.fordix.Tr;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -44,11 +45,11 @@ public final class AnalysisCommand {
         dispatcher.register(Commands.literal("fordixdump").executes(context -> {
             try {
                 Path file = dump();
-                context.getSource().sendSuccess(() -> Component.literal("Analyse ecrite dans " + file), false);
+                context.getSource().sendSuccess(() -> Tr.c("cmd.dump.done", file.toString()), false);
                 return 1;
             } catch (IOException | RuntimeException e) {
                 Fordix.LOGGER.warn("Fordix analysis failed", e);
-                context.getSource().sendFailure(Component.literal("Analyse impossible : " + e.getMessage()));
+                context.getSource().sendFailure(Tr.c("cmd.dump.failed", String.valueOf(e.getMessage())));
                 return 0;
             }
         }));

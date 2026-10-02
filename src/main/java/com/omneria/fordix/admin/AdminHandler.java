@@ -1,5 +1,6 @@
 package com.omneria.fordix.admin;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.guide.GuidePage;
 import com.omneria.fordix.guide.server.GuideBroadcaster;
 import com.omneria.fordix.notification.FordixNotifications;
@@ -47,7 +48,7 @@ public final class AdminHandler {
                 return;
             }
             if (!player.hasPermissions(Commands.LEVEL_GAMEMASTERS)) {
-                reply(player, "denied", List.of("Acces reserve aux operateurs."));
+                reply(player, "denied", List.of(Tr.encode("msg.denied")));
                 return;
             }
             MinecraftServer server = player.getServer();
@@ -59,13 +60,13 @@ public final class AdminHandler {
                 case "delete_panel" -> {
                     String id = arg(args, 0);
                     boolean existed = PanelRegistry.delete(server, id);
-                    status(player, existed ? "Panel '" + id + "' supprime." : "Panel '" + id + "' introuvable.");
+                    status(player, existed ? "msg.panel.deleted" : "msg.panel.missing", id);
                     reply(player, "panels", PanelRegistry.ids(server));
                 }
                 case "send_panel" -> {
                     PanelDraft draft = PanelRegistry.find(server, arg(args, 0));
                     if (draft == null) {
-                        status(player, "Panel introuvable.");
+                        status(player, "msg.panel.missing", arg(args, 0));
                     } else {
                         PanelSender.send(draft.toSpec(), List.of(player));
                     }
@@ -78,7 +79,7 @@ public final class AdminHandler {
                     int id = parseInt(arg(args, 0), -1);
                     boolean removed = NotificationScheduler.store().deleteSchedule(id);
                     NotificationScheduler.save();
-                    status(player, removed ? "Programmation #" + id + " supprimee." : "Programmation introuvable.");
+                    status(player, removed ? "msg.schedule.deleted" : "msg.schedule.missing", id);
                     schedules(player);
                 }
                 case "pages" -> pageList(player);
@@ -89,7 +90,7 @@ public final class AdminHandler {
                     boolean removed = NotificationScheduler.store().deletePage(id);
                     NotificationScheduler.save();
                     GuideBroadcaster.broadcastPages(server);
-                    status(player, removed ? "Page '" + id + "' supprimee." : "Page introuvable.");
+                    status(player, removed ? "msg.page.deleted" : "msg.page.missing", id);
                     pageList(player);
                 }
                 case "book" -> book(player);
@@ -97,7 +98,7 @@ public final class AdminHandler {
                 case "book_reset" -> {
                     NotificationScheduler.store().resetWelcomeBook();
                     NotificationScheduler.save();
-                    status(player, "Livre : retour aux etapes du fichier de config.");
+                    status(player, "msg.book.reset");
                     book(player);
                 }
                 case "templates" -> templates(player);
@@ -106,10 +107,10 @@ public final class AdminHandler {
                     String name = arg(args, 0);
                     boolean removed = NotificationScheduler.store().deleteTemplate(name);
                     NotificationScheduler.save();
-                    status(player, removed ? "Modele '" + name + "' supprime." : "Modele introuvable.");
+                    status(player, removed ? "msg.template.deleted" : "msg.template.missing", name);
                     templates(player);
                 }
-                default -> status(player, "Action inconnue.");
+                default -> status(player, "msg.unknown_action");
             }
         });
         ctx.get().setPacketHandled(true);
@@ -118,7 +119,7 @@ public final class AdminHandler {
     private static void panel(ServerPlayer player, MinecraftServer server, String id) {
         PanelDraft draft = PanelRegistry.find(server, id);
         if (draft == null) {
-            status(player, "Panel '" + id + "' introuvable.");
+            status(player, "msg.panel.missing", id);
             return;
         }
         PanelSpec spec = draft.toSpec();
@@ -133,7 +134,7 @@ public final class AdminHandler {
     private static void savePanel(ServerPlayer player, MinecraftServer server, List<String> args) {
         String id = arg(args, 0);
         if (!PANEL_ID.matcher(id).matches()) {
-            status(player, "Identifiant invalide (a-z, 0-9, _ et - ; 32 max).");
+            status(player, "msg.bad_id");
             return;
         }
         List<PanelSpec.PanelButton> buttons = new ArrayList<>();
@@ -147,7 +148,7 @@ public final class AdminHandler {
         draft.setTitle(clip(arg(args, 1).isBlank() ? id : arg(args, 1)));
         draft.setDescription(clip(arg(args, 2)));
         draft.replaceButtons(buttons);
-        status(player, "Panel '" + id + "' enregistre (" + buttons.size() + " bouton(s)).");
+        status(player, "msg.panel.saved", id, buttons.size());
         reply(player, "panels", PanelRegistry.ids(server));
     }
 
@@ -155,7 +156,7 @@ public final class AdminHandler {
     private static void notify(ServerPlayer player, MinecraftServer server, List<String> args) {
         NotificationStyle style = NotificationStyle.byId(arg(args, 0));
         if (style == null) {
-            status(player, "Style inconnu.");
+            status(player, "msg.bad_style");
             return;
         }
         int seconds = FordixNotifications.DEFAULT_SECONDS;
@@ -166,13 +167,13 @@ public final class AdminHandler {
         }
         String title = clip(arg(args, 2));
         if (title.isBlank()) {
-            status(player, "Le titre est vide.");
+            status(player, "msg.empty_title");
             return;
         }
         NotificationTargets.Resolved target = NotificationTargets.byKind(server, arg(args, 4), arg(args, 5));
         int count = NotificationSender.send(player.getGameProfile().getName(), style, seconds, title, clip(arg(args, 3)),
                 target.label(), target.players());
-        status(player, "Envoyee a " + count + " joueur(s) (" + target.label() + ").");
+        status(player, "msg.notify.sent", count, target.label());
         history(player);
     }
 
@@ -181,12 +182,12 @@ public final class AdminHandler {
         NotificationStyle style = NotificationStyle.byId(arg(args, 0));
         String title = clip(arg(args, 2));
         if (style == null || title.isBlank()) {
-            status(player, style == null ? "Style inconnu." : "Le titre est vide.");
+            status(player, style == null ? "msg.bad_style" : "msg.empty_title");
             return;
         }
         int minutes = parseInt(arg(args, 7), 0);
         if (minutes < 1 || minutes > MAX_MINUTES) {
-            status(player, "Delai invalide (1 a " + MAX_MINUTES + " minutes).");
+            status(player, "msg.bad_delay", MAX_MINUTES);
             return;
         }
         boolean repeating = arg(args, 6).equals("every");
@@ -196,11 +197,11 @@ public final class AdminHandler {
                 title, clip(arg(args, 3)), arg(args, 4), clip(arg(args, 5)), now + delay, repeating ? delay : 0,
                 player.getGameProfile().getName());
         if (entry == null) {
-            status(player, "Trop de programmations (" + com.omneria.fordix.notification.AdminStore.MAX_SCHEDULES + " max).");
+            status(player, "msg.too_many_schedules", com.omneria.fordix.notification.AdminStore.MAX_SCHEDULES);
             return;
         }
         NotificationScheduler.save();
-        status(player, "Programmation #" + entry.id + " enregistree.");
+        status(player, "msg.schedule.saved", entry.id);
         schedules(player);
     }
 
@@ -208,7 +209,8 @@ public final class AdminHandler {
         long now = System.currentTimeMillis();
         List<String> lines = new ArrayList<>();
         for (var entry : NotificationScheduler.store().schedules) {
-            lines.add(entry.id + "\t" + entry.describe(now));
+            lines.add(String.join("\t", Integer.toString(entry.id), entry.everyMs > 0 ? "every" : "once",
+                    Long.toString(entry.minutes(now)), entry.title, entry.kind, entry.value));
         }
         reply(player, "schedules", lines);
     }
@@ -218,17 +220,17 @@ public final class AdminHandler {
         String name = arg(args, 0).trim();
         NotificationStyle style = NotificationStyle.byId(arg(args, 1));
         if (!TEMPLATE_NAME.matcher(name).matches() || style == null) {
-            status(player, style == null ? "Style inconnu." : "Nom invalide (1 a 32 caracteres, sans tabulation).");
+            status(player, style == null ? "msg.bad_style" : "msg.bad_name");
             return;
         }
         boolean saved = NotificationScheduler.store().saveTemplate(name, style.id(),
                 Math.max(1, Math.min(120, parseInt(arg(args, 2), 5))), clip(arg(args, 3)), clip(arg(args, 4)));
         if (!saved) {
-            status(player, "Trop de modeles (" + com.omneria.fordix.notification.AdminStore.MAX_TEMPLATES + " max).");
+            status(player, "msg.too_many_templates", com.omneria.fordix.notification.AdminStore.MAX_TEMPLATES);
             return;
         }
         NotificationScheduler.save();
-        status(player, "Modele '" + name + "' enregistre.");
+        status(player, "msg.template.saved", name);
         templates(player);
     }
 
@@ -256,17 +258,17 @@ public final class AdminHandler {
                 continue;
             }
             if (com.omneria.fordix.welcome.WelcomeStep.parse(line) == null) {
-                status(player, "Etape invalide : " + clip(line));
+                status(player, "msg.book.bad_step", clip(line));
                 return;
             }
             steps.add(line);
         }
         if (!NotificationScheduler.store().setWelcomeBook(steps, arg(args, 0).strip())) {
-            status(player, "Trop d'etapes (" + com.omneria.fordix.notification.AdminStore.MAX_BOOK_STEPS + " max).");
+            status(player, "msg.book.too_many", com.omneria.fordix.notification.AdminStore.MAX_BOOK_STEPS);
             return;
         }
         NotificationScheduler.save();
-        status(player, "Livre de bienvenue enregistre (" + steps.size() + " etape(s)).");
+        status(player, "msg.book.saved", steps.size());
         book(player);
     }
 
@@ -279,7 +281,7 @@ public final class AdminHandler {
     private static void pageGet(ServerPlayer player, String id) {
         GuidePage page = NotificationScheduler.store().pages.get(id);
         if (page == null) {
-            status(player, "Page '" + id + "' introuvable.");
+            status(player, "msg.page.missing", id);
             return;
         }
         reply(player, "page", List.of(page.id, page.title, page.body));
@@ -289,7 +291,7 @@ public final class AdminHandler {
     private static void pageSave(ServerPlayer player, MinecraftServer server, List<String> args) {
         String id = arg(args, 0);
         if (!PANEL_ID.matcher(id).matches()) {
-            status(player, "Identifiant invalide (a-z, 0-9, _ et - ; 32 max).");
+            status(player, "msg.bad_id");
             return;
         }
         String body = arg(args, 2);
@@ -298,12 +300,12 @@ public final class AdminHandler {
         }
         String title = clip(arg(args, 1).isBlank() ? id : arg(args, 1));
         if (!NotificationScheduler.store().savePage(id, title, body, player.getGameProfile().getName(), System.currentTimeMillis())) {
-            status(player, "Trop de pages (" + com.omneria.fordix.notification.AdminStore.MAX_PAGES + " max).");
+            status(player, "msg.too_many_pages", com.omneria.fordix.notification.AdminStore.MAX_PAGES);
             return;
         }
         NotificationScheduler.save();
         GuideBroadcaster.broadcastPages(server);
-        status(player, "Page '" + id + "' enregistree.");
+        status(player, "msg.page.saved", id);
         pageList(player);
     }
 
@@ -329,8 +331,8 @@ public final class AdminHandler {
         return text.length() > MAX_TEXT ? text.substring(0, MAX_TEXT) : text;
     }
 
-    private static void status(ServerPlayer player, String message) {
-        reply(player, "status", List.of(message));
+    private static void status(ServerPlayer player, String key, Object... args) {
+        reply(player, "status", List.of(Tr.encode(key, args)));
     }
 
     private static void reply(ServerPlayer player, String kind, List<String> lines) {

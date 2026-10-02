@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.tooltip;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.rarity.EnchantPower;
 import com.omneria.fordix.rarity.RarityTier;
 import net.minecraft.world.item.EnchantedBookItem;
@@ -40,11 +41,23 @@ public final class ItemRarity {
         return !stack.isEmpty() && resolve(stack).notable();
     }
 
+    /** The rarity's name in the game language: the five known ones are translated, others keep their own name. */
+    private static String labelOf(String rarityName) {
+        String name = rarityName.toLowerCase(java.util.Locale.ROOT);
+        if (name.contains("legend")) {
+            return Tr.s("rarity.legendary");
+        }
+        return switch (name) {
+            case "common", "uncommon", "rare", "epic" -> Tr.s("rarity." + name);
+            default -> RarityPalette.labelOf(rarityName);
+        };
+    }
+
     private static Resolved resolve(ItemStack stack) {
         Optional<RarityTier> ruled = ServerRarities.tierOf(stack.getItem());
         if (ruled.isPresent() && !(stack.getItem() instanceof EnchantedBookItem)) {
             RarityTier tier = ruled.get().bump(EnchantPower.tiersAdded(EnchantPower.score(enchantmentsOf(stack))));
-            return new Resolved(RarityPalette.labelOf(tier.name()), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON);
+            return new Resolved(labelOf(tier.name()), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON);
         }
         Rarity rarity = stack.getRarity();
         Integer color = RarityPalette.colorOf(rarity.name());
@@ -52,7 +65,7 @@ public final class ItemRarity {
             Integer own = rarity.color.getColor();
             color = own == null ? RarityPalette.COMMON : 0xFF000000 | own;
         }
-        return new Resolved(RarityPalette.labelOf(rarity.name()), color, !"COMMON".equals(rarity.name()));
+        return new Resolved(labelOf(rarity.name()), color, !"COMMON".equals(rarity.name()));
     }
 
     private static List<EnchantPower.Entry> enchantmentsOf(ItemStack stack) {

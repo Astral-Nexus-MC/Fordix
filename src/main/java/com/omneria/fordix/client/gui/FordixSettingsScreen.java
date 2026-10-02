@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.FordixClient;
 import com.omneria.fordix.client.gui.widget.FordixButton;
@@ -36,7 +37,7 @@ public class FordixSettingsScreen extends FordixScreen {
     private Panel panel;
 
     public FordixSettingsScreen(Screen parent) {
-        super(Component.literal("FORDIX // CONFIGURATION"));
+        super(Tr.c("settings.title"));
         this.parent = parent;
     }
 
@@ -50,26 +51,26 @@ public class FordixSettingsScreen extends FordixScreen {
         int right = left + COLUMN_WIDTH + GAP;
         int y = panelY + 28;
 
-        addRenderableWidget(toggle(left, y, COLUMN_WIDTH, "Ecrans vanilla Voidframe", FordixConfig.VOIDFRAME_VANILLA_SCREENS));
-        addRenderableWidget(toggle(left, y + ROW, COLUMN_WIDTH, "HUD Voidframe", FordixConfig.VOIDFRAME_HUD));
-        addRenderableWidget(toggle(left, y + ROW * 2, COLUMN_WIDTH, "Infobulles Voidframe", FordixConfig.VOIDFRAME_TOOLTIPS));
-        addRenderableWidget(choice(left, y + ROW * 3, COLUMN_WIDTH, "Style d'infobulle", TooltipStyles.NAMES, FordixConfig.TOOLTIP_STYLE));
-        addRenderableWidget(choice(left, y + ROW * 4, COLUMN_WIDTH, "Theme", Theme.NAMES, FordixConfig.THEME));
-        addRenderableWidget(choice(left, y + ROW * 5, COLUMN_WIDTH, "Notifications", NotificationCorner.OPTIONS, FordixConfig.NOTIFICATION_POSITION));
+        addRenderableWidget(toggle(left, y, COLUMN_WIDTH, Tr.s("settings.vanilla_screens"), FordixConfig.VOIDFRAME_VANILLA_SCREENS));
+        addRenderableWidget(toggle(left, y + ROW, COLUMN_WIDTH, Tr.s("settings.hud"), FordixConfig.VOIDFRAME_HUD));
+        addRenderableWidget(toggle(left, y + ROW * 2, COLUMN_WIDTH, Tr.s("settings.tooltips"), FordixConfig.VOIDFRAME_TOOLTIPS));
+        addRenderableWidget(choice(left, y + ROW * 3, COLUMN_WIDTH, Tr.s("settings.tooltip_style"), TooltipStyles.NAMES, FordixConfig.TOOLTIP_STYLE));
+        addRenderableWidget(choice(left, y + ROW * 4, COLUMN_WIDTH, Tr.s("settings.theme"), Theme.NAMES, FordixConfig.THEME));
+        addRenderableWidget(choice(left, y + ROW * 5, COLUMN_WIDTH, Tr.s("settings.notifications"), NotificationCorner.OPTIONS, FordixConfig.NOTIFICATION_POSITION));
 
-        addRenderableWidget(new FordixButton(right, y, COLUMN_WIDTH, BUTTON_HEIGHT, Component.literal("Disposition du HUD..."),
+        addRenderableWidget(new FordixButton(right, y, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.hud_layout"),
                 () -> this.minecraft.setScreen(new HudLayoutScreen(this))));
-        addRenderableWidget(new FordixButton(right, y + ROW, COLUMN_WIDTH, BUTTON_HEIGHT, Component.literal("Administration..."),
+        addRenderableWidget(new FordixButton(right, y + ROW, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.admin"),
                 () -> this.minecraft.setScreen(new FordixAdminScreen(this))));
         addRenderableWidget(new FordixButton(right, y + ROW * 2, COLUMN_WIDTH, BUTTON_HEIGHT,
-                Component.literal("Tester une notification"), () -> NotificationOverlay.receive(
+                Tr.c("settings.test"), () -> NotificationOverlay.receive(
                 new ClientboundNotificationPayload(NotificationStyle.INFO, Component.literal("Fordix"),
-                        Component.literal("Ceci est une notification de test."), 100))));
+                        Tr.c("settings.test_message"), 100))));
 
         // Accent: a label line, then the hex box (empty keeps the theme's own accent).
-        EditBox accent = new EditBox(this.font, right, y + ROW * 3 + 12, COLUMN_WIDTH, BUTTON_HEIGHT, Component.literal("Accent"));
+        EditBox accent = new EditBox(this.font, right, y + ROW * 3 + 12, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.accent"));
         accent.setMaxLength(7);
-        accent.setHint(Component.literal("#RRGGBB (vide = theme)"));
+        accent.setHint(Tr.c("settings.accent_hint"));
         accent.setValue(FordixConfig.ACCENT_COLOR.get());
         accent.setResponder(text -> {
             boolean valid = text.isEmpty() || Theme.parseHex(text) != null;
@@ -80,10 +81,10 @@ public class FordixSettingsScreen extends FordixScreen {
         });
         addRenderableWidget(accent);
 
-        addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, "Indice Maj+G", FordixConfig.GUIDE_HINTS));
+        addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, Tr.s("settings.guide_hints"), FordixConfig.GUIDE_HINTS));
 
         addRenderableWidget(new FordixButton(left, y + ROW * 6 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
-                Component.literal("Fermer"), this::onClose));
+                Tr.c("common.close"), this::onClose));
     }
 
     /** A button showing "label : ON/OFF" that flips a boolean option. */
@@ -125,7 +126,7 @@ public class FordixSettingsScreen extends FordixScreen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, panel.getY() + 10, FordixPalette.ACCENT);
         int accentLabelY = panel.getY() + 28 + ROW * 3;
-        guiGraphics.drawString(this.font, "Couleur d'accent", panel.getX() + PADDING + COLUMN_WIDTH + GAP, accentLabelY,
+        guiGraphics.drawString(this.font, Tr.s("settings.accent_label"), panel.getX() + PADDING + COLUMN_WIDTH + GAP, accentLabelY,
                 FordixPalette.TEXT, false);
     }
 

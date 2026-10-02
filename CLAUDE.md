@@ -68,5 +68,8 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   le code client n'est appelé qu'à travers `DistExecutor` (voir `PanelNetwork`).
 - Les calculs sans dépendance Minecraft (ex. `client/gui/layout/Layout`) restent en Java pur
   pour être testables avec JUnit sans lancer le jeu.
-- Les messages de commande affichés en jeu sont en français, sans accents
-  (ex. « Panel 'x' supprime. »).
+- Tous les textes affichés par le mod passent par `Tr` (`Tr.c` composant traduit côté destinataire, `Tr.s` texte client) et les
+  fichiers `assets/fordix/lang/en_us.json` et `fr_fr.json` (clés préfixées `fordix.`) : ne jamais écrire un texte en dur. Les
+  retours serveur de l'écran d'administration voyagent sous la forme `Tr.encode(clé, args…)`. Ajouter une clé aux deux fichiers.
+  Restent volontairement en français : les valeurs des configs (étapes du livre, libellés de guides) et les étiquettes techniques
+  des destinataires dans l'historique des notifications.

@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.tooltip;
 
+import com.omneria.fordix.Tr;
 import com.google.common.collect.Multimap;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
@@ -148,7 +149,7 @@ public final class ItemTooltipRenderer {
             cursorY += 2;
         }
         if (!chips.isEmpty()) {
-            guiGraphics.drawString(font, "Enchantements", contentX, cursorY + 2, ENCHANT_SECTION, false);
+            guiGraphics.drawString(font, Tr.s("tooltip.enchantments"), contentX, cursorY + 2, ENCHANT_SECTION, false);
             cursorY += SECTION_HEIGHT;
             for (Chip chip : chips) {
                 drawChip(guiGraphics, font, chip, contentX, cursorY);
@@ -182,7 +183,8 @@ public final class ItemTooltipRenderer {
             var enchantment = entry.getKey();
             String star = enchantment.isTreasureOnly() && !enchantment.isCurse() ? "★ " : "";
             var key = ForgeRegistries.ENCHANTMENTS.getKey(enchantment);
-            String effect = key == null ? null : EnchantEffects.describe(key.toString(), entry.getValue());
+            var described = key == null ? null : EnchantEffects.describe(key.toString(), entry.getValue());
+            String effect = described == null ? null : Tr.s(described.key(), described.args().toArray());
             chips.add(new Chip(star + enchantment.getFullname(entry.getValue()).getString(), TooltipStyle.colorOf(enchantment),
                     effect == null ? "" : effect));
         }
@@ -307,16 +309,16 @@ public final class ItemTooltipRenderer {
     private static String typeOf(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem) {
-            return "Armure";
+            return Tr.s("tooltip.type.armor");
         }
         if (item instanceof SwordItem || item instanceof TridentItem
                 || !stack.getAttributeModifiers(EquipmentSlot.MAINHAND).get(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).isEmpty()) {
-            return item instanceof DiggerItem ? "Outil" : "Arme";
+            return Tr.s(item instanceof DiggerItem ? "tooltip.type.tool" : "tooltip.type.weapon");
         }
         if (item instanceof DiggerItem) {
-            return "Outil";
+            return Tr.s("tooltip.type.tool");
         }
-        return item instanceof BlockItem ? "Bloc" : "Objet";
+        return Tr.s(item instanceof BlockItem ? "tooltip.type.block" : "tooltip.type.item");
     }
 
     private static String modName(ItemStack stack) {

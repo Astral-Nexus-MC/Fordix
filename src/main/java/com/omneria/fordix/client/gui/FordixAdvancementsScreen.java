@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.anim.Smoothing;
 import com.omneria.fordix.client.gui.vanilla.Reflect;
 import com.omneria.fordix.client.gui.vanilla.VoidframeDraw;
@@ -433,7 +434,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
         lines.addAll(this.font.split(display.getDescription(), 200));
         AdvancementProgress progress = progressOf(node.advancement());
         if (progress != null && progress.isDone()) {
-            lines.add(Component.literal("Obtenu").getVisualOrderText());
+            lines.add(Tr.c("advancements.done").getVisualOrderText());
         } else if (progress != null && progress.getProgressText() != null) {
             lines.add(Component.literal(progress.getProgressText()).getVisualOrderText());
         }

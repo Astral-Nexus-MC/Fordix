@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.tooltip;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
@@ -108,7 +109,8 @@ public final class TooltipStyle {
         MutableComponent line = Component.literal(star + enchantment.getFullname(level).getString())
                 .withStyle(style -> style.withColor(color & 0xFFFFFF));
         var key = ForgeRegistries.ENCHANTMENTS.getKey(enchantment);
-        String effect = key == null ? null : EnchantEffects.describe(key.toString(), level);
+        var described = key == null ? null : EnchantEffects.describe(key.toString(), level);
+        String effect = described == null ? null : Tr.s(described.key(), described.args().toArray());
         if (effect != null) {
             line.append(Component.literal("  " + effect).withStyle(style -> style.withColor(EFFECT & 0xFFFFFF)));
         }
