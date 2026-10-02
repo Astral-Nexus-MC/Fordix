@@ -2,7 +2,9 @@ package com.omneria.fordix.client.guide;
 
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.FordixClient;
+import com.omneria.fordix.client.gui.ItemSheetScreen;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -40,6 +42,10 @@ public final class GuideHints {
         return null;
     }
 
+    private static boolean isPonder(GuideEntry entry) {
+        return entry != null && entry.action() == GuideEntry.Action.PONDER;
+    }
+
     private static String keyLabel() {
         return "Maj + " + FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString().toUpperCase();
     }
@@ -48,15 +54,12 @@ public final class GuideHints {
         if (!FordixConfig.GUIDE_HINTS.get()) {
             return;
         }
-        GuideEntry entry = entryFor(event.getItemStack());
-        if (entry == null) {
+        if (event.getItemStack().isEmpty()) {
             return;
         }
         List<Component> lines = event.getToolTip();
-        String text = entry.action() == GuideEntry.Action.PONDER && PonderScenes.hasScene(event.getItemStack())
-                ? "Voir la scene Ponder de cet objet"
-                : entry.action() == GuideEntry.Action.URL && entry.target().contains("{objet}")
-                ? "Ouvrir sa page du wiki" : "Ouvrir le guide : " + entry.label();
+        String text = PonderScenes.hasScene(event.getItemStack()) && isPonder(entryFor(event.getItemStack()))
+                ? "Voir la scene Ponder de cet objet" : "Voir la fiche de l'objet";
         lines.add(Component.literal("[" + keyLabel() + "] ").withStyle(ChatFormatting.AQUA)
                 .append(Component.literal(text).withStyle(ChatFormatting.GRAY)));
     }
@@ -71,13 +74,13 @@ public final class GuideHints {
         if (slot == null) {
             return;
         }
-        GuideEntry entry = entryFor(slot.getItem());
-        if (entry != null) {
-            event.setCanceled(true);
-            if (entry.action() == GuideEntry.Action.PONDER && PonderScenes.open(slot.getItem())) {
-                return;
-            }
-            GuideActions.run(entry, slot.getItem());
+        if (slot.getItem().isEmpty()) {
+            return;
         }
+        event.setCanceled(true);
+        if (isPonder(entryFor(slot.getItem())) && PonderScenes.open(slot.getItem())) {
+            return;
+        }
+        Minecraft.getInstance().setScreen(new ItemSheetScreen(screen, slot.getItem()));
     }
 }

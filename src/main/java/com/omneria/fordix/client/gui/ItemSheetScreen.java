@@ -1,0 +1,206 @@
+package com.omneria.fordix.client.gui;
+
+import com.omneria.fordix.client.guide.GuideActions;
+import com.omneria.fordix.client.guide.GuideEntry;
+import com.omneria.fordix.client.guide.GuideHints;
+import com.omneria.fordix.client.guide.ItemFacts;
+import com.omneria.fordix.client.gui.widget.FordixButton;
+import com.omneria.fordix.client.gui.widget.Panel;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * An item's sheet, drawn from what the game knows (see {@link ItemFacts}): how to make it, what it is
+ * used in and its figures. Clicking an ingredient or a result opens that item's sheet, Back returns.
+ */
+public final class ItemSheetScreen extends FordixScreen {
+    private static final int PANEL_WIDTH = 420;
+    private static final int PANEL_HEIGHT = 250;
+    private static final int PADDING = 10;
+    private static final int SLOT = 18;
+    private static final int USES_PER_ROW = 16;
+
+    private final Screen parent;
+    private final ItemFacts.Sheet sheet;
+    private final GuideEntry guide;
+    private int recipeIndex;
+    private int panelWidth = PANEL_WIDTH;
+    private int panelHeight = PANEL_HEIGHT;
+    private Panel panel;
+    private final List<Hit> hits = new ArrayList<>();
+    private ItemStack hovered = ItemStack.EMPTY;
+
+    private record Hit(int x, int y, ItemStack stack) {
+    }
+
+    public ItemSheetScreen(Screen parent, ItemStack stack) {
+        super(Component.literal("FICHE DE L'OBJET"));
+        this.parent = parent;
+        this.sheet = ItemFacts.of(stack);
+        this.guide = GuideHints.entryFor(stack);
+    }
+
+    @Override
+    protected void init() {
+        panelWidth = Math.min(PANEL_WIDTH, this.width - 10);
+        panelHeight = Math.min(PANEL_HEIGHT, this.height - 10);
+        int left = centerX(panelWidth);
+        int top = centerY(panelHeight);
+        panel = new Panel(left, top, panelWidth, panelHeight);
+        int by = top + panelHeight - PADDING - 18;
+        int x = left + PADDING;
+        addRenderableWidget(new FordixButton(x, by, 96, 18, Component.literal("Page du wiki"), () -> {
+            ItemStack stack = sheet.stack();
+            GuideActions.run(GuideEntry.parse("minecraft | Wiki | minecraft:book | url:https://minecraft.wiki/w/{objet}"), stack);
+        }));
+        x += 100;
+        if (guide != null && !(guide.action() == GuideEntry.Action.URL && guide.target().contains("{objet}"))) {
+            String label = this.font.plainSubstrByWidth(guide.label(), 140);
+            addRenderableWidget(new FordixButton(x, by, 150, 18, Component.literal(label), () -> GuideActions.run(guide, sheet.stack())));
+        }
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, by, 70, 18, Component.literal("Retour"), this::onClose));
+        if (sheet.makes().size() > 1) {
+            addRenderableWidget(new FordixButton(left + PADDING + 150, top + 62, 16, 14, Component.literal("<"),
+                    () -> recipeIndex = (recipeIndex + sheet.makes().size() - 1) % sheet.makes().size()));
+            addRenderableWidget(new FordixButton(left + PADDING + 170, top + 62, 16, 14, Component.literal(">"),
+                    () -> recipeIndex = (recipeIndex + 1) % sheet.makes().size()));
+        }
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(g);
+        panel.render(g, mouseX, mouseY, partialTick);
+        hits.clear();
+        hovered = ItemStack.EMPTY;
+        int left = panel.getX() + PADDING;
+        int top = panel.getY();
+        int right = panel.getX() + panelWidth - PADDING;
+
+        // Header: big icon, name, id and mod.
+        g.pose().pushPose();
+        g.pose().translate(left, top + 8, 0);
+        g.pose().scale(2, 2, 1);
+        g.renderItem(sheet.stack(), 0, 0);
+        g.pose().popPose();
+        g.drawString(this.font, sheet.name(), left + 40, top + 10, FordixPalette.TEXT_BRIGHT, false);
+        g.drawString(this.font, sheet.mod() + " - " + sheet.id(), left + 40, top + 22, FordixPalette.TEXT, false);
+        g.fill(left, top + 42, right, top + 43, FordixPalette.BEVEL_HIGHLIGHT);
+        hit(left, top + 8, 32, 32, sheet.stack(), mouseX, mouseY, false);
+
+        // Left column: how to make it.
+        int columnWidth = (right - left) / 2 - 6;
+        g.drawString(this.font, "Fabrication", left, top + 48, FordixPalette.ACCENT, false);
+        List<ItemFacts.RecipeView> makes = sheet.makes();
+        if (makes.isEmpty()) {
+            g.drawString(this.font, "Pas de recette de fabrication.", left, top + 66, FordixPalette.TEXT, false);
+        } else {
+            ItemFacts.RecipeView view = makes.get(Math.min(recipeIndex, makes.size() - 1));
+            String head = view.station() + (makes.size() > 1 ? "  " + (recipeIndex + 1) + "/" + makes.size() : "");
+            g.drawString(this.font, this.font.plainSubstrByWidth(head, 140), left, top + 64, FordixPalette.TEXT, false);
+            drawRecipe(g, view, left, top + 80, mouseX, mouseY);
+        }
+
+        // Right column: figures.
+        int fx = left + columnWidth + 12;
+        g.drawString(this.font, "Caracteristiques", fx, top + 48, FordixPalette.ACCENT, false);
+        int fy = top + 62;
+        for (ItemFacts.Fact fact : sheet.facts()) {
+            if (fy > top + 150) {
+                break;
+            }
+            int available = right - fx;
+            String value = this.font.plainSubstrByWidth(fact.value(), available * 2 / 3);
+            int valueWidth = this.font.width(value);
+            g.drawString(this.font, this.font.plainSubstrByWidth(fact.label(), available - valueWidth - 6), fx, fy, FordixPalette.TEXT, false);
+            g.drawString(this.font, value, right - valueWidth, fy, fact.color() == 0 ? FordixPalette.TEXT_BRIGHT : fact.color(), false);
+            fy += 11;
+        }
+
+        // Uses.
+        int uy = top + 156;
+        g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
+        g.drawString(this.font, sheet.uses().isEmpty() ? "Utilise dans : rien" : "Utilise dans", left, uy, FordixPalette.ACCENT, false);
+        int shown = 0;
+        for (ItemStack use : sheet.uses()) {
+            int column = shown % USES_PER_ROW;
+            int row = shown / USES_PER_ROW;
+            int ux = left + column * SLOT;
+            int uyy = uy + 12 + row * SLOT;
+            if (uyy + SLOT > top + panelHeight - PADDING - 22) {
+                break;
+            }
+            g.renderItem(use, ux + 1, uyy + 1);
+            hit(ux, uyy, SLOT, SLOT, use, mouseX, mouseY, true);
+            shown++;
+        }
+        if (shown < sheet.uses().size()) {
+            String more = "+" + (sheet.uses().size() - shown);
+            g.drawString(this.font, more, right - this.font.width(more), uy, FordixPalette.TEXT, false);
+        }
+
+        super.render(g, mouseX, mouseY, partialTick);
+        if (!hovered.isEmpty()) {
+            g.renderTooltip(this.font, hovered, mouseX, mouseY);
+        }
+    }
+
+    private void drawRecipe(GuiGraphics g, ItemFacts.RecipeView view, int x, int y, int mouseX, int mouseY) {
+        long tick = System.currentTimeMillis() / 1000;
+        for (int i = 0; i < view.cells().size(); i++) {
+            int cx = x + (i % view.columns()) * SLOT;
+            int cy = y + (i / view.columns()) * SLOT;
+            g.fill(cx, cy, cx + SLOT - 1, cy + SLOT - 1, FordixPalette.SLOT_FILL);
+            List<ItemStack> options = view.cells().get(i);
+            if (!options.isEmpty()) {
+                ItemStack stack = options.get((int) (tick % options.size()));
+                g.renderItem(stack, cx + 1, cy + 1);
+                hit(cx, cy, SLOT - 1, SLOT - 1, stack, mouseX, mouseY, true);
+            }
+        }
+        int ax = x + view.columns() * SLOT + 6;
+        int ay = y + (view.rows() * SLOT) / 2 - 4;
+        g.drawString(this.font, "->", ax, ay, FordixPalette.ACCENT, false);
+        int rx = ax + 18;
+        int ry = y + (view.rows() * SLOT) / 2 - SLOT / 2;
+        g.fill(rx, ry, rx + SLOT - 1, ry + SLOT - 1, FordixPalette.SLOT_FILL);
+        g.renderItem(view.result(), rx + 1, ry + 1);
+        g.renderItemDecorations(this.font, view.result(), rx + 1, ry + 1);
+        hit(rx, ry, SLOT - 1, SLOT - 1, view.result(), mouseX, mouseY, false);
+        if (!view.note().isEmpty()) {
+            g.drawString(this.font, view.note(), x, y + view.rows() * SLOT + 4, FordixPalette.TEXT, false);
+        }
+    }
+
+    /** Registers a hoverable item; {@code link} makes a click open that item's sheet. */
+    private void hit(int x, int y, int w, int h, ItemStack stack, int mouseX, int mouseY, boolean link) {
+        if (mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h) {
+            hovered = stack;
+            if (link && !stack.is(sheet.stack().getItem())) {
+                hits.add(new Hit(x, y, stack));
+            }
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            return true;
+        }
+        if (button == 0 && !hits.isEmpty()) {
+            this.minecraft.setScreen(new ItemSheetScreen(this, hits.get(0).stack()));
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(parent);
+    }
+}

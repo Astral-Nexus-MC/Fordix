@@ -290,6 +290,12 @@ public final class DevTest {
             hoverIndex = 0;
             mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements()));
         }, 40, false));
+        steps.add(new Step("17d-item-sheet", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE))), 40, false));
+        steps.add(new Step("17e-item-sheet-stick", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STICK))), 40, false));
+        steps.add(new Step("17f-item-sheet-furnace", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT))), 40, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
