@@ -157,6 +157,7 @@ dependencies {
     if (project.hasProperty('devMods')) {
         modLocalRuntime 'curse.maven:the-twilight-forest-227639:5468648'
         modLocalRuntime 'maven.modrinth:create:1.20.1-0.5.1.j'
+        modLocalRuntime 'maven.modrinth:journeymap:gryqmTt2'
     }
 
     // Plain JUnit 5 tests for Minecraft-independent logic (layout math, etc).

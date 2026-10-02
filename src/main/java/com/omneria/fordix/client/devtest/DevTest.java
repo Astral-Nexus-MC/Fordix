@@ -187,6 +187,26 @@ public final class DevTest {
             com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
             com.omneria.fordix.FordixConfig.hudOffsetX("health").save();
         }, 10, false));
+        if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
+            steps.add(new Step("10f-hud-journeymap", () -> {
+                HudLayoutScreen layout = new HudLayoutScreen(null);
+                mc.setScreen(layout);
+                layoutForExtras = layout;
+            }, 40, false));
+            steps.add(new Step("10g-hud-journeymap-moved", () -> {
+                HudLayoutScreen layout = layoutForExtras;
+                com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layout.listed());
+                com.omneria.fordix.Fordix.LOGGER.info("JM rect before {}",
+                        com.omneria.fordix.client.gui.vanilla.JourneyMapHud.rect(layout.width, layout.height));
+                layout.nudge("journeymap", -120, 120);
+                com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("journeymap", 1.5F);
+                com.omneria.fordix.Fordix.LOGGER.info("JM rect after {}",
+                        com.omneria.fordix.client.gui.vanilla.JourneyMapHud.rect(layout.width, layout.height));
+            }, 40, false));
+            steps.add(new Step("10h-hud-journeymap-live", () -> mc.setScreen(null), 40, false));
+            steps.add(new Step("10i-hud-journeymap-reset", () ->
+                    com.omneria.fordix.client.gui.vanilla.HudSlots.reset("journeymap"), 20, false));
+        }
         steps.add(new Step("11-admin", () -> {
             for (String element : com.omneria.fordix.FordixConfig.HUD_ELEMENTS) {
                 com.omneria.fordix.FordixConfig.hudOffsetX(element).set(0);
