@@ -188,7 +188,7 @@ public final class VoidframeHud {
 
     /** Over the strip but under nothing that matters: a top rule and an accent edge, clear of the text. */
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
-        if (event.getScreen() instanceof ChatScreen && FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (event.getScreen() instanceof ChatScreen && FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() && !ChatPanel.enabled()) {
             int width = event.getScreen().width;
             int height = event.getScreen().height;
             GuiGraphics guiGraphics = event.getGuiGraphics();
