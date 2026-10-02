@@ -1,6 +1,7 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.FordixConfig;
+import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.anim.Smoothing;
 import net.minecraft.client.Minecraft;
@@ -177,7 +178,8 @@ public final class VoidframeHud {
 
     /** Behind vanilla's translucent input strip: a panel tint, so the strip reads dark blue instead of black. */
     public static void onScreenRenderPre(ScreenEvent.Render.Pre event) {
-        if (event.getScreen() instanceof ChatScreen && FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        // The Voidframe chat draws its own text field bar; this full-width one is only for the vanilla chat.
+        if (event.getScreen() instanceof ChatScreen && FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() && !ChatPanel.enabled()) {
             int width = event.getScreen().width;
             int height = event.getScreen().height;
             event.getGuiGraphics().fill(2, height - 14, width - 2, height - 2, 0xCC000000 | (FordixPalette.PANEL_FILL & 0xFFFFFF));
