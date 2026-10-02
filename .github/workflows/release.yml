@@ -5,10 +5,24 @@ name: Release
 # scripts/vps/fordix-mod-sync.service de ce dépôt) et l'installe dans le modpack ;
 # sync-server-mods.py le recopie ensuite sur le serveur Minecraft. Un tag = une mise à jour
 # des joueurs et du serveur.
+#
+# Deux façons de publier, sans effet l'une sur l'autre (la release est idempotente) :
+#   - pousser un tag vX.Y.Z ;
+#   - pousser sur main un gradle.properties dont mod_version n'a pas encore de release : le workflow
+#     crée alors lui-même le tag vX.Y.Z (sur le commit poussé) et la release. Il peut aussi être lancé
+#     à la main (workflow_dispatch) sur main pour rattraper une version.
+# Un tag créé par ce workflow avec le jeton Actions ne redéclenche pas de workflow : tout se fait ici.
 
 on:
   push:
     tags: [ "v*.*.*" ]
+    branches: [ main ]
+    paths: [ gradle.properties ]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -20,44 +34,70 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Le nom du jar (fordix-<mod_version>.jar) sert au VPS à identifier la version : un tag
-      # qui ne correspond pas à mod_version publierait un jar mal nommé.
-      - name: Check mod_version matches tag
+      # Tag à publier : celui qui a été poussé, ou vX.Y.Z tiré de mod_version quand le workflow part de main.
+      - name: Resolve version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          tag_version="${GITHUB_REF_NAME#v}"
           mod_version="$(sed -n 's/^mod_version=//p' gradle.properties | tr -d '[:space:]')"
-          if [ "$tag_version" != "$mod_version" ]; then
-            echo "::error::Le tag $GITHUB_REF_NAME ne correspond pas à mod_version=$mod_version (gradle.properties). Mettre à jour mod_version, committer, puis re-tagger."
-            exit 1
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            tag="$GITHUB_REF_NAME"
+            # Le nom du jar (fordix-<mod_version>.jar) sert au VPS à identifier la version : un tag
+            # qui ne correspond pas à mod_version publierait un jar mal nommé.
+            if [ "${tag#v}" != "$mod_version" ]; then
+              echo "::error::Le tag $tag ne correspond pas à mod_version=$mod_version (gradle.properties). Mettre à jour mod_version, committer, puis re-tagger."
+              exit 1
+            fi
+          else
+            if [ "$GITHUB_REF_NAME" != "main" ]; then
+              echo "::error::Lancer ce workflow sur main (branche actuelle : $GITHUB_REF_NAME)."
+              exit 1
+            fi
+            tag="v$mod_version"
+          fi
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "VERSION=${tag#v}" >> "$GITHUB_ENV"
+          # Depuis main, une version déjà publiée (release avec son jar) n'est pas refaite.
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            assets="$(gh release view "$tag" --json assets --jq '.assets | length' 2>/dev/null || echo 0)"
+            if [ "$assets" -gt 0 ]; then
+              echo "La release $tag existe déjà avec ses fichiers : rien à faire."
+              echo "SKIP=true" >> "$GITHUB_ENV"
+            fi
           fi
 
       - name: Set up JDK 21
+        if: env.SKIP != 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
       - name: Setup Gradle
+        if: env.SKIP != 'true'
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build mod
+        if: env.SKIP != 'true'
         run: ./gradlew build --no-daemon --stacktrace
 
       - name: Publish release
+        if: env.SKIP != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          jar="build/libs/fordix-${GITHUB_REF_NAME#v}.jar"
+          jar="build/libs/fordix-${VERSION}.jar"
           if [ ! -f "$jar" ]; then
             echo "::error::$jar introuvable. Contenu de build/libs :"; ls -la build/libs; exit 1
           fi
           # Empreinte vérifiée par le VPS avant d'installer le jar.
           (cd build/libs && sha256sum "$(basename "$jar")" > "$(basename "$jar").sha256")
           # Idempotent : une release vide/ratée pour ce tag ne doit pas bloquer un nouvel essai.
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$jar" "$jar.sha256" --clobber
-            gh release edit "$GITHUB_REF_NAME" --latest
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$jar" "$jar.sha256" --clobber
+            gh release edit "$TAG" --latest
           else
-            gh release create "$GITHUB_REF_NAME" "$jar" "$jar.sha256" \
-              --title "$GITHUB_REF_NAME" --generate-notes --latest
+            # --target : le commit du tag quand il n'existe pas encore (sans effet sinon).
+            gh release create "$TAG" "$jar" "$jar.sha256" --target "$GITHUB_SHA" \
+              --title "$TAG" --generate-notes --latest
           fi

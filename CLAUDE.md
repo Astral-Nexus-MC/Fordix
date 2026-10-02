@@ -34,9 +34,11 @@ Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur 
 
 ## Publier une version
 
-1. Passer `mod_version` à la nouvelle version dans `gradle.properties`, committer, pousser.
-2. Tagger ce commit `vX.Y.Z` (identique à `mod_version`) et pousser le tag. Les versions
-   officielles se taggent sur `main`, après fusion de `dev`, à la demande de l'utilisateur.
+1. Passer `mod_version` à la nouvelle version dans `gradle.properties`, committer, pousser sur `dev`.
+2. À la demande de l'utilisateur, fusionner `dev` dans `main` (avance rapide). Le workflow `release.yml` voit le
+   `gradle.properties` poussé sur `main`, crée tout seul le tag `vX.Y.Z` (identique à `mod_version`) et publie la release.
+   Un tag poussé à la main reste possible et donne le même résultat ; `workflow_dispatch` sur `main` rattrape une version
+   (Actions > Release > Run workflow). Les sessions Claude ne peuvent pas pousser de tag (403) : ne pas essayer.
 3. `.github/workflows/release.yml` publie `fordix-X.Y.Z.jar` + `.sha256` en release GitHub ; le
    VPS l'installe dans le modpack puis sur le serveur (voir `scripts/vps/README.md`).
 
