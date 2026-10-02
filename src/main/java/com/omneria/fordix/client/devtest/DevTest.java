@@ -201,6 +201,19 @@ public final class DevTest {
             mc.player.connection.sendChat("salut tout le monde");
         }, 25, false));
         steps.add(new Step("12d-chat-open", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("/tp An")), 25, false));
+        steps.add(new Step("12d2-chat-send", () -> {
+            // Type and send a line the way a player does: Enter in the chat screen.
+            if (mc.screen instanceof net.minecraft.client.gui.screens.ChatScreen chat) {
+                chat.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0);
+            }
+        }, 20, false));
+        steps.add(new Step("12d3-chat-reopen", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("coucou")), 15, false));
+        steps.add(new Step("12d4-chat-send2", () -> {
+            if (mc.screen instanceof net.minecraft.client.gui.screens.ChatScreen chat) {
+                chat.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER, 0, 0);
+            }
+        }, 20, false));
+        steps.add(new Step("12d5-chat-open-again", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")), 15, false));
         steps.add(new Step("12e-chat-tab-server", () ->
                 com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.SERVER), 15, false));
         steps.add(new Step("12f-chat-tab-reset", () -> {
