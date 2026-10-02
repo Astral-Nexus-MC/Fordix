@@ -50,4 +50,34 @@ class HudSlotTest {
         assertFalse(slot.customized());
         assertTrue(slot.measured);
     }
+
+    @Test
+    void sizeCountsAsACustomizationAndIsKeptInRange() {
+        HudSlot slot = new HudSlot();
+        slot.scale = 1.5F;
+        assertTrue(slot.customized());
+        slot.scale = 9F;
+        assertEquals(3.0F, slot.scaleValue());
+        slot.scale = 0F; // an older file without the field
+        assertEquals(1.0F, slot.scaleValue());
+        assertFalse(slot.customized());
+    }
+
+    @Test
+    void biggerElementKeepsItsCornerAndStaysOnScreen() {
+        HudSlot slot = new HudSlot();
+        slot.setBase(new HudSnap.Rect(100, 100, 40, 20), 400, 300);
+        slot.scale = 2F;
+        assertEquals(new HudSnap.Rect(100, 100, 80, 40), slot.placed(slot.base(400, 300), 400, 300));
+        slot.anchor = "bottom_right";
+        assertEquals(new HudSnap.Rect(320, 260, 80, 40), slot.placed(slot.base(400, 300), 400, 300));
+    }
+
+    @Test
+    void resetBringsTheSizeBack() {
+        HudSlot slot = new HudSlot();
+        slot.scale = 2F;
+        slot.reset();
+        assertEquals(1.0F, slot.scaleValue());
+    }
 }

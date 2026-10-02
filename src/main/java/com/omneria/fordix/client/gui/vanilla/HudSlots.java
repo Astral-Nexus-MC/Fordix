@@ -51,11 +51,32 @@ public final class HudSlots {
         return namespace.equals("minecraft") ? words : words + " (" + ModNames.of(namespace) + ")";
     }
 
+    /** The default spot at the element's current size (top-left corner as it would be at normal size). */
     public static HudSnap.Rect defaults(String id, int width, int height) {
-        if (isBuiltin(id)) {
-            return HudBounds.defaults(id, width, height);
+        if (isJourneyMap(id)) {
+            return JourneyMapHud.rect(width, height);
         }
-        return isJourneyMap(id) ? JourneyMapHud.rect(width, height) : ExtraHud.defaults(id, width, height);
+        HudSnap.Rect base = isBuiltin(id) ? HudBounds.defaults(id, width, height) : ExtraHud.defaults(id, width, height);
+        return HudAnchors.scaled(base, scale(id));
+    }
+
+    /** Size factor: 1 is the usual size. */
+    public static float scale(String id) {
+        if (isBuiltin(id)) {
+            return FordixConfig.hudScale(id);
+        }
+        return isJourneyMap(id) ? JourneyMapHud.scale() : ExtraHud.slot(id).scaleValue();
+    }
+
+    public static void setScale(String id, float scale) {
+        float clamped = HudAnchors.clampScale(scale);
+        if (isBuiltin(id)) {
+            FordixConfig.hudScaleValue(id).set((double) clamped);
+        } else if (isJourneyMap(id)) {
+            JourneyMapHud.setScale(clamped);
+        } else {
+            ExtraHud.slot(id).scale = clamped;
+        }
     }
 
     public static HudAnchors.Anchor anchor(String id) {
@@ -141,6 +162,9 @@ public final class HudSlots {
     public static void apply(String id, HudAnchors.Entry entry) {
         setPlacement(id, entry.anchor(), entry.offsetX(), entry.offsetY());
         setHidden(id, entry.hidden());
+        if (!isJourneyMap(id)) {
+            setScale(id, 1.0F);
+        }
     }
 
     /** Back to the default spot, visible. */

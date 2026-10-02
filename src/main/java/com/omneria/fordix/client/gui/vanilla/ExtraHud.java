@@ -127,10 +127,16 @@ public final class ExtraHud {
         }
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
-        int[] delta = slot.delta(defaults(id.toString(), width, height), width, height);
-        if (delta[0] != 0 || delta[1] != 0) {
-            event.getGuiGraphics().pose().pushPose();
-            event.getGuiGraphics().pose().translate(delta[0], delta[1], 0.0F);
+        HudSnap.Rect base = defaults(id.toString(), width, height);
+        HudSnap.Rect placed = slot.placed(base, width, height);
+        float scale = slot.scaleValue();
+        if (placed.x() != base.x() || placed.y() != base.y() || scale != 1.0F) {
+            // Drawn at its default spot: move to the placed corner, size it from there, come back to draw as usual.
+            var pose = event.getGuiGraphics().pose();
+            pose.pushPose();
+            pose.translate(placed.x(), placed.y(), 0.0F);
+            pose.scale(scale, scale, 1.0F);
+            pose.translate(-base.x(), -base.y(), 0.0F);
             shifted.add(id);
         }
     }

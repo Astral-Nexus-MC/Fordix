@@ -11,7 +11,23 @@ import java.util.Locale;
  * Pure Java, unit tested.
  */
 public final class HudAnchors {
+    public static final double MIN_SCALE = 0.5D;
+    public static final double MAX_SCALE = 3.0D;
+
     private HudAnchors() {
+    }
+
+    /** A size factor kept in the range the layout screen allows (and 1 for a missing value). */
+    public static float clampScale(float scale) {
+        if (!(scale > 0.0F)) {
+            return 1.0F;
+        }
+        return (float) Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
+    }
+
+    /** A rectangle with its size multiplied, its top-left corner staying where it is. */
+    public static HudSnap.Rect scaled(HudSnap.Rect rect, float scale) {
+        return new HudSnap.Rect(rect.x(), rect.y(), Math.max(1, Math.round(rect.w() * scale)), Math.max(1, Math.round(rect.h() * scale)));
     }
 
     public enum Anchor {

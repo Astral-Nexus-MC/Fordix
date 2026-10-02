@@ -114,9 +114,35 @@ public final class JourneyMapHud {
             Object position = field(properties(), "position");
             Class<?> enumClass = (Class<?>) position.getClass().getMethod("getEnumClass").invoke(position);
             set(position, enumValue(enumClass, "TopRight"));
+            setScale(1.0F);
             refresh();
         } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
             Fordix.LOGGER.warn("Could not reset the JourneyMap minimap: {}", e.toString());
+        }
+    }
+
+    /** Size relative to JourneyMap's default minimap size (its "size" setting is a percentage of the screen). */
+    public static float scale() {
+        try {
+            Object size = field(properties(), "sizePercent");
+            int now = (Integer) value(size);
+            int usual = (Integer) size.getClass().getMethod("getDefaultValue").invoke(size);
+            return usual > 0 ? now / (float) usual : 1.0F;
+        } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
+            return 1.0F;
+        }
+    }
+
+    public static void setScale(float scale) {
+        try {
+            Object size = field(properties(), "sizePercent");
+            int usual = (Integer) size.getClass().getMethod("getDefaultValue").invoke(size);
+            int min = (Integer) size.getClass().getMethod("getMinValue").invoke(size);
+            int max = (Integer) size.getClass().getMethod("getMaxValue").invoke(size);
+            set(size, Math.max(min, Math.min(max, Math.round(usual * scale))));
+            refresh();
+        } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
+            Fordix.LOGGER.warn("Could not resize the JourneyMap minimap: {}", e.toString());
         }
     }
 

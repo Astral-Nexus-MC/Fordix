@@ -31,6 +31,8 @@ public class HudLayoutScreen extends FordixScreen {
     private static final int GRID = 20;
     private static final long DOUBLE_CLICK_MS = 300L;
     private static final int TOOLBAR_WIDTH = 120;
+    private static final int HANDLE = 7;
+    private static final float WHEEL_STEP = 0.1F;
 
     /** Kept for the session: the two helpers are a habit, not a setting worth a config file. */
     private static boolean showGrid = true;
@@ -41,6 +43,8 @@ public class HudLayoutScreen extends FordixScreen {
     private boolean discovered;
     private int selected = -1;
     private boolean dragging;
+    private boolean resizing;
+    private float resizeBaseWidth;
     private double rawX;
     private double rawY;
     private Integer guideX;
@@ -235,13 +239,43 @@ public class HudLayoutScreen extends FordixScreen {
         int textWidth = this.font.width(label);
         int textY = rect.h() >= 10 ? rect.y() + (rect.h() - 8) / 2 : rect.y() - 9;
         guiGraphics.drawString(this.font, label, rect.x() + (rect.w() - textWidth) / 2, textY, FordixPalette.TEXT_BRIGHT, true);
+        if (isSelected) {
+            int hx = handleX(rect);
+            int hy = handleY(rect);
+            guiGraphics.fill(hx, hy, hx + HANDLE, hy + HANDLE, 0xFF000000 | accent);
+            guiGraphics.fill(hx + 2, hy + 2, hx + HANDLE - 1, hy + HANDLE - 1, 0xFF05070A);
+        }
+    }
+
+    /** The resize handle sits on the selected element's bottom-right corner, half outside it so small ones stay grabbable. */
+    private static int handleX(HudSnap.Rect rect) {
+        return rect.right() - HANDLE / 2 - 1;
+    }
+
+    private static int handleY(HudSnap.Rect rect) {
+        return rect.bottom() - HANDLE / 2 - 1;
+    }
+
+    private boolean onHandle(double mouseX, double mouseY) {
+        if (selected < 0) {
+            return false;
+        }
+        HudSnap.Rect rect = rectOf(selected);
+        return mouseX >= handleX(rect) - 1 && mouseX < handleX(rect) + HANDLE + 1
+                && mouseY >= handleY(rect) - 1 && mouseY < handleY(rect) + HANDLE + 1;
+    }
+
+    private void resize(int index, float scale) {
+        HudSlots.setScale(elements.get(index), scale);
     }
 
     /** Offset of the selected element, next to it while it's being moved. */
     private void drawTag(GuiGraphics guiGraphics, int index) {
         int[] offset = HudSlots.offset(elements.get(index));
         HudSnap.Rect rect = rectOf(index);
-        String text = HudSlots.anchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1];
+        float scale = HudSlots.scale(elements.get(index));
+        String text = HudSlots.anchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1]
+                + (Math.abs(scale - 1.0F) > 0.005F ? "  x" + Math.round(scale * 100) / 100.0F : "");
         int width = this.font.width(text) + 6;
         int x = Math.max(0, Math.min(this.width - width, rect.x()));
         int y = rect.y() >= 22 ? rect.y() - 20 : rect.bottom() + 3;
@@ -285,6 +319,11 @@ public class HudLayoutScreen extends FordixScreen {
         if (button != 0) {
             return false;
         }
+        if (onHandle(mouseX, mouseY)) {
+            resizing = true;
+            resizeBaseWidth = rectOf(selected).w() / HudSlots.scale(elements.get(selected));
+            return true;
+        }
         int hit = elementAt(mouseX, mouseY);
         selected = hit;
         if (hit < 0) {
@@ -308,6 +347,11 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (resizing && selected >= 0 && button == 0) {
+            HudSnap.Rect rect = rectOf(selected);
+            resize(selected, (float) (mouseX - rect.x()) / Math.max(1.0F, resizeBaseWidth));
+            return true;
+        }
         if (dragging && selected >= 0 && button == 0) {
             rawX += dragX;
             rawY += dragY;
@@ -332,6 +376,10 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (resizing) {
+            resizing = false;
+            save();
+        }
         if (dragging) {
             dragging = false;
             guideX = null;
@@ -344,8 +392,28 @@ public class HudLayoutScreen extends FordixScreen {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+    /** The wheel resizes the element under the pointer (Shift: bigger steps). */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        int hit = elementAt(mouseX, mouseY);
+        if (hit >= 0 && delta != 0.0D) {
+            selected = hit;
+            resize(hit, HudSlots.scale(elements.get(hit)) + (float) Math.signum(delta) * WHEEL_STEP * (hasShiftDown() ? 2.5F : 1.0F));
+            save();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (selected >= 0 && (keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD
+                || keyCode == GLFW.GLFW_KEY_MINUS || keyCode == GLFW.GLFW_KEY_KP_SUBTRACT)) {
+            boolean bigger = keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD;
+            resize(selected, HudSlots.scale(elements.get(selected)) + (bigger ? WHEEL_STEP : -WHEEL_STEP));
+            save();
+            return true;
+        }
         if (selected >= 0) {
             int step = hasShiftDown() ? 10 : 1;
             int dx = 0;

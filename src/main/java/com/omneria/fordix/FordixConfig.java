@@ -29,6 +29,7 @@ public final class FordixConfig {
     private static final Map<String, ForgeConfigSpec.IntValue[]> HUD_OFFSETS = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.ConfigValue<String>> HUD_ANCHORS = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_HIDDEN = new LinkedHashMap<>();
+    private static final Map<String, ForgeConfigSpec.DoubleValue> HUD_SCALES = new LinkedHashMap<>();
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -59,12 +60,16 @@ public final class FordixConfig {
                             "middle_left, center, middle_right, bottom_left, bottom_center or bottom_right.")
                     .define("anchor", "default", value -> value instanceof String text && HudAnchors.Anchor.byId(text) != null);
             ForgeConfigSpec.BooleanValue hidden = builder.define("hidden", false);
+            ForgeConfigSpec.DoubleValue scale = builder
+                    .comment("Size of the element, 1.0 being its usual size.")
+                    .defineInRange("scale", 1.0D, HudAnchors.MIN_SCALE, HudAnchors.MAX_SCALE);
             ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -1000, 1000);
             ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -1000, 1000);
             builder.pop();
             HUD_OFFSETS.put(element, new ForgeConfigSpec.IntValue[]{x, y});
             HUD_ANCHORS.put(element, anchor);
             HUD_HIDDEN.put(element, hidden);
+            HUD_SCALES.put(element, scale);
         }
         builder.pop();
         THEME = builder
@@ -106,6 +111,19 @@ public final class FordixConfig {
 
     public static ForgeConfigSpec.ConfigValue<String> hudAnchorValue(String element) {
         return HUD_ANCHORS.get(element);
+    }
+
+    public static ForgeConfigSpec.DoubleValue hudScaleValue(String element) {
+        return HUD_SCALES.get(element);
+    }
+
+    /** Size factor of a HUD element (1 before the config has loaded). */
+    public static float hudScale(String element) {
+        try {
+            return HudAnchors.clampScale(HUD_SCALES.get(element).get().floatValue());
+        } catch (IllegalStateException notLoadedYet) {
+            return 1.0F;
+        }
     }
 
     public static ForgeConfigSpec.BooleanValue hudHiddenValue(String element) {

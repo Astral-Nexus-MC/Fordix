@@ -164,7 +164,7 @@
     "fordix.hud.element.hunger": "Hunger",
     "fordix.hud.element.journeymap": "JourneyMap minimap",
     "fordix.hud.grid": "Grid: %s",
-    "fordix.hud.help": "Drag an element to move it: it snaps to the nearest point of the screen. Arrows: 1 px (Shift: 10). Double-click or Del: default position.",
+    "fordix.hud.help": "Drag an element to move it: it snaps to the nearest point of the screen. Corner square, wheel or + / -: resize. Arrows: 1 px (Shift: 10). Double-click or Del: default position and size.",
     "fordix.hud.hidden_suffix": " (hidden)",
     "fordix.hud.hide": "Hide",
     "fordix.hud.magnet": "Magnet: %s",

@@ -173,15 +173,19 @@ public final class DevTest {
             com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layout.listed());
             layout.nudge("minecraft:chat_panel", layout.width - 330, -(layout.height - 140));
             layout.nudge("minecraft:hotbar", 0, -60);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:hotbar", 1.5F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("minecraft:chat_panel", 0.7F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("health", 1.6F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("experience", 1.5F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("boss", 1.4F);
         }, 30, false));
         steps.add(new Step("10d-hud-extras-live", () -> mc.setScreen(null), 30, false));
         steps.add(new Step("10e-hud-extras-reset", () -> {
             for (String id : layoutForExtras.listed()) {
-                if (id.contains(":")) {
-                    com.omneria.fordix.client.gui.vanilla.HudSlots.reset(id);
-                }
+                com.omneria.fordix.client.gui.vanilla.HudSlots.reset(id);
             }
             com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
+            com.omneria.fordix.FordixConfig.hudOffsetX("health").save();
         }, 10, false));
         steps.add(new Step("11-admin", () -> {
             for (String element : com.omneria.fordix.FordixConfig.HUD_ELEMENTS) {

@@ -164,7 +164,7 @@
     "fordix.hud.element.hunger": "Faim",
     "fordix.hud.element.journeymap": "Minicarte JourneyMap",
     "fordix.hud.grid": "Grille : %s",
-    "fordix.hud.help": "Glisse un élément pour le déplacer : il s'accroche au point de l'écran le plus proche. Flèches : 1 px (Maj : 10). Double-clic ou Suppr : position par défaut.",
+    "fordix.hud.help": "Glisse un élément pour le déplacer : il s'accroche au point de l'écran le plus proche. Carré du coin, molette ou + / - : taille. Flèches : 1 px (Maj : 10). Double-clic ou Suppr : position et taille par défaut.",
     "fordix.hud.hidden_suffix": " (masqué)",
     "fordix.hud.hide": "Masquer",
     "fordix.hud.magnet": "Aimant : %s",

@@ -64,7 +64,9 @@ public final class VoidframeGauges {
                 event.setCanceled(true);
                 int[] offset = HudPlacement.delta("experience");
                 if (!HudPlacement.hidden("experience")) {
-                    drawExperience(guiGraphics, minecraft.font, player, width + 2 * offset[0], height + offset[1]);
+                    boolean sized = HudPlacement.begin(guiGraphics, "experience", false);
+drawExperience(guiGraphics, minecraft.font, player, width + 2 * offset[0], height + offset[1]);
+HudPlacement.end(guiGraphics, sized);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.ARMOR_LEVEL.type()) {
@@ -74,7 +76,9 @@ public final class VoidframeGauges {
                 gui.leftHeight += 10;
                 if (player.getArmorValue() > 0 && !HudPlacement.hidden("armor")) {
                     int[] offset = HudPlacement.delta("armor");
-                    drawArmor(guiGraphics, minecraft.font, player, width / 2 - 91 + offset[0], top + 1 + offset[1]);
+                    boolean sized = HudPlacement.begin(guiGraphics, "armor", false);
+drawArmor(guiGraphics, minecraft.font, player, width / 2 - 91 + offset[0], top + 1 + offset[1]);
+HudPlacement.end(guiGraphics, sized);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.AIR_LEVEL.type()) {
@@ -86,7 +90,9 @@ public final class VoidframeGauges {
                 gui.rightHeight += 10;
                 int[] offset = HudPlacement.delta("air");
                 if (!HudPlacement.hidden("air")) {
-                    drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH + offset[0], top + 1 + offset[1]);
+                    boolean sized = HudPlacement.begin(guiGraphics, "air", false);
+drawAir(guiGraphics, minecraft.font, air, max, width / 2 + 91 - GAUGE_WIDTH + offset[0], top + 1 + offset[1]);
+HudPlacement.end(guiGraphics, sized);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.JUMP_BAR.type()) {
@@ -94,7 +100,9 @@ public final class VoidframeGauges {
                 event.setCanceled(true);
                 int[] offset = HudPlacement.delta("experience");
                 if (!HudPlacement.hidden("experience")) {
-                    drawJump(guiGraphics, minecraft.player.getJumpRidingScale(), width + 2 * offset[0], height + offset[1]);
+                    boolean sized = HudPlacement.begin(guiGraphics, "experience", false);
+drawJump(guiGraphics, minecraft.player.getJumpRidingScale(), width + 2 * offset[0], height + offset[1]);
+HudPlacement.end(guiGraphics, sized);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.MOUNT_HEALTH.type()) {
@@ -104,7 +112,9 @@ public final class VoidframeGauges {
                 gui.rightHeight += 10;
                 int[] offset = HudPlacement.delta("hunger");
                 if (!HudPlacement.hidden("hunger")) {
-                    drawMountHealth(guiGraphics, minecraft.font, mount, width / 2 + 91 - MOUNT_WIDTH + offset[0], top + offset[1]);
+                    boolean sized = HudPlacement.begin(guiGraphics, "hunger", false);
+drawMountHealth(guiGraphics, minecraft.font, mount, width / 2 + 91 - MOUNT_WIDTH + offset[0], top + offset[1]);
+HudPlacement.end(guiGraphics, sized);
                 }
             }
         } else if (overlay == VanillaGuiOverlay.CROSSHAIR.type()) {
@@ -112,13 +122,11 @@ public final class VoidframeGauges {
         } else if (overlay == VanillaGuiOverlay.BOSS_EVENT_PROGRESS.type()) {
             if (Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events) {
                 event.setCanceled(true);
-                int[] offset = HudPlacement.delta("boss");
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(offset[0], offset[1], 0.0F);
+                boolean sized = HudPlacement.begin(guiGraphics, "boss", true);
                 if (!HudPlacement.hidden("boss")) {
                     drawBosses(guiGraphics, minecraft.font, events, width, height);
                 }
-                guiGraphics.pose().popPose();
+                HudPlacement.end(guiGraphics, sized);
             }
         }
     }
