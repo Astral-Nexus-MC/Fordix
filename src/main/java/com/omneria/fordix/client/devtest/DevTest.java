@@ -198,6 +198,7 @@ public final class DevTest {
             cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Ana\",\"on se retrouve au spawn ? Dev tu as le kit ?\"]}");
             cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Kiro\",\"ok, j'arrive\"]}");
             cmd(mc, "gamemode creative");
+            mc.player.connection.sendChat("salut tout le monde");
         }, 25, false));
         steps.add(new Step("12d-chat-open", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("/tp An")), 25, false));
         steps.add(new Step("12e-chat-tab-server", () ->

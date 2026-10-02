@@ -151,9 +151,10 @@ public final class ChatLog {
             Object[] args = content.getContents() instanceof TranslatableContents translatable ? translatable.getArgs() : null;
             if (args != null && "chat.type.emote".equals(key)) {
                 // "* Name does something": no name column, the line reads as is
-            } else if (args != null && args.length >= 2 && args[args.length - 2] instanceof Component component) {
-                name = component;
-                body = args[args.length - 1] instanceof Component text ? text : Component.literal(String.valueOf(args[args.length - 1]));
+            } else if (args != null && args.length >= 2) {
+                // Plain-text arguments (a /tellraw, some servers) arrive as strings, vanilla's own as components.
+                name = asComponent(args[args.length - 2]);
+                body = asComponent(args[args.length - 1]);
             } else if (args == null) {
                 String[] parts = ChatKind.splitPlain(content.getString());
                 if (parts != null) {
@@ -183,6 +184,10 @@ public final class ChatLog {
                 }
             }
         }
+    }
+
+    private static Component asComponent(Object argument) {
+        return argument instanceof Component component ? component : Component.literal(String.valueOf(argument));
     }
 
     /** The player's id carried by the click and hover of a name the server sent (vanilla names hover as an entity). */
