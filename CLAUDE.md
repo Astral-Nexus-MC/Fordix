@@ -53,7 +53,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `HudLayoutScreen` liste aussi le HUD que Fordix ne dessine pas : chat, barre d'objets, scoreboard, effets, titres et tout overlay
   Forge d'un autre mod (`ExtraHud` : mesuré en le dessinant hors écran, déplacé/masqué par ses événements de rendu, sauvé dans
   `fordix-hud-extras.json`), plus la minicarte JourneyMap (`JourneyMapHud`, par réflexion sur ses réglages, position `Custom`).
-  `HudSlots` donne un accès unique aux trois. Chaque élément se redimensionne (carré du coin, molette, + / -) : facteur `scale` autour du coin haut-gauche (`HudPlacement.begin/end`, `HudSlot.scale`, taille `sizePercent` pour JourneyMap). Les clics sur un chat déplacé restent décalés (limite connue).
+  `HudSlots` donne un accès unique aux trois. Chaque élément se redimensionne (carré du coin, molette, + / -) : facteur `scale` autour du coin haut-gauche (`HudPlacement.begin/end`, `HudSlot.scale`, taille `sizePercent` pour JourneyMap). Le chat est un seul élément : historique (overlay) et barre de texte (écran de chat) partagent le même décalage et la même taille (`ExtraHud.onChat*`, clics réinjectés en coordonnées d'origine). `HeldItemHud` ajoute le modèle 3D de l'objet à gauche de la ligne du nom de l'objet tenu. Le client de dev `-PdevMods` inclut aussi JourneyMap.
 - `client/tooltip` : infobulles d'objets (`ItemTooltipRenderer`, `TooltipStyle`, `EnchantEffects`,
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
 - Écran d'administration (`FordixAdminScreen`, ops) : envoi de notifications, planification (`AdminStore`,
