@@ -52,6 +52,7 @@ public final class DevTest {
     }
 
     private final List<Step> steps = new ArrayList<>();
+    private HudLayoutScreen layoutForExtras;
     private int index = -1;
     private int frame;
     private int worldTicks;
@@ -161,6 +162,27 @@ public final class DevTest {
             layout.mouseClicked(grabX, grabY, 0);
             layout.mouseDragged(grabX - 30, grabY - 30, 0, -30, -30);
         }, 30, false));
+        steps.add(new Step("10b-hud-extras", () -> {
+            // Chat, hotbar and the other overlays are listed too: send the chat to the top right, the effects to the left.
+            HudLayoutScreen layout = new HudLayoutScreen(null);
+            mc.setScreen(layout);
+            layoutForExtras = layout;
+        }, 30, false));
+        steps.add(new Step("10c-hud-extras-moved", () -> {
+            HudLayoutScreen layout = layoutForExtras;
+            com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layout.listed());
+            layout.nudge("minecraft:chat_panel", layout.width - 330, -(layout.height - 140));
+            layout.nudge("minecraft:hotbar", 0, -60);
+        }, 30, false));
+        steps.add(new Step("10d-hud-extras-live", () -> mc.setScreen(null), 30, false));
+        steps.add(new Step("10e-hud-extras-reset", () -> {
+            for (String id : layoutForExtras.listed()) {
+                if (id.contains(":")) {
+                    com.omneria.fordix.client.gui.vanilla.HudSlots.reset(id);
+                }
+            }
+            com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
+        }, 10, false));
         steps.add(new Step("11-admin", () -> {
             for (String element : com.omneria.fordix.FordixConfig.HUD_ELEMENTS) {
                 com.omneria.fordix.FordixConfig.hudOffsetX(element).set(0);

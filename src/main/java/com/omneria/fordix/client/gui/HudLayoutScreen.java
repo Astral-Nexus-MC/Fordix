@@ -5,6 +5,9 @@ import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
 import com.omneria.fordix.client.gui.layout.HudSnap;
+import com.omneria.fordix.client.gui.vanilla.ExtraHud;
+import com.omneria.fordix.client.gui.vanilla.HudSlots;
+import com.omneria.fordix.client.gui.vanilla.JourneyMapHud;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,11 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Moves the Voidframe HUD by dragging: every element is outlined where it sits over the live
+ * Moves the HUD by dragging: every element (Voidframe's own, the vanilla chat, hotbar, scoreboard..., the overlays
+ * other mods add, JourneyMap's minimap) is outlined where it sits over the live
  * game, you grab it and drop it anywhere. A grid and magnetism (screen center and edges, the other
  * elements' lines) help line things up; arrow keys nudge by 1 px (10 with Shift), a double-click or
- * Delete puts an element back. Offsets from each element's default spot are saved in
- * fordix-client.toml ([hud]) when the mouse is released.
+ * Delete puts an element back. Placements are saved when the mouse is released: fordix-client.toml ([hud]) for
+ * Voidframe's elements, fordix-hud-extras.json for the other overlays, JourneyMap's own settings for its minimap.
  */
 public class HudLayoutScreen extends FordixScreen {
     private static final int SNAP_DISTANCE = 4;
@@ -33,7 +37,8 @@ public class HudLayoutScreen extends FordixScreen {
     private static boolean magnet = true;
 
     private final Screen parent;
-    private final List<String> elements = FordixConfig.HUD_ELEMENTS;
+    private final List<String> elements = new ArrayList<>(FordixConfig.HUD_ELEMENTS);
+    private boolean discovered;
     private int selected = -1;
     private boolean dragging;
     private double rawX;
@@ -72,7 +77,7 @@ public class HudLayoutScreen extends FordixScreen {
         }));
         hideButton = addRenderableWidget(new FordixButton(x, y + 54, TOOLBAR_WIDTH, 16, Tr.c("hud.hide"), () -> {
             if (selected >= 0) {
-                FordixConfig.hudHiddenValue(elements.get(selected)).set(!FordixConfig.hudHidden(elements.get(selected)));
+                HudSlots.setHidden(elements.get(selected), !HudSlots.hidden(elements.get(selected)));
                 save();
             }
         }));
@@ -90,12 +95,11 @@ public class HudLayoutScreen extends FordixScreen {
 
     private void applyPreset(HudAnchors.Preset preset) {
         for (int i = 0; i < elements.size(); i++) {
-            HudAnchors.Entry entry = preset.entries().get(i);
-            String element = elements.get(i);
-            FordixConfig.hudAnchorValue(element).set(entry.anchor().id());
-            FordixConfig.hudOffsetX(element).set(entry.offsetX());
-            FordixConfig.hudOffsetY(element).set(entry.offsetY());
-            FordixConfig.hudHiddenValue(element).set(entry.hidden());
+            // The presets lay out Voidframe's own elements; the other overlays only come back to their spot.
+            HudSlots.apply(elements.get(i), i < preset.entries().size() ? preset.entries().get(i) : HudAnchors.Entry.standard());
+            if (i >= preset.entries().size() && HudSlots.isJourneyMap(elements.get(i))) {
+                HudSlots.reset(elements.get(i));
+            }
         }
         save();
     }
@@ -109,50 +113,34 @@ public class HudLayoutScreen extends FordixScreen {
     }
 
     private HudSnap.Rect rectOf(int index) {
-        String element = elements.get(index);
-        int[] offset = FordixConfig.hudOffset(element);
-        return HudAnchors.place(FordixConfig.hudAnchor(element), offset[0], offset[1],
-                HudBounds.defaults(element, this.width, this.height), this.width, this.height);
+        return HudSlots.placed(elements.get(index), this.width, this.height);
     }
 
     private HudSnap.Rect defaultOf(int index) {
-        return HudBounds.defaults(elements.get(index), this.width, this.height);
+        return HudSlots.defaults(elements.get(index), this.width, this.height);
     }
 
-    /** Stores the offset that puts the element's rectangle at (x, y), kept on screen. */
+    /** Stores the placement that puts the element's rectangle at (x, y), kept on screen. */
     private void moveTo(int index, int x, int y) {
-        HudSnap.Rect base = defaultOf(index);
-        HudSnap.Rect placed = HudBounds.place(new HudSnap.Rect(x, y, base.w(), base.h()), 0, 0, this.width, this.height);
-        int[] offset = HudAnchors.offsetFor(FordixConfig.hudAnchor(elements.get(index)), placed, base, this.width, this.height);
-        setOffset(index, offset[0], offset[1]);
-    }
-
-    private void setOffset(int index, int offsetX, int offsetY) {
-        String element = elements.get(index);
-        FordixConfig.hudOffsetX(element).set(offsetX);
-        FordixConfig.hudOffsetY(element).set(offsetY);
+        HudSlots.moveTo(elements.get(index), x, y, this.width, this.height);
     }
 
     /** Back to the default spot, visible. */
     private void reset(int index) {
-        String element = elements.get(index);
-        FordixConfig.hudAnchorValue(element).set(HudAnchors.Anchor.DEFAULT.id());
-        FordixConfig.hudHiddenValue(element).set(false);
-        setOffset(index, 0, 0);
+        HudSlots.reset(elements.get(index));
     }
 
     /** Pins the element to the screen point nearest its final spot, so it keeps its place on any window size. */
     private void pinToNearestAnchor(int index) {
-        String element = elements.get(index);
-        HudSnap.Rect rect = rectOf(index);
-        HudAnchors.Anchor anchor = HudAnchors.nearest(rect, this.width, this.height);
-        int[] offset = HudAnchors.offsetFor(anchor, rect, defaultOf(index), this.width, this.height);
-        FordixConfig.hudAnchorValue(element).set(anchor.id());
-        setOffset(index, offset[0], offset[1]);
+        HudSlots.pinToNearestAnchor(elements.get(index), this.width, this.height);
     }
 
     private void save() {
-        FordixConfig.hudOffsetX(elements.get(0)).save();
+        HudSlots.save(HudBounds.ELEMENTS.get(0));
+        ExtraHud.save();
+        if (elements.contains(JourneyMapHud.ID)) {
+            JourneyMapHud.save();
+        }
     }
 
     private List<HudSnap.Rect> othersThan(int index) {
@@ -182,6 +170,10 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (!discovered) {
+            discovered = true;
+            discover(guiGraphics);
+        }
         // The game stays visible and undimmed behind: only a faint veil so the outlines read.
         guiGraphics.fill(0, 0, this.width, this.height, 0x33000000);
         if (showGrid) {
@@ -202,10 +194,20 @@ public class HudLayoutScreen extends FordixScreen {
         if (selected >= 0) {
             drawTag(guiGraphics, selected);
         }
-        hideButton.setMessage(Tr.c(selected >= 0 && FordixConfig.hudHidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
+        hideButton.setMessage(Tr.c(selected >= 0 && HudSlots.hidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
         hideButton.active = selected >= 0;
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         drawHelp(guiGraphics);
+    }
+
+    /** First frame: find the overlays other than Voidframe's (off screen, so before anything of ours is drawn). */
+    private void discover(GuiGraphics guiGraphics) {
+        guiGraphics.flush();
+        elements.addAll(ExtraHud.discover(this.width, this.height));
+        if (JourneyMapHud.available()) {
+            elements.add(JourneyMapHud.ID);
+        }
+        // Rare: a mod overlay measured as nothing leaves the vanilla ones; nothing to do for them.
     }
 
     private void drawGrid(GuiGraphics guiGraphics) {
@@ -220,7 +222,7 @@ public class HudLayoutScreen extends FordixScreen {
 
     private void drawElement(GuiGraphics guiGraphics, int index, boolean isSelected, boolean isHovered) {
         HudSnap.Rect rect = rectOf(index);
-        boolean hiddenElement = FordixConfig.hudHidden(elements.get(index));
+        boolean hiddenElement = HudSlots.hidden(elements.get(index));
         int accent = FordixPalette.ACCENT & 0xFFFFFF;
         int fill = isSelected ? 0x55000000 | accent : isHovered ? 0x40000000 | accent : 0x22000000 | accent;
         int border = isSelected ? 0xFF000000 | accent : isHovered ? FordixPalette.TEXT_BRIGHT : 0xAA000000 | accent;
@@ -229,7 +231,7 @@ public class HudLayoutScreen extends FordixScreen {
         guiGraphics.fill(rect.x(), rect.bottom() - 1, rect.right(), rect.bottom(), border);
         guiGraphics.fill(rect.x(), rect.y(), rect.x() + 1, rect.bottom(), border);
         guiGraphics.fill(rect.right() - 1, rect.y(), rect.right(), rect.bottom(), border);
-        String label = Tr.s("hud.element." + HudBounds.ELEMENTS.get(index)) + (hiddenElement ? Tr.s("hud.hidden_suffix") : "");
+        String label = HudSlots.label(elements.get(index)) + (hiddenElement ? Tr.s("hud.hidden_suffix") : "");
         int textWidth = this.font.width(label);
         int textY = rect.h() >= 10 ? rect.y() + (rect.h() - 8) / 2 : rect.y() - 9;
         guiGraphics.drawString(this.font, label, rect.x() + (rect.w() - textWidth) / 2, textY, FordixPalette.TEXT_BRIGHT, true);
@@ -237,9 +239,9 @@ public class HudLayoutScreen extends FordixScreen {
 
     /** Offset of the selected element, next to it while it's being moved. */
     private void drawTag(GuiGraphics guiGraphics, int index) {
-        int[] offset = FordixConfig.hudOffset(elements.get(index));
+        int[] offset = HudSlots.offset(elements.get(index));
         HudSnap.Rect rect = rectOf(index);
-        String text = FordixConfig.hudAnchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1];
+        String text = HudSlots.anchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1];
         int width = this.font.width(text) + 6;
         int x = Math.max(0, Math.min(this.width - width, rect.x()));
         int y = rect.y() >= 22 ? rect.y() - 20 : rect.bottom() + 3;
@@ -255,6 +257,24 @@ public class HudLayoutScreen extends FordixScreen {
             guiGraphics.drawString(this.font, line, 6, y, FordixPalette.TEXT_BRIGHT, true);
             y += 10;
         }
+    }
+
+    /** For the in-game test: moves a listed element by a few pixels as a drag would. */
+    public boolean nudge(String id, int dx, int dy) {
+        int index = elements.indexOf(id);
+        if (index < 0) {
+            return false;
+        }
+        selected = index;
+        HudSnap.Rect rect = rectOf(index);
+        moveTo(index, rect.x() + dx, rect.y() + dy);
+        pinToNearestAnchor(index);
+        save();
+        return true;
+    }
+
+    public List<String> listed() {
+        return List.copyOf(elements);
     }
 
     @Override

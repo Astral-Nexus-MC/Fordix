@@ -50,6 +50,10 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
 - `client/gui/vanilla` : écrans de conteneurs redessinés (`VoidframeScreens`, `VoidframeStations`), HUD
   (`VoidframeHud` vie/faim, placement par glisser-deposer dans `HudLayoutScreen` avec aimant `HudSnap`, `VoidframeGauges` XP/armure/air/boss, `VoidframeDurability`), forme commune des
   barres (`Chevron`, `BarShape`), recoloration des textures vanilla (`TextureRecolor`, `Duotone`).
+  `HudLayoutScreen` liste aussi le HUD que Fordix ne dessine pas : chat, barre d'objets, scoreboard, effets, titres et tout overlay
+  Forge d'un autre mod (`ExtraHud` : mesuré en le dessinant hors écran, déplacé/masqué par ses événements de rendu, sauvé dans
+  `fordix-hud-extras.json`), plus la minicarte JourneyMap (`JourneyMapHud`, par réflexion sur ses réglages, position `Custom`).
+  `HudSlots` donne un accès unique aux trois. Les clics sur un chat déplacé restent décalés (limite connue).
 - `client/tooltip` : infobulles d'objets (`ItemTooltipRenderer`, `TooltipStyle`, `EnchantEffects`,
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
 - Écran d'administration (`FordixAdminScreen`, ops) : envoi de notifications, planification (`AdminStore`,

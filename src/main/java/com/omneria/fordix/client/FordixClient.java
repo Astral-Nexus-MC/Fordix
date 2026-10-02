@@ -21,6 +21,7 @@ import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ServerPages;
+import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.AnalysisCommand;
 import com.omneria.fordix.client.tooltip.ItemTooltipRenderer;
@@ -231,6 +232,18 @@ public final class FordixClient {
         @SubscribeEvent
         static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
             VoidframeHud.onOverlayPre(event);
+        }
+
+        /** Highest priority: pushes the pose before any other listener can cancel the overlay (the Post event pops it). */
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onExtraOverlayPre(RenderGuiOverlayEvent.Pre event) {
+            ExtraHud.onOverlayPre(event);
+        }
+
+        /** Lowest priority: the rarity frames drawn after the hotbar follow it when it was moved. */
+        @SubscribeEvent(priority = EventPriority.LOWEST)
+        static void onExtraOverlayPost(RenderGuiOverlayEvent.Post event) {
+            ExtraHud.onOverlayPost(event);
         }
 
         @SubscribeEvent
