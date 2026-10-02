@@ -8,7 +8,7 @@ import net.minecraftforge.fml.ModList;
 import java.lang.reflect.Method;
 
 /**
- * JourneyMap's minimap, moved through JourneyMap's own settings: its "Custom" position stores the center of the map
+ * JourneyMap's minimap, moved through JourneyMap's own settings: its "Custom" position stores the map's top-left corner
  * as a fraction of the screen. JourneyMap draws it from its own render events (not as a Forge overlay), so it
  * can't be wrapped like the others. Everything goes through reflection, JourneyMap being an optional mod; any failure
  * simply means the element isn't offered.
@@ -83,7 +83,7 @@ public final class JourneyMapHud {
             float px = (Float) value(field(props, "positionX"));
             float py = (Float) value(field(props, "positionY"));
             return switch (position) {
-                case "Custom" -> new HudSnap.Rect(Math.round(px * width - w / 2F), Math.round(py * height - h / 2F), w, h);
+                case "Custom" -> new HudSnap.Rect(Math.round(px * width), Math.round(py * height), w, h);
                 case "TopRight" -> new HudSnap.Rect(width - w - MARGIN, MARGIN, w, h);
                 case "BottomRight" -> new HudSnap.Rect(width - w - MARGIN, height - h - MARGIN, w, h);
                 case "BottomLeft" -> new HudSnap.Rect(MARGIN, height - h - MARGIN, w, h);
@@ -103,8 +103,8 @@ public final class JourneyMapHud {
             Object position = field(props, "position");
             Class<?> enumClass = (Class<?>) position.getClass().getMethod("getEnumClass").invoke(position);
             set(position, enumValue(enumClass, "Custom"));
-            set(field(props, "positionX"), (rect.x() + rect.w() / 2F) / width);
-            set(field(props, "positionY"), (rect.y() + rect.h() / 2F) / height);
+            set(field(props, "positionX"), rect.x() / (float) width);
+            set(field(props, "positionY"), rect.y() / (float) height);
             refresh();
         } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
             Fordix.LOGGER.warn("Could not move the JourneyMap minimap: {}", e.toString());
