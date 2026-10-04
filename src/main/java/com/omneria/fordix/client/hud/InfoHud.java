@@ -178,7 +178,9 @@ public final class InfoHud {
         double tps = tps(minecraft);
         String fpsText = Integer.toString(fps);
         String tpsText = tps < 0 ? "--" : String.format(Locale.ROOT, "%.1f", tps);
-        int boxWidth = font.width("FPS " + fpsText + "   TPS " + tpsText) + PAD * 2 + 2;
+        int ping = ping(minecraft);
+        String pingText = ping < 0 ? "--" : ping + " ms";
+        int boxWidth = font.width("FPS " + fpsText + "   TPS " + tpsText + "   PING " + pingText) + PAD * 2 + 2;
         int top = 4 + LINE * 2 + PAD * 2 - 2 + 4;
         panel(graphics, 4, top, boxWidth, LINE + PAD * 2 - 4);
         int cursor = 4 + PAD + 2;
@@ -186,7 +188,18 @@ public final class InfoHud {
         cursor = part(graphics, font, "FPS ", LABEL, cursor, textTop);
         cursor = part(graphics, font, fpsText + "   ", fps >= 60 ? GOOD : fps >= 30 ? WARN : BAD, cursor, textTop);
         cursor = part(graphics, font, "TPS ", LABEL, cursor, textTop);
-        part(graphics, font, tpsText, tps < 0 ? LABEL : tps >= 19.0D ? GOOD : tps >= 15.0D ? WARN : BAD, cursor, textTop);
+        cursor = part(graphics, font, tpsText + "   ", tps < 0 ? LABEL : tps >= 19.0D ? GOOD : tps >= 15.0D ? WARN : BAD, cursor, textTop);
+        cursor = part(graphics, font, "PING ", LABEL, cursor, textTop);
+        part(graphics, font, pingText, ping < 0 ? LABEL : ping <= 100 ? GOOD : ping <= 250 ? WARN : BAD, cursor, textTop);
+    }
+
+    /** Latency to the server in ms, from the tab list entry; -1 when playing alone (no network) or not yet measured. */
+    private static int ping(Minecraft minecraft) {
+        if (minecraft.player == null || minecraft.getConnection() == null || minecraft.hasSingleplayerServer()) {
+            return -1;
+        }
+        var info = minecraft.getConnection().getPlayerInfo(minecraft.player.getUUID());
+        return info == null || info.getLatency() <= 0 ? -1 : info.getLatency();
     }
 
     private static void drawTargetBlock(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {

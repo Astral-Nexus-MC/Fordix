@@ -123,7 +123,7 @@ public final class ExtraHud {
             case "hotbar" -> new HudSnap.Rect(center - 91, height - 22, 182, 22);
             case "chat_panel" -> new HudSnap.Rect(0, height - 130, 320, 90);
             case "coordinates" -> new HudSnap.Rect(4, 4, 150, 22);
-            case "performance" -> new HudSnap.Rect(4, 30, 120, 14);
+            case "performance" -> new HudSnap.Rect(4, 30, 175, 14);
             case "target_block" -> new HudSnap.Rect(center - 80, 26, 160, 28);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);
             case "potion_icons" -> new HudSnap.Rect(width - 25, 1, 24, 24);
