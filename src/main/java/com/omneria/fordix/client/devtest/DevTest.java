@@ -220,6 +220,24 @@ public final class DevTest {
             com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.ALL);
             mc.setScreen(null);
         }, 10, false));
+        steps.add(new Step("13-info-hud", () -> mc.player.setXRot(55F), 30, false));
+        steps.add(new Step("13b-info-hud-layout", () -> {
+            HudLayoutScreen layout = new HudLayoutScreen(null);
+            mc.setScreen(layout);
+            layoutForExtras = layout;
+        }, 30, false));
+        steps.add(new Step("13c-info-hud-moved", () -> {
+            com.omneria.fordix.Fordix.LOGGER.info("HUD layout lists {}", layoutForExtras.listed());
+            layoutForExtras.nudge("fordix:coordinates", 300, 120);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("fordix:target_block", 1.5F);
+        }, 20, false));
+        steps.add(new Step("13d-info-hud-live", () -> mc.setScreen(null), 20, false));
+        steps.add(new Step("13e-info-hud-reset", () -> {
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:target_block");
+            com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
+            mc.player.setXRot(0F);
+        }, 5, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

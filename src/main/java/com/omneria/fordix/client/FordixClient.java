@@ -23,6 +23,7 @@ import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.chat.ChatLog;
 import com.omneria.fordix.client.chat.ChatPanel;
+import com.omneria.fordix.client.hud.InfoHud;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HeldItemHud;
 import com.omneria.fordix.client.notification.NotificationOverlay;
@@ -42,6 +43,7 @@ import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterItemDecorationsEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
@@ -107,6 +109,11 @@ public final class FordixClient {
     @Mod.EventBusSubscriber(modid = Fordix.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static final class ModBusEvents {
         private ModBusEvents() {
+        }
+
+        @SubscribeEvent
+        static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
+            InfoHud.registerOverlays(event);
         }
 
         @SubscribeEvent
@@ -290,6 +297,12 @@ public final class FordixClient {
         @SubscribeEvent
         static void onChatLogout(ClientPlayerNetworkEvent.LoggingOut event) {
             ChatLog.clear();
+            InfoHud.onLoggingOut(event);
+        }
+
+        @SubscribeEvent
+        static void onInfoHudLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+            InfoHud.onLoggingIn(event);
         }
 
         /** Highest priority: the chat screen is shifted before anything else draws on it. */

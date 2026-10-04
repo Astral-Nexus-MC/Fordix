@@ -122,6 +122,9 @@ public final class ExtraHud {
         return switch (path) {
             case "hotbar" -> new HudSnap.Rect(center - 91, height - 22, 182, 22);
             case "chat_panel" -> new HudSnap.Rect(0, height - 130, 320, 90);
+            case "coordinates" -> new HudSnap.Rect(4, 4, 150, 22);
+            case "performance" -> new HudSnap.Rect(4, 30, 120, 14);
+            case "target_block" -> new HudSnap.Rect(center - 80, 26, 160, 28);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);
             case "potion_icons" -> new HudSnap.Rect(width - 25, 1, 24, 24);
             case "item_name" -> new HudSnap.Rect(center - 80, height - 74, 160, 22);
@@ -252,7 +255,9 @@ public final class ExtraHud {
                     continue;
                 }
                 HudSnap.Rect rect = measure(minecraft, gui, named, target, image, guiWidth, guiHeight);
-                if (!vanilla && (rect == null || rect.w() * rect.h() > 0.6 * guiWidth * guiHeight)) {
+                // Fordix's own panels are always listed, even when they draw nothing right now (no block targeted).
+                boolean own = id.getNamespace().equals("fordix");
+                if (!vanilla && !own && (rect == null || rect.w() * rect.h() > 0.6 * guiWidth * guiHeight)) {
                     continue;
                 }
                 if (rect != null) {
