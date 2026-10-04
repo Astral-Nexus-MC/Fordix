@@ -115,7 +115,7 @@ public final class FordixConfig {
                 .defineInRange("durabilityPercent", 10, 1, 50);
         builder.pop();
         HUD_OPACITY = builder.comment("Opacity of the information panels in percent: " + String.join(", ", HUD_OPACITIES) + ".")
-                .defineInList("hudOpacity", "70", HUD_OPACITIES);
+                .define("hudOpacity", "70", value -> value instanceof String text && HUD_OPACITIES.contains(text));
         HUD_COMPACT = builder.comment("Tighter information panels (less padding and line spacing), for small screens.")
                 .define("hudCompact", false);
         HUD_EFFECTS_LIST = builder.comment("Replace the potion effect icons with a list showing name and time left.")

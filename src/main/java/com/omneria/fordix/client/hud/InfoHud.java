@@ -523,7 +523,7 @@ public final class InfoHud {
         int boxWidth = pad() + 2 + 16 + 4 + nameWidth + 8 + timeWidth + pad();
         int boxHeight = effects.size() * row + pad() - 2;
         int x = width - boxWidth - 4;
-        int y = 70;
+        int y = 102;
         panel(graphics, x, y, boxWidth, boxHeight);
         for (int i = 0; i < effects.size(); i++) {
             MobEffectInstance effect = effects.get(i);

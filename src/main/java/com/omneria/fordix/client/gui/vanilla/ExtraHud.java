@@ -131,7 +131,7 @@ public final class ExtraHud {
             case "performance" -> new HudSnap.Rect(4, 32, 175, 14);
             case "clock" -> new HudSnap.Rect(4, 50, 150, 24);
             case "compass" -> new HudSnap.Rect(4, 78, 130, 24);
-            case "effects" -> new HudSnap.Rect(width - 110, 70, 106, 36);
+            case "effects" -> new HudSnap.Rect(width - 110, 102, 106, 36);
             case "gear" -> new HudSnap.Rect(width - 90, height - 28, 86, 24);
             case "target_block" -> new HudSnap.Rect(center - 80, 26, 160, 38);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);

@@ -311,14 +311,14 @@ public final class DevTest {
             cmd(mc, "effect give @s minecraft:speed 600 1");
             cmd(mc, "effect give @s minecraft:poison 8");
             cmd(mc, "effect give @s minecraft:night_vision 300");
-            cmd(mc, "item replace entity @s armor.head with minecraft:diamond_helmet{Damage:200}");
-            cmd(mc, "item replace entity @s armor.chest with minecraft:netherite_chestplate{Damage:250}");
-            cmd(mc, "item replace entity @s armor.feet with minecraft:iron_boots{Damage:150}");
+            wear(mc, 3, net.minecraft.world.item.Items.DIAMOND_HELMET, 200);
+            wear(mc, 2, net.minecraft.world.item.Items.NETHERITE_CHESTPLATE, 250);
+            wear(mc, 0, net.minecraft.world.item.Items.IRON_BOOTS, 150);
             mc.player.getInventory().selected = 3;
             mc.player.setXRot(0F);
         }, 40, false));
         steps.add(new Step("12m2-hud-alert", () -> {
-            cmd(mc, "item replace entity @s armor.head with minecraft:diamond_helmet{Damage:360}");
+            wear(mc, 3, net.minecraft.world.item.Items.DIAMOND_HELMET, 360);
         }, 20, false));
         steps.add(new Step("12m3-hud-container", () -> {
             cmd(mc, "effect clear @s");
@@ -353,9 +353,9 @@ public final class DevTest {
         steps.add(new Step("12m8-options-screen", () -> mc.setScreen(new com.omneria.fordix.client.gui.HudOptionsScreen(null)), 15, false));
         steps.add(new Step("12m9-reset", () -> {
             mc.setScreen(null);
-            cmd(mc, "item replace entity @s armor.head with minecraft:air");
-            cmd(mc, "item replace entity @s armor.chest with minecraft:air");
-            cmd(mc, "item replace entity @s armor.feet with minecraft:air");
+            for (int piece = 0; piece < 4; piece++) {
+                mc.player.getInventory().armor.set(piece, net.minecraft.world.item.ItemStack.EMPTY);
+            }
             cmd(mc, "gamemode creative");
         }, 8, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
@@ -602,6 +602,13 @@ public final class DevTest {
         Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
         field.setDouble(target, value);
+    }
+
+    /** Puts a worn armor piece on the client player directly (commands don't refresh these slots in the harness). */
+    private static void wear(Minecraft mc, int piece, net.minecraft.world.item.Item item, int damage) {
+        net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(item);
+        stack.setDamageValue(damage);
+        mc.player.getInventory().armor.set(piece, stack);
     }
 
     private void shot(Minecraft mc, String name) {
