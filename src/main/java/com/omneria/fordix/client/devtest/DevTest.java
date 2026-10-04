@@ -114,6 +114,8 @@ public final class DevTest {
         mc.resizeDisplay();
         steps.add(new Step("00-setup", () -> {
             cmd(mc, "gamemode survival");
+            mc.player.getInventory().setItem(10, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPASS));
+            mc.player.getInventory().setItem(11, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CLOCK));
             cmd(mc, "clear @s");
             cmd(mc, "give @s minecraft:diamond_sword{Enchantments:[{id:\"minecraft:sharpness\",lvl:5},{id:\"minecraft:unbreaking\",lvl:3},{id:\"minecraft:mending\",lvl:1}]}");
             cmd(mc, "give @s minecraft:netherite_chestplate{Enchantments:[{id:\"minecraft:protection\",lvl:4},{id:\"minecraft:thorns\",lvl:3}],Damage:300}");

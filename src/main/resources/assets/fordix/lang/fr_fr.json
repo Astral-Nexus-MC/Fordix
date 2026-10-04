@@ -290,6 +290,7 @@
     "fordix.settings.chat_sound": "Son de mention du chat",
     "fordix.settings.guide_hints": "Indice Maj+G",
     "fordix.settings.hud": "HUD Voidframe",
+    "fordix.settings.hud_items": "Boussole/horloge à fabriquer",
     "fordix.settings.hud_layout": "Disposition du HUD...",
     "fordix.settings.hud_lines": "Lignes du HUD",
     "fordix.settings.notifications": "Notifications",

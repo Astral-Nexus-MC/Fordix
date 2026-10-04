@@ -41,6 +41,7 @@ public final class FordixConfig {
             "compass_spawn", "compass_marker");
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_LINE_VALUES = new LinkedHashMap<>();
     public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
+    public static final ForgeConfigSpec.BooleanValue HUD_REQUIRE_ITEMS;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -92,6 +93,10 @@ public final class FordixConfig {
             HUD_LINE_VALUES.put(line, builder.define(line, true));
         }
         builder.pop();
+        HUD_REQUIRE_ITEMS = builder
+                .comment("The compass panel needs a compass (or recovery compass) in your inventory and the clock panel needs a clock:",
+                        "craft them to unlock these two panels.")
+                .define("hudRequireItems", true);
         CHAT_MENTION_SOUND = builder
                 .comment("Play a short sound when a chat message mentions your name or whispers to you.")
                 .define("chatMentionSound", true);

@@ -217,7 +217,36 @@ public final class InfoHud {
         return on("performance_fps") || on("performance_tps") || on("performance_ping") ? 1 : 0;
     }
 
+    /** Whether the player has one of these items anywhere on them (bag, armor slots, off hand), or the option is off. */
+    private static boolean unlocked(Player player, net.minecraft.world.item.Item... items) {
+        if (!FordixConfig.HUD_REQUIRE_ITEMS.get()) {
+            return true;
+        }
+        for (List<ItemStack> stacks : List.of(player.getInventory().items, player.getInventory().offhand, player.getInventory().armor)) {
+            for (ItemStack stack : stacks) {
+                for (net.minecraft.world.item.Item item : items) {
+                    if (stack.is(item)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasClock(Player player) {
+        return unlocked(player, net.minecraft.world.item.Items.CLOCK);
+    }
+
+    private static boolean hasCompass(Player player) {
+        return unlocked(player, net.minecraft.world.item.Items.COMPASS, net.minecraft.world.item.Items.RECOVERY_COMPASS);
+    }
+
     private static int clockRows() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null && !hasClock(minecraft.player)) {
+            return 0;
+        }
         return (on("clock_real") || on("clock_game") ? 1 : 0) + (on("clock_weather") ? 1 : 0);
     }
 
@@ -321,6 +350,9 @@ public final class InfoHud {
         if (hidden(minecraft)) {
             return;
         }
+        if (!hasClock(minecraft.player)) {
+            return;
+        }
         Level level = minecraft.level;
         boolean cycle = !level.dimensionType().hasFixedTime();
         Line times = new Line();
@@ -383,6 +415,9 @@ public final class InfoHud {
     private static void drawCompass(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
         Minecraft minecraft = Minecraft.getInstance();
         if (hidden(minecraft)) {
+            return;
+        }
+        if (!hasCompass(minecraft.player)) {
             return;
         }
         Line spawn = new Line();

@@ -290,6 +290,7 @@
     "fordix.settings.chat_sound": "Chat mention sound",
     "fordix.settings.guide_hints": "Shift+G hint",
     "fordix.settings.hud": "Voidframe HUD",
+    "fordix.settings.hud_items": "Craft compass/clock to unlock",
     "fordix.settings.hud_layout": "HUD layout...",
     "fordix.settings.hud_lines": "HUD lines",
     "fordix.settings.notifications": "Notifications",
