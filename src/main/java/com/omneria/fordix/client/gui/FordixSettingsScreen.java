@@ -84,7 +84,8 @@ public class FordixSettingsScreen extends FordixScreen {
         addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, Tr.s("settings.guide_hints"), FordixConfig.GUIDE_HINTS));
 
         addRenderableWidget(toggle(left, y + ROW * 6, COLUMN_WIDTH, Tr.s("settings.chat"), FordixConfig.VOIDFRAME_CHAT));
-        addRenderableWidget(toggle(right, y + ROW * 7, COLUMN_WIDTH, Tr.s("settings.hud_items"), FordixConfig.HUD_REQUIRE_ITEMS));
+        addRenderableWidget(new FordixButton(right, y + ROW * 7, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.hud_options"),
+                () -> this.minecraft.setScreen(new HudOptionsScreen(this))));
         addRenderableWidget(toggle(left, y + ROW * 7, COLUMN_WIDTH, Tr.s("settings.chat_sound"), FordixConfig.CHAT_MENTION_SOUND));
         addRenderableWidget(new FordixButton(right, y + ROW * 6, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.hud_lines"),
                 () -> this.minecraft.setScreen(new HudLinesScreen(this))));

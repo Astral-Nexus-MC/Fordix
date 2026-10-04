@@ -13,6 +13,8 @@ public final class HudSlot {
     public boolean hidden;
     /** Size factor; 0 in an older file means 1. */
     public float scale = 1.0F;
+    /** Height factor; 0 (also an older file) means the same as {@link #scale}. */
+    public float scaleY;
     public boolean measured;
     public int w;
     public int h;
@@ -21,11 +23,15 @@ public final class HudSlot {
 
     /** True when the player changed anything: otherwise the overlay is left alone. */
     public boolean customized() {
-        return hidden || offsetX != 0 || offsetY != 0 || !"default".equals(anchor) || scaleValue() != 1.0F;
+        return hidden || offsetX != 0 || offsetY != 0 || !"default".equals(anchor) || scaleValue() != 1.0F || scaleYValue() != 1.0F;
     }
 
     public float scaleValue() {
         return HudAnchors.clampScale(scale);
+    }
+
+    public float scaleYValue() {
+        return scaleY > 0.0F ? HudAnchors.clampScale(scaleY) : scaleValue();
     }
 
     /** The default rectangle for a screen size, from the measured size and relative spot. */
@@ -57,6 +63,7 @@ public final class HudSlot {
         offsetY = 0;
         hidden = false;
         scale = 1.0F;
+        scaleY = 0.0F;
     }
 
     /** {dx, dy} from the default spot to where the element is placed on this screen. */
@@ -72,6 +79,6 @@ public final class HudSlot {
 
     /** Where the element ends up (at its size), kept on screen. */
     public HudSnap.Rect placed(HudSnap.Rect base, int screenWidth, int screenHeight) {
-        return HudAnchors.place(anchorValue(), offsetX, offsetY, HudAnchors.scaled(base, scaleValue()), screenWidth, screenHeight);
+        return HudAnchors.place(anchorValue(), offsetX, offsetY, HudAnchors.scaled(base, scaleValue(), scaleYValue()), screenWidth, screenHeight);
     }
 }

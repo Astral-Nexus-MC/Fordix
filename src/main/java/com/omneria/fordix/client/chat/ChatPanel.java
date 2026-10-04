@@ -6,6 +6,7 @@ import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.Reflect;
+import com.omneria.fordix.client.hud.InfoHud;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -390,7 +391,12 @@ public final class ChatPanel {
                     if (y >= hit.top() && y < hit.bottom() && x >= hit.x()) {
                         Style style = font.getSplitter().componentStyleAtWidth(hit.line(), (int) (x - hit.x()));
                         if (style != null) {
-                            screen.handleComponentClicked(style);
+                            int[] place = style.getClickEvent() == null ? null : ChatCoords.parseClick(style.getClickEvent().getValue());
+                            if (place != null) {
+                                InfoHud.setMarker(minecraft, place[0], place[1], place[2]);
+                            } else {
+                                screen.handleComponentClicked(style);
+                            }
                         }
                         return;
                     }

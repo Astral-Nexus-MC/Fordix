@@ -23,7 +23,7 @@ public final class HudPlacement {
         HudSnap.Rect base = HudBounds.defaults(element, width, height);
         int[] offset = FordixConfig.hudOffset(element);
         return HudAnchors.place(FordixConfig.hudAnchor(element), offset[0], offset[1],
-                HudAnchors.scaled(base, FordixConfig.hudScale(element)), width, height);
+                HudAnchors.scaled(base, FordixConfig.hudScale(element), FordixConfig.hudScaleY(element)), width, height);
     }
 
     /** {dx, dy} from the element's default spot to where the player put it. */
@@ -46,7 +46,8 @@ public final class HudPlacement {
      */
     public static boolean begin(GuiGraphics guiGraphics, String element, boolean drawsAtDefault) {
         float scale = FordixConfig.hudScale(element);
-        if (!drawsAtDefault && scale == 1.0F) {
+        float scaleY = FordixConfig.hudScaleY(element);
+        if (!drawsAtDefault && scale == 1.0F && scaleY == 1.0F) {
             return false;
         }
         Minecraft minecraft = Minecraft.getInstance();
@@ -55,7 +56,7 @@ public final class HudPlacement {
         HudSnap.Rect placed = placed(element);
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(placed.x(), placed.y(), 0.0F);
-        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.pose().scale(scale, scaleY, 1.0F);
         HudSnap.Rect origin = drawsAtDefault ? base : placed;
         guiGraphics.pose().translate(-origin.x(), -origin.y(), 0.0F);
         return true;

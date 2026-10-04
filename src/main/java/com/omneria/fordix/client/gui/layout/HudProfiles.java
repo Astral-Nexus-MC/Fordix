@@ -25,6 +25,8 @@ public final class HudProfiles {
         public int offsetY;
         public boolean hidden;
         public float scale = 1.0F;
+        /** 0 in an older file: same as the width factor. */
+        public float scaleY;
 
         public Placement() {
         }

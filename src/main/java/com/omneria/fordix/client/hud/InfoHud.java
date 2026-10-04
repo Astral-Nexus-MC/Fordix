@@ -38,6 +38,12 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -57,15 +63,13 @@ public final class InfoHud {
     public static final String GEAR = "gear";
     public static final String CLOCK = "clock";
     public static final String COMPASS = "compass";
+    public static final String EFFECTS = "effects";
 
-    private static final int PAD = 4;
-    private static final int LINE = 10;
     private static final int GAP = 4;
     private static final int TARGET_WIDTH = 160;
     private static final int TARGET_HEIGHT = 28;
     private static final int TARGET_MAX_WIDTH = 230;
     private static final int LEFT_COLUMN_WIDTH = 160;
-    private static final int PANEL_FILL = 0xB00B1118;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int LABEL = 0xFF8AA0AD;
     private static final int GOOD = 0xFF7DFFB0;
@@ -88,6 +92,7 @@ public final class InfoHud {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COMPASS, InfoHud::drawCompass);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_BLOCK, InfoHud::drawTarget);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), GEAR, InfoHud::drawGear);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, InfoHud::drawEffects);
     }
 
     // ---- TPS: the game time packets, watched on their way to the game
@@ -123,7 +128,7 @@ public final class InfoHud {
     }
 
     /** TPS: the integrated server's own figure when playing alone, the estimate from the packets on a server; -1 if unknown. */
-    private static double tps(Minecraft minecraft) {
+    static double tps(Minecraft minecraft) {
         if (minecraft.getSingleplayerServer() != null) {
             double millis = minecraft.getSingleplayerServer().getAverageTickTime();
             return millis <= 0 ? TpsMeter.MAX_TPS : Math.min(TpsMeter.MAX_TPS, 1000.0D / millis);
@@ -169,17 +174,44 @@ public final class InfoHud {
         return new Seg(text, color);
     }
 
+    private static boolean compact() {
+        try {
+            return FordixConfig.HUD_COMPACT.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return false;
+        }
+    }
+
+    private static int pad() {
+        return compact() ? 3 : 4;
+    }
+
+    private static int lineH() {
+        return compact() ? 9 : 10;
+    }
+
+    /** The panel background with the player's opacity. */
+    private static int panelFill() {
+        int percent;
+        try {
+            percent = Integer.parseInt(FordixConfig.HUD_OPACITY.get());
+        } catch (IllegalStateException | NumberFormatException notReady) {
+            percent = 70;
+        }
+        return (Math.max(0, Math.min(255, percent * 255 / 100)) << 24) | 0x0B1118;
+    }
+
     private static boolean hidden(Minecraft minecraft) {
         return !FordixConfig.VOIDFRAME_HUD.get() || minecraft.options.hideGui || minecraft.options.renderDebug
                 || minecraft.player == null || minecraft.level == null;
     }
 
     private static int panelHeight(int lines) {
-        return lines == 0 ? 0 : lines * LINE + 4;
+        return lines == 0 ? 0 : lines * lineH() + pad();
     }
 
     private static void panel(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, PANEL_FILL);
+        graphics.fill(x, y, x + width, y + height, panelFill());
         graphics.fill(x, y, x + 2, y + height, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
     }
 
@@ -193,11 +225,11 @@ public final class InfoHud {
         for (Line line : lines) {
             width = Math.max(width, line.width(font));
         }
-        panel(graphics, x, y, width + PAD * 2 + 2, panelHeight(lines.size()));
+        panel(graphics, x, y, width + pad() * 2 + 2, panelHeight(lines.size()));
         for (int i = 0; i < lines.size(); i++) {
-            int cursor = x + PAD + 2;
+            int cursor = x + pad() + 2;
             for (Seg seg : lines.get(i).segs) {
-                graphics.drawString(font, seg.text(), cursor, y + 3 + i * LINE, seg.color(), true);
+                graphics.drawString(font, seg.text(), cursor, y + pad() - 1 + i * lineH(), seg.color(), true);
                 cursor += font.width(seg.text());
             }
         }
@@ -392,15 +424,22 @@ public final class InfoHud {
         if (minecraft.player == null || minecraft.level == null) {
             return;
         }
-        String key = markerKey(minecraft);
         if (Screen.hasShiftDown()) {
-            markers().remove(key);
+            markers().remove(markerKey(minecraft));
             minecraft.gui.setOverlayMessage(Tr.c("hud.compass.cleared"), false);
         } else {
             BlockPos pos = minecraft.player.blockPosition();
-            markers().set(key, new MarkerStore.Marker(pos.getX(), pos.getY(), pos.getZ()));
-            minecraft.gui.setOverlayMessage(Tr.c("hud.compass.set", pos.getX(), pos.getY(), pos.getZ()), false);
+            setMarker(minecraft, pos.getX(), pos.getY(), pos.getZ());
         }
+    }
+
+    /** Puts the compass marker at a place (the key puts it under the player, a click on chat coordinates anywhere). */
+    public static void setMarker(Minecraft minecraft, int x, int y, int z) {
+        if (minecraft.level == null) {
+            return;
+        }
+        markers().set(markerKey(minecraft), new MarkerStore.Marker(x, y, z));
+        minecraft.gui.setOverlayMessage(Tr.c("hud.compass.set", x, y, z), false);
     }
 
     private static Line pointer(String name, Minecraft minecraft, double x, double z) {
@@ -436,6 +475,67 @@ public final class InfoHud {
         drawLines(graphics, minecraft.font, 4, top, List.of(spawn, marker));
     }
 
+    // ---- potion effects as a list
+
+    /** The vanilla effect icons give way to the list. */
+    public static void onOverlayPre(net.minecraftforge.client.event.RenderGuiOverlayEvent.Pre event) {
+        if (event.getOverlay() == VanillaGuiOverlay.POTION_ICONS.type() && replacesVanillaEffects()) {
+            event.setCanceled(true);
+        }
+    }
+
+    /** Whether the effects list stands in for vanilla's icons. */
+    public static boolean replacesVanillaEffects() {
+        try {
+            return FordixConfig.VOIDFRAME_HUD.get() && FordixConfig.HUD_EFFECTS_LIST.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return false;
+        }
+    }
+
+    private static void drawEffects(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (hidden(minecraft) || !replacesVanillaEffects()) {
+            return;
+        }
+        List<MobEffectInstance> effects = new ArrayList<>(minecraft.player.getActiveEffects());
+        if (effects.isEmpty()) {
+            return;
+        }
+        effects.sort(java.util.Comparator.comparingInt((MobEffectInstance e) -> e.getEffect().isBeneficial() ? 0 : 1));
+        if (effects.size() > 10) {
+            effects = effects.subList(0, 10);
+        }
+        Font font = minecraft.font;
+        int nameWidth = 0;
+        int timeWidth = 0;
+        List<String> names = new ArrayList<>();
+        List<String> times = new ArrayList<>();
+        for (MobEffectInstance effect : effects) {
+            String name = I18n.get(effect.getDescriptionId()) + (effect.getAmplifier() > 0 ? " " + (effect.getAmplifier() + 1) : "");
+            String time = MobEffectUtil.formatDuration(effect, 1.0F).getString();
+            names.add(name);
+            times.add(time);
+            nameWidth = Math.max(nameWidth, font.width(name));
+            timeWidth = Math.max(timeWidth, font.width(time));
+        }
+        int row = 18;
+        int boxWidth = pad() + 2 + 16 + 4 + nameWidth + 8 + timeWidth + pad();
+        int boxHeight = effects.size() * row + pad() - 2;
+        int x = width - boxWidth - 4;
+        int y = 70;
+        panel(graphics, x, y, boxWidth, boxHeight);
+        for (int i = 0; i < effects.size(); i++) {
+            MobEffectInstance effect = effects.get(i);
+            int top = y + pad() / 2 + i * row;
+            graphics.blit(x + pad() + 2, top, 0, 16, 16, minecraft.getMobEffectTextures().get(effect.getEffect()));
+            int textY = top + 4;
+            graphics.drawString(font, names.get(i), x + pad() + 2 + 16 + 4, textY, effect.getEffect().isBeneficial() ? WHITE : BAD, true);
+            boolean ending = effect.getDuration() != -1 && effect.getDuration() <= 200;
+            graphics.drawString(font, times.get(i), x + boxWidth - pad() - font.width(times.get(i)), textY, ending ? BAD : LABEL, true);
+        }
+    }
+
     // ---- what is under the crosshair
 
     private static void drawTarget(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
@@ -444,10 +544,80 @@ public final class InfoHud {
             return;
         }
         HitResult hit = minecraft.hitResult;
+        int[] box = null;
+        List<ItemStack> contents = List.of();
+        String caption = "";
         if (hit instanceof BlockHitResult blockHit && hit.getType() == HitResult.Type.BLOCK) {
-            drawBlock(graphics, minecraft, width, blockHit);
+            box = drawBlock(graphics, minecraft, width, blockHit);
+            if (box != null && on("target_container")) {
+                BlockPos pos = blockHit.getBlockPos();
+                BlockState state = minecraft.level.getBlockState(pos);
+                if (minecraft.level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox) {
+                    contents = jukebox.getFirstItem().isEmpty() ? List.of() : List.of(jukebox.getFirstItem());
+                    caption = Tr.s("hud.target.record");
+                } else {
+                    ContainerMemory.Snapshot snapshot = ContainerMemory.at(minecraft, pos, state);
+                    if (snapshot != null) {
+                        contents = snapshot.items();
+                        caption = Tr.s("hud.target.seen", age(System.currentTimeMillis() - snapshot.seenAt()));
+                        if (contents.isEmpty()) {
+                            caption = Tr.s("hud.target.empty") + " · " + caption;
+                        }
+                    }
+                }
+            }
         } else if (hit instanceof EntityHitResult entityHit && on("target_entity")) {
-            drawEntity(graphics, minecraft, width, entityHit.getEntity());
+            Entity entity = entityHit.getEntity();
+            box = drawEntity(graphics, minecraft, width, entity);
+            if (on("target_container")) {
+                if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
+                    contents = List.of(frame.getItem());
+                    caption = Tr.s("hud.target.frame");
+                } else if (entity instanceof ItemEntity dropped) {
+                    contents = List.of(dropped.getItem());
+                    caption = Tr.s("hud.target.dropped");
+                } else if (entity instanceof LivingEntity living) {
+                    List<ItemStack> worn = new ArrayList<>();
+                    for (EquipmentSlot slot : EquipmentSlot.values()) {
+                        if (!living.getItemBySlot(slot).isEmpty()) {
+                            worn.add(living.getItemBySlot(slot));
+                        }
+                    }
+                    contents = worn;
+                    caption = Tr.s("hud.target.equipment");
+                }
+            }
+        }
+        if (box != null && (!contents.isEmpty() || !caption.isEmpty())) {
+            drawPreview(graphics, minecraft.font, box[0], box[1] + 2, box[2], caption, contents);
+        }
+    }
+
+    private static String age(long millis) {
+        long seconds = millis / 1000L;
+        return seconds < 60 ? seconds + " s" : seconds < 3600 ? seconds / 60 + " min" : seconds / 3600 + " h";
+    }
+
+    /** A strip under the target panel: a caption and the items (merged, counts on them), with "+N" when they don't all fit. */
+    private static void drawPreview(GuiGraphics graphics, Font font, int x, int y, int boxWidth, String caption, List<ItemStack> stacks) {
+        List<ItemStack> merged = new ArrayList<>();
+        for (ItemStack stack : stacks) {
+            ContainerMemory.merge(merged, stack);
+        }
+        int fits = Math.max(1, (boxWidth - 12) / 18);
+        boolean more = merged.size() > fits;
+        int shown = more ? fits - 1 : merged.size();
+        int height = lineH() + pad() + (merged.isEmpty() ? 0 : 20);
+        panel(graphics, x, y, boxWidth, height);
+        graphics.drawString(font, font.plainSubstrByWidth(caption, boxWidth - 12), x + 6, y + pad() - 1, LABEL, true);
+        for (int i = 0; i < shown; i++) {
+            int ix = x + 6 + i * 18;
+            int iy = y + lineH() + pad() - 1;
+            graphics.renderItem(merged.get(i), ix, iy);
+            graphics.renderItemDecorations(font, merged.get(i), ix, iy);
+        }
+        if (more) {
+            graphics.drawString(font, "+" + (merged.size() - shown), x + 6 + shown * 18 + 2, y + lineH() + pad() + 3, WHITE, true);
         }
     }
 
@@ -456,10 +626,10 @@ public final class InfoHud {
         return Math.max(width / 2 - boxWidth / 2, 4 + LEFT_COLUMN_WIDTH + GAP);
     }
 
-    private static void drawBlock(GuiGraphics graphics, Minecraft minecraft, int width, BlockHitResult hit) {
+    private static int[] drawBlock(GuiGraphics graphics, Minecraft minecraft, int width, BlockHitResult hit) {
         BlockState state = minecraft.level.getBlockState(hit.getBlockPos());
         if (state.isAir()) {
-            return;
+            return null;
         }
         Font font = minecraft.font;
         String name = state.getBlock().getName().getString();
@@ -470,7 +640,7 @@ public final class InfoHud {
             toolWidth += font.width(seg.text());
         }
         int boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(TARGET_WIDTH, Math.max(toolWidth, Math.max(font.width(name), font.width(id))) + 6 + 16 + 5 + 6));
-        int boxHeight = TARGET_HEIGHT + (tool.isEmpty() ? 0 : LINE);
+        int boxHeight = TARGET_HEIGHT + (tool.isEmpty() ? 0 : lineH());
         int x = targetLeft(width, boxWidth);
         int y = 26;
         panel(graphics, x, y, boxWidth, boxHeight);
@@ -482,12 +652,13 @@ public final class InfoHud {
         int textX = x + 6 + 16 + 5;
         int textWidth = boxWidth - (textX - x) - 4;
         graphics.drawString(font, font.plainSubstrByWidth(name, textWidth), textX, y + 5, WHITE, true);
-        graphics.drawString(font, font.plainSubstrByWidth(id, textWidth), textX, y + 5 + LINE, LABEL, false);
+        graphics.drawString(font, font.plainSubstrByWidth(id, textWidth), textX, y + 5 + lineH(), LABEL, false);
         int cursor = x + 6;
         for (Seg seg : tool) {
             graphics.drawString(font, seg.text(), cursor, y + TARGET_HEIGHT - 1, seg.color(), true);
             cursor += font.width(seg.text());
         }
+        return new int[]{x, y + boxHeight, boxWidth};
     }
 
     /** "Tool : Pickaxe (Iron) · Hardness 3.0", the tool colored by whether the one in hand does the job. */
@@ -506,7 +677,7 @@ public final class InfoHud {
                 label("  ·  " + Tr.s("hud.target.hardness") + " " + number(hardness)));
     }
 
-    private static void drawEntity(GuiGraphics graphics, Minecraft minecraft, int width, Entity entity) {
+    private static int[] drawEntity(GuiGraphics graphics, Minecraft minecraft, int width, Entity entity) {
         Font font = minecraft.font;
         String name = entity.getDisplayName().getString();
         String detail;
@@ -533,12 +704,13 @@ public final class InfoHud {
         int textX = x + 6 + iconSpace;
         int textWidth = boxWidth - (textX - x) - 4;
         graphics.drawString(font, font.plainSubstrByWidth(name, textWidth), textX, y + 5, WHITE, true);
-        graphics.drawString(font, font.plainSubstrByWidth(detail, textWidth), textX, y + 5 + LINE, detailColor, true);
+        graphics.drawString(font, font.plainSubstrByWidth(detail, textWidth), textX, y + 5 + lineH(), detailColor, true);
         if (entity instanceof LivingEntity) {
             graphics.fill(x + 2, y + TARGET_HEIGHT - 2, x + boxWidth, y + TARGET_HEIGHT, 0x40FFFFFF);
             graphics.fill(x + 2, y + TARGET_HEIGHT - 2, x + 2 + Math.round((boxWidth - 2) * left), y + TARGET_HEIGHT,
                     LEVEL_COLORS[HudFormat.level(left)]);
         }
+        return new int[]{x, y + TARGET_HEIGHT, boxWidth};
     }
 
     private static String health(float value) {
@@ -565,7 +737,7 @@ public final class InfoHud {
 
     private record GearRow(ItemStack stack, String durability, float left, String ammo, int ammoColor) {
         int height() {
-            return Math.max(18, (durability != null ? 13 : 0) + (ammo != null ? LINE : 0) + 2);
+            return Math.max(18, (durability != null ? 13 : 0) + (ammo != null ? lineH() : 0) + 2);
         }
     }
 
@@ -607,26 +779,40 @@ public final class InfoHud {
                 rows.add(row);
             }
         }
-        if (rows.isEmpty()) {
+        List<ItemStack> armor = new ArrayList<>();
+        if (on("gear_armor")) {
+            for (int piece = 3; piece >= 0; piece--) {
+                ItemStack worn = player.getInventory().armor.get(piece);
+                if (!worn.isEmpty() && worn.isDamageableItem()) {
+                    armor.add(worn);
+                }
+            }
+        }
+        if (rows.isEmpty() && armor.isEmpty()) {
             return;
         }
         Font font = minecraft.font;
         int textWidth = 56;
-        int total = PAD;
+        int total = pad();
         for (GearRow row : rows) {
             textWidth = Math.max(textWidth, Math.max(row.durability != null ? font.width(row.durability) : 0,
                     row.ammo != null ? font.width(row.ammo) : 0));
             total += row.height() + 2;
         }
-        int boxWidth = PAD + 2 + 16 + 5 + textWidth + PAD;
-        int boxHeight = total - 2 + PAD - 2;
+        if (!armor.isEmpty()) {
+            total += 22;
+        }
+        int rowsWidth = rows.isEmpty() ? 0 : 16 + 5 + textWidth;
+        int armorWidth = armor.isEmpty() ? 0 : armor.size() * 18 - 2;
+        int boxWidth = pad() + 2 + Math.max(rowsWidth, armorWidth) + pad();
+        int boxHeight = total - 2 + pad() - 2;
         int x = width - boxWidth - 4;
         int y = height - boxHeight - 4;
         panel(graphics, x, y, boxWidth, boxHeight);
-        int rowTop = y + PAD - 1;
+        int rowTop = y + pad() - 1;
         for (GearRow row : rows) {
-            graphics.renderItem(row.stack, x + PAD + 2, rowTop + (row.height() - 16) / 2);
-            int textX = x + PAD + 2 + 16 + 5;
+            graphics.renderItem(row.stack, x + pad() + 2, rowTop + (row.height() - 16) / 2);
+            int textX = x + pad() + 2 + 16 + 5;
             int cursor = rowTop + 1;
             if (row.durability != null) {
                 int color = LEVEL_COLORS[HudFormat.level(row.left)];
@@ -639,6 +825,14 @@ public final class InfoHud {
                 graphics.drawString(font, row.ammo, textX, cursor, row.ammoColor, true);
             }
             rowTop += row.height() + 2;
+        }
+        for (int i = 0; i < armor.size(); i++) {
+            ItemStack piece = armor.get(i);
+            int ix = x + pad() + 2 + i * 18;
+            float left = HudFormat.durabilityLeft(piece.getDamageValue(), piece.getMaxDamage());
+            graphics.renderItem(piece, ix, rowTop);
+            graphics.fill(ix, rowTop + 17, ix + 16, rowTop + 19, 0x40FFFFFF);
+            graphics.fill(ix, rowTop + 17, ix + Math.round(16 * left), rowTop + 19, LEVEL_COLORS[HudFormat.level(left)]);
         }
     }
 }

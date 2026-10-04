@@ -58,7 +58,7 @@ public final class HudSlots {
             return JourneyMapHud.rect(width, height);
         }
         HudSnap.Rect base = isBuiltin(id) ? HudBounds.defaults(id, width, height) : ExtraHud.defaults(id, width, height);
-        return HudAnchors.scaled(base, scale(id));
+        return HudAnchors.scaled(base, scale(id), scaleY(id));
     }
 
     /** Size factor: 1 is the usual size. */
@@ -69,14 +69,33 @@ public final class HudSlots {
         return isJourneyMap(id) ? JourneyMapHud.scale() : ExtraHud.slot(id).scaleValue();
     }
 
-    public static void setScale(String id, float scale) {
-        float clamped = HudAnchors.clampScale(scale);
+    /** Height factor: the same as {@link #scale} unless the element was stretched. JourneyMap's minimap stays square. */
+    public static float scaleY(String id) {
         if (isBuiltin(id)) {
-            FordixConfig.hudScaleValue(id).set((double) clamped);
+            return FordixConfig.hudScaleY(id);
+        }
+        return isJourneyMap(id) ? JourneyMapHud.scale() : ExtraHud.slot(id).scaleYValue();
+    }
+
+    /** Both factors the same. */
+    public static void setScale(String id, float scale) {
+        setScales(id, scale, scale);
+    }
+
+    /** Width and height factors apart (an equal pair is stored as one factor). */
+    public static void setScales(String id, float scaleX, float scaleY) {
+        float x = HudAnchors.clampScale(scaleX);
+        float y = HudAnchors.clampScale(scaleY);
+        boolean same = Math.abs(x - y) < 0.0005F;
+        if (isBuiltin(id)) {
+            FordixConfig.hudScaleValue(id).set((double) x);
+            FordixConfig.hudScaleYValue(id).set(same ? 0.0D : (double) y);
         } else if (isJourneyMap(id)) {
-            JourneyMapHud.setScale(clamped);
+            JourneyMapHud.setScale(x);
         } else {
-            ExtraHud.slot(id).scale = clamped;
+            HudSlot slot = ExtraHud.slot(id);
+            slot.scale = x;
+            slot.scaleY = same ? 0.0F : y;
         }
     }
 
@@ -181,14 +200,16 @@ public final class HudSlots {
     /** What a HUD profile keeps of an element (JourneyMap's minimap lives in its own settings and is left out). */
     public static HudProfiles.Placement snapshot(String id) {
         int[] offset = offset(id);
-        return new HudProfiles.Placement(anchor(id).id(), offset[0], offset[1], hidden(id), scale(id));
+        HudProfiles.Placement placement = new HudProfiles.Placement(anchor(id).id(), offset[0], offset[1], hidden(id), scale(id));
+        placement.scaleY = scaleY(id);
+        return placement;
     }
 
     public static void restore(String id, HudProfiles.Placement placement) {
         HudAnchors.Anchor anchor = HudAnchors.Anchor.byId(placement.anchor);
         setPlacement(id, anchor != null ? anchor : HudAnchors.Anchor.DEFAULT, placement.offsetX, placement.offsetY);
         setHidden(id, placement.hidden);
-        setScale(id, placement.scale);
+        setScales(id, placement.scale, placement.scaleY > 0.0F ? placement.scaleY : placement.scale);
     }
 
     public static void save(String id) {

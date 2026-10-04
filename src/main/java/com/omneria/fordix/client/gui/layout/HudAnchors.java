@@ -25,6 +25,11 @@ public final class HudAnchors {
         return (float) Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
     }
 
+    /** A rectangle with width and height multiplied separately, its top-left corner staying where it is. */
+    public static HudSnap.Rect scaled(HudSnap.Rect rect, float scaleX, float scaleY) {
+        return new HudSnap.Rect(rect.x(), rect.y(), Math.max(1, Math.round(rect.w() * scaleX)), Math.max(1, Math.round(rect.h() * scaleY)));
+    }
+
     /** A rectangle with its size multiplied, its top-left corner staying where it is. */
     public static HudSnap.Rect scaled(HudSnap.Rect rect, float scale) {
         return new HudSnap.Rect(rect.x(), rect.y(), Math.max(1, Math.round(rect.w() * scale)), Math.max(1, Math.round(rect.h() * scale)));

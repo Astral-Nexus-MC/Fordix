@@ -3,6 +3,7 @@ package com.omneria.fordix.client.gui.vanilla;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.layout.HudProfiles;
+import com.omneria.fordix.client.hud.CombatSwitch;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.loading.FMLPaths;
 
@@ -30,7 +31,8 @@ public final class HudProfileActions {
         return Tr.s("hud.profile.name." + slot);
     }
 
-    public static void save(int slot) {
+    /** The placement of every element as it is now. */
+    private static Map<String, HudProfiles.Placement> snapshotAll() {
         Map<String, HudProfiles.Placement> layout = new LinkedHashMap<>();
         for (String id : FordixConfig.HUD_ELEMENTS) {
             layout.put(id, HudSlots.snapshot(id));
@@ -38,15 +40,11 @@ public final class HudProfileActions {
         for (String id : ExtraHud.knownIds()) {
             layout.put(id, HudSlots.snapshot(id));
         }
-        profiles().put(slot, layout);
+        return layout;
     }
 
-    /** Puts a saved layout back; an element the profile doesn't know returns to its default spot. */
-    public static boolean load(int slot) {
-        Map<String, HudProfiles.Placement> layout = profiles().get(slot);
-        if (layout == null) {
-            return false;
-        }
+    /** Puts a layout back; an element it doesn't know returns to its default spot. */
+    private static void restoreAll(Map<String, HudProfiles.Placement> layout) {
         for (String id : FordixConfig.HUD_ELEMENTS) {
             apply(id, layout);
         }
@@ -55,8 +53,67 @@ public final class HudProfileActions {
         }
         FordixConfig.hudOffsetX(FordixConfig.HUD_ELEMENTS.get(0)).save();
         ExtraHud.save();
+    }
+
+    public static void save(int slot) {
+        profiles().put(slot, snapshotAll());
+    }
+
+    /** Puts a saved layout back. */
+    public static boolean load(int slot) {
+        Map<String, HudProfiles.Placement> layout = profiles().get(slot);
+        if (layout == null) {
+            return false;
+        }
+        restoreAll(layout);
         profiles().setActive(slot);
         return true;
+    }
+
+    // ---- the combat layout, entered while a hostile creature is near
+
+    private static final int COMBAT_SLOT = 1;
+    private static final int CHECK_EVERY_TICKS = 10;
+    private static final double HOSTILE_RANGE = 12.0D;
+    private static final CombatSwitch COMBAT = new CombatSwitch(6);
+    private static Map<String, HudProfiles.Placement> beforeCombat;
+    private static int ticks;
+
+    public static void onLoggingOut() {
+        beforeCombat = null;
+    }
+
+    /** Every client tick: with the option on, the second profile (Combat) is loaded while a hostile creature is near. */
+    public static void autoTick(Minecraft minecraft) {
+        if (minecraft.player == null || minecraft.level == null || ++ticks % CHECK_EVERY_TICKS != 0) {
+            return;
+        }
+        if (!FordixConfig.AUTO_COMBAT_PROFILE.get()) {
+            if (beforeCombat != null) {
+                restoreAll(beforeCombat);
+                beforeCombat = null;
+            }
+            return;
+        }
+        boolean hostile = profiles().has(COMBAT_SLOT) && !minecraft.level.getEntitiesOfClass(
+                net.minecraft.world.entity.monster.Monster.class,
+                minecraft.player.getBoundingBox().inflate(HOSTILE_RANGE), monster -> monster.isAlive()).isEmpty();
+        switch (COMBAT.update(hostile)) {
+            case ENTER -> {
+                beforeCombat = snapshotAll();
+                restoreAll(profiles().get(COMBAT_SLOT));
+                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", name(COMBAT_SLOT)), false);
+            }
+            case LEAVE -> {
+                if (beforeCombat != null) {
+                    restoreAll(beforeCombat);
+                    beforeCombat = null;
+                    minecraft.gui.setOverlayMessage(Tr.c("hud.profile.back"), false);
+                }
+            }
+            default -> {
+            }
+        }
     }
 
     private static void apply(String id, Map<String, HudProfiles.Placement> layout) {

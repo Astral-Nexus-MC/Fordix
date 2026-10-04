@@ -131,6 +131,7 @@ public final class ExtraHud {
             case "performance" -> new HudSnap.Rect(4, 32, 175, 14);
             case "clock" -> new HudSnap.Rect(4, 50, 150, 24);
             case "compass" -> new HudSnap.Rect(4, 78, 130, 24);
+            case "effects" -> new HudSnap.Rect(width - 110, 70, 106, 36);
             case "gear" -> new HudSnap.Rect(width - 90, height - 28, 86, 24);
             case "target_block" -> new HudSnap.Rect(center - 80, 26, 160, 38);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);
@@ -161,12 +162,13 @@ public final class ExtraHud {
         HudSnap.Rect base = defaults(id.toString(), width, height);
         HudSnap.Rect placed = slot.placed(base, width, height);
         float scale = slot.scaleValue();
-        if (placed.x() != base.x() || placed.y() != base.y() || scale != 1.0F) {
+        float scaleY = slot.scaleYValue();
+        if (placed.x() != base.x() || placed.y() != base.y() || scale != 1.0F || scaleY != 1.0F) {
             // Drawn at its default spot: move to the placed corner, size it from there, come back to draw as usual.
             var pose = event.getGuiGraphics().pose();
             pose.pushPose();
             pose.translate(placed.x(), placed.y(), 0.0F);
-            pose.scale(scale, scale, 1.0F);
+            pose.scale(scale, scaleY, 1.0F);
             pose.translate(-base.x(), -base.y(), 0.0F);
             shifted.add(id);
         }
@@ -192,21 +194,21 @@ public final class ExtraHud {
     // ---- the chat screen (text field, suggestions): same shift and size as the history
 
     /** The chat block as it sits on this screen: its default rectangle, where it was put, and its size factor. */
-    public record ChatFrame(HudSnap.Rect base, HudSnap.Rect placed, float scale) {
+    public record ChatFrame(HudSnap.Rect base, HudSnap.Rect placed, float scale, float scaleY) {
         /** A screen position mapped back into the block's own (default) coordinates. */
         public double toBlockX(double x) {
             return (x - placed.x()) / scale + base.x();
         }
 
         public double toBlockY(double y) {
-            return (y - placed.y()) / scale + base.y();
+            return (y - placed.y()) / scaleY + base.y();
         }
     }
 
     public static ChatFrame chatFrame(int width, int height) {
         HudSlot slot = slot(CHAT_PANEL);
         HudSnap.Rect base = defaults(CHAT_PANEL, width, height);
-        return new ChatFrame(base, slot.placed(base, width, height), slot.scaleValue());
+        return new ChatFrame(base, slot.placed(base, width, height), slot.scaleValue(), slot.scaleYValue());
     }
 
     /** Highest priority: shifts and sizes the whole chat screen, which draws only the text field, its bar and suggestions. */
@@ -215,11 +217,12 @@ public final class ExtraHud {
             return;
         }
         ChatFrame frame = chatFrame(screen.width, screen.height);
-        if (frame.placed().x() != frame.base().x() || frame.placed().y() != frame.base().y() || frame.scale() != 1.0F) {
+        if (frame.placed().x() != frame.base().x() || frame.placed().y() != frame.base().y() || frame.scale() != 1.0F
+                || frame.scaleY() != 1.0F) {
             var pose = event.getGuiGraphics().pose();
             pose.pushPose();
             pose.translate(frame.placed().x(), frame.placed().y(), 0.0F);
-            pose.scale(frame.scale(), frame.scale(), 1.0F);
+            pose.scale(frame.scale(), frame.scaleY(), 1.0F);
             pose.translate(-frame.base().x(), -frame.base().y(), 0.0F);
             chatShifted = true;
         }
@@ -256,6 +259,9 @@ public final class ExtraHud {
                 ResourceLocation id = named.id();
                 boolean vanilla = id.getNamespace().equals("minecraft");
                 if (vanilla && !MOVABLE_VANILLA.contains(id)) {
+                    continue;
+                }
+                if (id.equals(VanillaGuiOverlay.POTION_ICONS.id()) && com.omneria.fordix.client.hud.InfoHud.replacesVanillaEffects()) {
                     continue;
                 }
                 if (id.toString().equals(CHAT_PANEL) && ChatPanel.enabled()) {

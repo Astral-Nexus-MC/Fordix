@@ -31,15 +31,25 @@ public final class FordixConfig {
     private static final Map<String, ForgeConfigSpec.ConfigValue<String>> HUD_ANCHORS = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_HIDDEN = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.DoubleValue> HUD_SCALES = new LinkedHashMap<>();
+    private static final Map<String, ForgeConfigSpec.DoubleValue> HUD_SCALES_Y = new LinkedHashMap<>();
     /** Lines of the information panels the player can switch off, in the order the lines screen lists them. */
     public static final List<String> HUD_LINES = List.of(
             "coordinates_xyz", "coordinates_direction", "coordinates_biome",
             "performance_fps", "performance_tps", "performance_ping",
-            "target_tool", "target_entity",
-            "gear_durability", "gear_ammo",
+            "target_tool", "target_entity", "target_container",
+            "gear_durability", "gear_ammo", "gear_armor",
             "clock_real", "clock_game", "clock_weather",
             "compass_spawn", "compass_marker");
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_LINE_VALUES = new LinkedHashMap<>();
+    /** Alerts that can be switched off, in the order the options screen lists them. */
+    public static final List<String> HUD_ALERTS = List.of("alert_durability", "alert_ammo", "alert_tps", "alert_sound");
+    private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_ALERT_VALUES = new LinkedHashMap<>();
+    public static final List<String> HUD_OPACITIES = List.of("100", "85", "70", "55", "40");
+    public static final ForgeConfigSpec.ConfigValue<String> HUD_OPACITY;
+    public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
+    public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
+    public static final ForgeConfigSpec.BooleanValue AUTO_COMBAT_PROFILE;
+    public static final ForgeConfigSpec.IntValue ALERT_DURABILITY_PERCENT;
     public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
     public static final ForgeConfigSpec.BooleanValue HUD_REQUIRE_ITEMS;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
@@ -78,6 +88,9 @@ public final class FordixConfig {
             ForgeConfigSpec.DoubleValue scale = builder
                     .comment("Size of the element, 1.0 being its usual size.")
                     .defineInRange("scale", 1.0D, HudAnchors.MIN_SCALE, HudAnchors.MAX_SCALE);
+            ForgeConfigSpec.DoubleValue scaleY = builder
+                    .comment("Height factor when it differs from the width one; 0 keeps both the same.")
+                    .defineInRange("scaleY", 0.0D, 0.0D, HudAnchors.MAX_SCALE);
             ForgeConfigSpec.IntValue x = builder.defineInRange("offsetX", 0, -1000, 1000);
             ForgeConfigSpec.IntValue y = builder.defineInRange("offsetY", 0, -1000, 1000);
             builder.pop();
@@ -85,6 +98,7 @@ public final class FordixConfig {
             HUD_ANCHORS.put(element, anchor);
             HUD_HIDDEN.put(element, hidden);
             HUD_SCALES.put(element, scale);
+            HUD_SCALES_Y.put(element, scaleY);
         }
         builder.pop();
         builder.comment("Which lines the information panels of the HUD show (coordinates, FPS/TPS/ping, target, gear, clock, compass).")
@@ -93,6 +107,21 @@ public final class FordixConfig {
             HUD_LINE_VALUES.put(line, builder.define(line, true));
         }
         builder.pop();
+        builder.comment("Warnings above the hotbar: an item about to break, a bow without arrows, a server that lags.").push("alerts");
+        for (String alert : HUD_ALERTS) {
+            HUD_ALERT_VALUES.put(alert, builder.define(alert, true));
+        }
+        ALERT_DURABILITY_PERCENT = builder.comment("Durability left (in percent) under which the break warning shows.")
+                .defineInRange("durabilityPercent", 10, 1, 50);
+        builder.pop();
+        HUD_OPACITY = builder.comment("Opacity of the information panels in percent: " + String.join(", ", HUD_OPACITIES) + ".")
+                .defineInList("hudOpacity", "70", HUD_OPACITIES);
+        HUD_COMPACT = builder.comment("Tighter information panels (less padding and line spacing), for small screens.")
+                .define("hudCompact", false);
+        HUD_EFFECTS_LIST = builder.comment("Replace the potion effect icons with a list showing name and time left.")
+                .define("hudEffectsList", true);
+        AUTO_COMBAT_PROFILE = builder.comment("Load the second saved HUD profile (Combat) while a hostile creature is near, then go back.")
+                .define("autoCombatProfile", false);
         HUD_REQUIRE_ITEMS = builder
                 .comment("The compass panel needs a compass (or recovery compass) in your inventory and the clock panel needs a clock:",
                         "craft them to unlock these two panels.")
@@ -154,6 +183,20 @@ public final class FordixConfig {
         }
     }
 
+    public static ForgeConfigSpec.DoubleValue hudScaleYValue(String element) {
+        return HUD_SCALES_Y.get(element);
+    }
+
+    /** Height factor of a HUD element: its own when set, the width factor otherwise. */
+    public static float hudScaleY(String element) {
+        try {
+            double own = HUD_SCALES_Y.get(element).get();
+            return own > 0.0D ? HudAnchors.clampScale((float) own) : hudScale(element);
+        } catch (IllegalStateException notLoadedYet) {
+            return 1.0F;
+        }
+    }
+
     public static ForgeConfigSpec.BooleanValue hudHiddenValue(String element) {
         return HUD_HIDDEN.get(element);
     }
@@ -181,6 +224,18 @@ public final class FordixConfig {
             return new int[]{hudOffsetX(element).get(), hudOffsetY(element).get()};
         } catch (IllegalStateException notLoadedYet) {
             return new int[]{0, 0};
+        }
+    }
+
+    public static ForgeConfigSpec.BooleanValue hudAlertValue(String alert) {
+        return HUD_ALERT_VALUES.get(alert);
+    }
+
+    public static boolean hudAlert(String alert) {
+        try {
+            return HUD_ALERT_VALUES.get(alert).get();
+        } catch (IllegalStateException notLoadedYet) {
+            return true;
         }
     }
 

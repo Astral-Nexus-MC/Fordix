@@ -306,6 +306,58 @@ public final class DevTest {
             cmd(mc, "kill @e[type=minecraft:cow]");
             mc.player.setXRot(0F);
         }, 8, false));
+        steps.add(new Step("12m-hud-effects-armor", () -> {
+            cmd(mc, "gamemode survival");
+            cmd(mc, "effect give @s minecraft:speed 600 1");
+            cmd(mc, "effect give @s minecraft:poison 8");
+            cmd(mc, "effect give @s minecraft:night_vision 300");
+            cmd(mc, "item replace entity @s armor.head with minecraft:diamond_helmet{Damage:200}");
+            cmd(mc, "item replace entity @s armor.chest with minecraft:netherite_chestplate{Damage:250}");
+            cmd(mc, "item replace entity @s armor.feet with minecraft:iron_boots{Damage:150}");
+            mc.player.getInventory().selected = 3;
+            mc.player.setXRot(0F);
+        }, 40, false));
+        steps.add(new Step("12m2-hud-alert", () -> {
+            cmd(mc, "item replace entity @s armor.head with minecraft:diamond_helmet{Damage:360}");
+        }, 20, false));
+        steps.add(new Step("12m3-hud-container", () -> {
+            cmd(mc, "effect clear @s");
+            cmd(mc, "execute at @s run setblock ^ ^ ^2 minecraft:chest");
+            mc.player.setXRot(29F);
+        }, 25, false));
+        steps.add(new Step("12m4-hud-container-seen", () -> {
+            if (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit) {
+                com.omneria.fordix.client.hud.ContainerMemory.put(mc, hit.getBlockPos(), mc.level.getBlockState(hit.getBlockPos()), java.util.List.of(
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND, 12),
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 64),
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 7),
+                        new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 20)));
+            }
+        }, 15, false));
+        steps.add(new Step("12m5-hud-stretch", () -> {
+            cmd(mc, "setblock ~ ~ ~ minecraft:air");
+            mc.player.setXRot(0F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScales("fordix:coordinates", 1.4F, 0.8F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScales("fordix:performance", 0.8F, 1.0F);
+            HudLayoutScreen layout = new HudLayoutScreen(null);
+            mc.setScreen(layout);
+        }, 25, false));
+        steps.add(new Step("12m6-chat-coords", () -> {
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:performance");
+            com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
+            mc.setScreen(null);
+            cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Ana\",\"retrouve-moi a 120 64 -300 pour le portail\"]}");
+        }, 25, false));
+        steps.add(new Step("12m7-chat-coords-open", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")), 20, false));
+        steps.add(new Step("12m8-options-screen", () -> mc.setScreen(new com.omneria.fordix.client.gui.HudOptionsScreen(null)), 15, false));
+        steps.add(new Step("12m9-reset", () -> {
+            mc.setScreen(null);
+            cmd(mc, "item replace entity @s armor.head with minecraft:air");
+            cmd(mc, "item replace entity @s armor.chest with minecraft:air");
+            cmd(mc, "item replace entity @s armor.feet with minecraft:air");
+            cmd(mc, "gamemode creative");
+        }, 8, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

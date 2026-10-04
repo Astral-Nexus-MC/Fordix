@@ -23,6 +23,8 @@ import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.chat.ChatLog;
 import com.omneria.fordix.client.chat.ChatPanel;
+import com.omneria.fordix.client.hud.ContainerMemory;
+import com.omneria.fordix.client.hud.HudAlerts;
 import com.omneria.fordix.client.hud.InfoHud;
 import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
@@ -193,6 +195,8 @@ public final class FordixClient {
             }
             Minecraft minecraft = Minecraft.getInstance();
             TextureRecolor.onClientTick(minecraft);
+            HudAlerts.tick(minecraft);
+            HudProfileActions.autoTick(minecraft);
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixDemoScreen());
@@ -221,11 +225,26 @@ public final class FordixClient {
             ServerGuides.clear();
             ServerPages.clear();
             ServerRarities.clear();
+            HudAlerts.reset();
+            ContainerMemory.clear();
+            HudProfileActions.onLoggingOut();
         }
 
         @SubscribeEvent
         static void onScreenOpening(ScreenEvent.Opening event) {
             VanillaScreens.onScreenOpening(event);
+            ContainerMemory.onScreenOpening(event);
+        }
+
+        @SubscribeEvent
+        static void onScreenClosing(ScreenEvent.Closing event) {
+            ContainerMemory.onScreenClosing(event);
+        }
+
+        /** The effects list takes the place of vanilla's potion icons. */
+        @SubscribeEvent
+        static void onEffectsOverlayPre(RenderGuiOverlayEvent.Pre event) {
+            InfoHud.onOverlayPre(event);
         }
 
         @SubscribeEvent

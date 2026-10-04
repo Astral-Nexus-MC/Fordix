@@ -33,8 +33,10 @@ public class HudLayoutScreen extends FordixScreen {
     private static final int GRID = 20;
     private static final long DOUBLE_CLICK_MS = 300L;
     private static final int TOOLBAR_WIDTH = 120;
+    private static final int TOOLBAR_HEIGHT = 148;
     private static final int HANDLE = 7;
-    private static final float WHEEL_STEP = 0.1F;
+    private static final float WHEEL_STEP = 0.05F;
+    private static final float FINE_STEP = 0.01F;
 
     /** Kept for the session: the two helpers are a habit, not a setting worth a config file. */
     private static boolean showGrid = true;
@@ -46,7 +48,11 @@ public class HudLayoutScreen extends FordixScreen {
     private int selected = -1;
     private boolean dragging;
     private boolean resizing;
+    /** Which handle is being dragged: the corner (both sizes), the right edge (width) or the bottom edge (height). */
+    private int resizeMode;
     private float resizeBaseWidth;
+    private float resizeBaseHeight;
+    private float resizeRatio = 1.0F;
     private double rawX;
     private double rawY;
     private Integer guideX;
@@ -69,44 +75,44 @@ public class HudLayoutScreen extends FordixScreen {
     @Override
     protected void init() {
         int x = 6;
-        int y = 6;
-        gridButton = addRenderableWidget(new FordixButton(x, y, TOOLBAR_WIDTH, 16, gridLabel(), () -> {
+        int y = toolbarTop();
+        gridButton = addRenderableWidget(new FordixButton(x, y, TOOLBAR_WIDTH, 14, gridLabel(), () -> {
             showGrid = !showGrid;
             gridButton.setMessage(gridLabel());
         }));
-        magnetButton = addRenderableWidget(new FordixButton(x, y + 18, TOOLBAR_WIDTH, 16, magnetLabel(), () -> {
+        magnetButton = addRenderableWidget(new FordixButton(x, y + 16, TOOLBAR_WIDTH, 14, magnetLabel(), () -> {
             magnet = !magnet;
             magnetButton.setMessage(magnetLabel());
         }));
-        presetButton = addRenderableWidget(new FordixButton(x, y + 36, TOOLBAR_WIDTH, 16, presetLabel(), () -> {
+        presetButton = addRenderableWidget(new FordixButton(x, y + 32, TOOLBAR_WIDTH, 14, presetLabel(), () -> {
             applyPreset(HudAnchors.PRESETS.get(presetIndex));
             presetIndex = (presetIndex + 1) % HudAnchors.PRESETS.size();
             presetButton.setMessage(presetLabel());
         }));
-        hideButton = addRenderableWidget(new FordixButton(x, y + 54, TOOLBAR_WIDTH, 16, Tr.c("hud.hide"), () -> {
+        hideButton = addRenderableWidget(new FordixButton(x, y + 48, TOOLBAR_WIDTH, 14, Tr.c("hud.hide"), () -> {
             if (selected >= 0) {
                 HudSlots.setHidden(elements.get(selected), !HudSlots.hidden(elements.get(selected)));
                 save();
             }
         }));
-        addRenderableWidget(new FordixButton(x, y + 72, TOOLBAR_WIDTH, 16, Tr.c("hud.reset"), () -> {
+        addRenderableWidget(new FordixButton(x, y + 64, TOOLBAR_WIDTH, 14, Tr.c("hud.reset"), () -> {
             applyPreset(HudAnchors.PRESETS.get(0));
             presetIndex = 1;
             presetButton.setMessage(presetLabel());
         }));
-        addRenderableWidget(new FordixButton(x, y + 90, TOOLBAR_WIDTH, 16, Tr.c("common.close"), this::onClose));
+        addRenderableWidget(new FordixButton(x, y + 80, TOOLBAR_WIDTH, 14, Tr.c("common.close"), this::onClose));
 
         // Saved layouts: pick a slot, then fill it with the layout on screen or put its layout back.
         profileSlot = Math.max(0, HudProfileActions.profiles().active());
-        profileButton = addRenderableWidget(new FordixButton(x, y + 114, TOOLBAR_WIDTH, 16, profileLabel(), () -> {
+        profileButton = addRenderableWidget(new FordixButton(x, y + 102, TOOLBAR_WIDTH, 14, profileLabel(), () -> {
             profileSlot = (profileSlot + 1) % HudProfiles.SLOTS;
             profileButton.setMessage(profileLabel());
         }));
-        addRenderableWidget(new FordixButton(x, y + 132, TOOLBAR_WIDTH, 16, Tr.c("hud.profile.save"), () -> {
+        addRenderableWidget(new FordixButton(x, y + 118, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.save"), () -> {
             HudProfileActions.save(profileSlot);
             profileButton.setMessage(profileLabel());
         }));
-        addRenderableWidget(new FordixButton(x, y + 150, TOOLBAR_WIDTH, 16, Tr.c("hud.profile.load"), () -> {
+        addRenderableWidget(new FordixButton(x, y + 134, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.load"), () -> {
             if (HudProfileActions.load(profileSlot)) {
                 presetIndex = 0;
                 presetButton.setMessage(presetLabel());
@@ -117,6 +123,11 @@ public class HudLayoutScreen extends FordixScreen {
     private Component profileLabel() {
         return Tr.c("hud.profile.slot", HudProfileActions.name(profileSlot),
                 HudProfileActions.profiles().has(profileSlot) ? "\u25CF" : "\u25CB");
+    }
+
+    /** The settings column sits at the middle of the screen's left edge. */
+    private int toolbarTop() {
+        return Math.max(4, (this.height - TOOLBAR_HEIGHT) / 2);
     }
 
     private Component presetLabel() {
@@ -266,33 +277,64 @@ public class HudLayoutScreen extends FordixScreen {
         int textY = rect.h() >= 10 ? rect.y() + (rect.h() - 8) / 2 : rect.y() - 9;
         guiGraphics.drawString(this.font, label, rect.x() + (rect.w() - textWidth) / 2, textY, FordixPalette.TEXT_BRIGHT, true);
         if (isSelected) {
-            int hx = handleX(rect);
-            int hy = handleY(rect);
-            guiGraphics.fill(hx, hy, hx + HANDLE, hy + HANDLE, 0xFF000000 | accent);
-            guiGraphics.fill(hx + 2, hy + 2, hx + HANDLE - 1, hy + HANDLE - 1, 0xFF05070A);
+            for (int mode = 1; mode <= 3; mode++) {
+                int hx = handleX(rect, mode);
+                int hy = handleY(rect, mode);
+                guiGraphics.fill(hx, hy, hx + HANDLE, hy + HANDLE, 0xFF000000 | accent);
+                guiGraphics.fill(hx + 2, hy + 2, hx + HANDLE - 1, hy + HANDLE - 1, 0xFF05070A);
+            }
         }
     }
 
     /** The resize handle sits on the selected element's bottom-right corner, half outside it so small ones stay grabbable. */
-    private static int handleX(HudSnap.Rect rect) {
-        return rect.right() - HANDLE / 2 - 1;
+    private static int handleX(HudSnap.Rect rect, int mode) {
+        return (mode == 3 ? rect.x() + rect.w() / 2 : rect.right()) - HANDLE / 2 - 1;
     }
 
-    private static int handleY(HudSnap.Rect rect) {
-        return rect.bottom() - HANDLE / 2 - 1;
+    private static int handleY(HudSnap.Rect rect, int mode) {
+        return (mode == 2 ? rect.y() + rect.h() / 2 : rect.bottom()) - HANDLE / 2 - 1;
     }
 
-    private boolean onHandle(double mouseX, double mouseY) {
+    /** The handle under the pointer: 1 corner (both sizes), 2 right edge (width), 3 bottom edge (height), 0 none. */
+    private int handleAt(double mouseX, double mouseY) {
         if (selected < 0) {
-            return false;
+            return 0;
         }
         HudSnap.Rect rect = rectOf(selected);
-        return mouseX >= handleX(rect) - 1 && mouseX < handleX(rect) + HANDLE + 1
-                && mouseY >= handleY(rect) - 1 && mouseY < handleY(rect) + HANDLE + 1;
+        for (int mode = 1; mode <= 3; mode++) {
+            if (mouseX >= handleX(rect, mode) - 1 && mouseX < handleX(rect, mode) + HANDLE + 1
+                    && mouseY >= handleY(rect, mode) - 1 && mouseY < handleY(rect, mode) + HANDLE + 1) {
+                return mode;
+            }
+        }
+        return 0;
     }
 
     private void resize(int index, float scale) {
         HudSlots.setScale(elements.get(index), scale);
+    }
+
+    /** Width and height factors apart (JourneyMap's minimap only has one size). */
+    private void resize(int index, float scaleX, float scaleY) {
+        HudSlots.setScales(elements.get(index), scaleX, scaleY);
+    }
+
+    /**
+     * A step of the wheel or of + and -: both sizes together, only the width with Ctrl, only the height with Alt;
+     * 5 % a step, 1 % with Shift.
+     */
+    private void step(int index, float direction) {
+        String id = elements.get(index);
+        float amount = direction * (hasShiftDown() ? FINE_STEP : WHEEL_STEP);
+        float sx = HudSlots.scale(id);
+        float sy = HudSlots.scaleY(id);
+        if (hasControlDown() && !HudSlots.isJourneyMap(id)) {
+            resize(index, sx + amount, sy);
+        } else if (hasAltDown() && !HudSlots.isJourneyMap(id)) {
+            resize(index, sx, sy + amount);
+        } else {
+            resize(index, sx + amount, sy + amount);
+        }
     }
 
     /** Offset of the selected element, next to it while it's being moved. */
@@ -300,8 +342,14 @@ public class HudLayoutScreen extends FordixScreen {
         int[] offset = HudSlots.offset(elements.get(index));
         HudSnap.Rect rect = rectOf(index);
         float scale = HudSlots.scale(elements.get(index));
-        String text = HudSlots.anchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1]
-                + (Math.abs(scale - 1.0F) > 0.005F ? "  x" + Math.round(scale * 100) / 100.0F : "");
+        float scaleY = HudSlots.scaleY(elements.get(index));
+        String size = "";
+        if (Math.abs(scale - scaleY) > 0.005F) {
+            size = "  " + Math.round(scale * 100) + "% x " + Math.round(scaleY * 100) + "%";
+        } else if (Math.abs(scale - 1.0F) > 0.005F) {
+            size = "  " + Math.round(scale * 100) + "%";
+        }
+        String text = HudSlots.anchor(elements.get(index)).id() + " " + offset[0] + ", " + offset[1] + size;
         int width = this.font.width(text) + 6;
         int x = Math.max(0, Math.min(this.width - width, rect.x()));
         int y = rect.y() >= 22 ? rect.y() - 20 : rect.bottom() + 3;
@@ -310,11 +358,10 @@ public class HudLayoutScreen extends FordixScreen {
     }
 
     private void drawHelp(GuiGraphics guiGraphics) {
-        List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.help"),
-                TOOLBAR_WIDTH + 70);
-        int y = 6 + 150 + 22;
+        List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.help"), 200);
+        int y = toolbarTop();
         for (FormattedCharSequence line : lines) {
-            guiGraphics.drawString(this.font, line, 6, y, FordixPalette.TEXT_BRIGHT, true);
+            guiGraphics.drawString(this.font, line, 6 + TOOLBAR_WIDTH + 8, y, FordixPalette.TEXT_BRIGHT, true);
             y += 10;
         }
     }
@@ -345,9 +392,14 @@ public class HudLayoutScreen extends FordixScreen {
         if (button != 0) {
             return false;
         }
-        if (onHandle(mouseX, mouseY)) {
+        int handle = handleAt(mouseX, mouseY);
+        if (handle != 0) {
             resizing = true;
-            resizeBaseWidth = rectOf(selected).w() / HudSlots.scale(elements.get(selected));
+            resizeMode = handle;
+            String id = elements.get(selected);
+            resizeBaseWidth = rectOf(selected).w() / HudSlots.scale(id);
+            resizeBaseHeight = rectOf(selected).h() / HudSlots.scaleY(id);
+            resizeRatio = HudSlots.scaleY(id) / HudSlots.scale(id);
             return true;
         }
         int hit = elementAt(mouseX, mouseY);
@@ -375,7 +427,16 @@ public class HudLayoutScreen extends FordixScreen {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (resizing && selected >= 0 && button == 0) {
             HudSnap.Rect rect = rectOf(selected);
-            resize(selected, (float) (mouseX - rect.x()) / Math.max(1.0F, resizeBaseWidth));
+            String id = elements.get(selected);
+            float width = (float) (mouseX - rect.x()) / Math.max(1.0F, resizeBaseWidth);
+            float height = (float) (mouseY - rect.y()) / Math.max(1.0F, resizeBaseHeight);
+            if (resizeMode == 2 && !HudSlots.isJourneyMap(id)) {
+                resize(selected, width, HudSlots.scaleY(id));
+            } else if (resizeMode == 3 && !HudSlots.isJourneyMap(id)) {
+                resize(selected, HudSlots.scale(id), height);
+            } else {
+                resize(selected, width, width * resizeRatio);
+            }
             return true;
         }
         if (dragging && selected >= 0 && button == 0) {
@@ -424,7 +485,7 @@ public class HudLayoutScreen extends FordixScreen {
         int hit = elementAt(mouseX, mouseY);
         if (hit >= 0 && delta != 0.0D) {
             selected = hit;
-            resize(hit, HudSlots.scale(elements.get(hit)) + (float) Math.signum(delta) * WHEEL_STEP * (hasShiftDown() ? 2.5F : 1.0F));
+            step(hit, (float) Math.signum(delta));
             save();
             return true;
         }
@@ -436,7 +497,7 @@ public class HudLayoutScreen extends FordixScreen {
         if (selected >= 0 && (keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD
                 || keyCode == GLFW.GLFW_KEY_MINUS || keyCode == GLFW.GLFW_KEY_KP_SUBTRACT)) {
             boolean bigger = keyCode == GLFW.GLFW_KEY_EQUAL || keyCode == GLFW.GLFW_KEY_KP_ADD;
-            resize(selected, HudSlots.scale(elements.get(selected)) + (bigger ? WHEEL_STEP : -WHEEL_STEP));
+            step(selected, bigger ? 1.0F : -1.0F);
             save();
             return true;
         }
