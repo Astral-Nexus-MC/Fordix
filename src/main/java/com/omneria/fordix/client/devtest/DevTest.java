@@ -252,7 +252,6 @@ public final class DevTest {
         steps.add(new Step("12i2-hud-clock-compass", () -> {
             cmd(mc, "time set 15000");
             cmd(mc, "weather rain");
-            com.omneria.fordix.client.hud.InfoHud.onMarkerKey(mc);
             cmd(mc, "tp @s ~25 ~ ~-30");
             mc.player.getInventory().selected = 3;
         }, 40, false));

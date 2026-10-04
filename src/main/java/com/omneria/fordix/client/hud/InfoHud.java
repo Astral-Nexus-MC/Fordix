@@ -27,8 +27,6 @@ import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 import java.util.Locale;
-import com.omneria.fordix.client.FordixClient;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -37,7 +35,6 @@ import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
-import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -80,7 +77,6 @@ public final class InfoHud {
     private static final String[] ARROWS = {"\u2191", "\u2197", "\u2192", "\u2198", "\u2193", "\u2199", "\u2190", "\u2196"};
     private static final DateTimeFormatter CLOCK_FORMAT = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT);
     private static final TpsMeter METER = new TpsMeter();
-    private static MarkerStore markers;
 
     private InfoHud() {
     }
@@ -406,42 +402,6 @@ public final class InfoHud {
 
     // ---- compass
 
-    private static String markerKey(Minecraft minecraft) {
-        String world = minecraft.getCurrentServer() != null ? minecraft.getCurrentServer().ip
-                : minecraft.getSingleplayerServer() != null ? "sp:" + minecraft.getSingleplayerServer().getWorldData().getLevelName() : "?";
-        return world + "|" + minecraft.level.dimension().location();
-    }
-
-    private static MarkerStore markers() {
-        if (markers == null) {
-            markers = new MarkerStore(FMLPaths.CONFIGDIR.get().resolve("fordix-markers.json"));
-        }
-        return markers;
-    }
-
-    /** The marker key: puts the marker where the player stands, or with Shift takes it away. */
-    public static void onMarkerKey(Minecraft minecraft) {
-        if (minecraft.player == null || minecraft.level == null) {
-            return;
-        }
-        if (Screen.hasShiftDown()) {
-            markers().remove(markerKey(minecraft));
-            minecraft.gui.setOverlayMessage(Tr.c("hud.compass.cleared"), false);
-        } else {
-            BlockPos pos = minecraft.player.blockPosition();
-            setMarker(minecraft, pos.getX(), pos.getY(), pos.getZ());
-        }
-    }
-
-    /** Puts the compass marker at a place (the key puts it under the player, a click on chat coordinates anywhere). */
-    public static void setMarker(Minecraft minecraft, int x, int y, int z) {
-        if (minecraft.level == null) {
-            return;
-        }
-        markers().set(markerKey(minecraft), new MarkerStore.Marker(x, y, z));
-        minecraft.gui.setOverlayMessage(Tr.c("hud.compass.set", x, y, z), false);
-    }
-
     private static Line pointer(String name, Minecraft minecraft, double x, double z) {
         LocalPlayer player = minecraft.player;
         double dx = x - player.getX();
@@ -464,15 +424,8 @@ public final class InfoHud {
             BlockPos at = minecraft.level.getSharedSpawnPos();
             spawn = pointer(Tr.s("hud.compass.spawn"), minecraft, at.getX() + 0.5D, at.getZ() + 0.5D);
         }
-        Line marker = new Line();
-        if (on("compass_marker")) {
-            MarkerStore.Marker at = markers().get(markerKey(minecraft));
-            marker = at != null ? pointer(Tr.s("hud.compass.marker"), minecraft, at.x() + 0.5D, at.z() + 0.5D)
-                    : new Line().add(label(Tr.s("hud.compass.marker") + " "),
-                            value(Tr.s("hud.compass.none", FordixClient.SET_MARKER.getTranslatedKeyMessage().getString()), LABEL));
-        }
         int top = columnTop(3) + 0;
-        drawLines(graphics, minecraft.font, 4, top, List.of(spawn, marker));
+        drawLines(graphics, minecraft.font, 4, top, List.of(spawn));
     }
 
     // ---- potion effects as a list

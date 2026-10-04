@@ -39,7 +39,7 @@ public final class FordixConfig {
             "target_tool", "target_entity", "target_container",
             "gear_durability", "gear_ammo", "gear_armor",
             "clock_real", "clock_game", "clock_weather",
-            "compass_spawn", "compass_marker");
+            "compass_spawn");
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_LINE_VALUES = new LinkedHashMap<>();
     /** Alerts that can be switched off, in the order the options screen lists them. */
     public static final List<String> HUD_ALERTS = List.of("alert_durability", "alert_ammo", "alert_tps", "alert_sound");

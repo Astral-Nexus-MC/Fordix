@@ -10,11 +10,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import com.omneria.fordix.Tr;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
@@ -84,9 +80,8 @@ public final class ChatLog {
         /** The text wrapped to a width: "Name message" for a player, the line itself otherwise. */
         public List<FormattedCharSequence> lines(Font font, int width) {
             if (linesWidth != width) {
-                Component linked = linkCoordinates(body);
-                Component whole = name == null ? linked
-                        : Component.empty().append(name.copy().withStyle(style -> style.withBold(true))).append(" ").append(linked);
+                Component whole = name == null ? body
+                        : Component.empty().append(name.copy().withStyle(style -> style.withBold(true))).append(" ").append(body);
                 if (kind == ChatKind.COMMAND) {
                     whole = whole.copy().withStyle(ChatFormatting.GRAY);
                 }
@@ -106,44 +101,6 @@ public final class ChatLog {
                     : senderName != null ? minecraft.getConnection().getPlayerInfo(senderName) : null;
             return info == null ? null : info.getSkinLocation();
         }
-    }
-
-    /** The same text with every coordinate triple made clickable (a click puts the compass marker there). */
-    static Component linkCoordinates(Component component) {
-        String plain = component.getString();
-        List<ChatCoords.Found> found = ChatCoords.find(plain);
-        if (found.isEmpty()) {
-            return component;
-        }
-        MutableComponent result = Component.empty();
-        int[] offset = {0};
-        component.visit((style, text) -> {
-            int start = offset[0];
-            int end = start + text.length();
-            offset[0] = end;
-            int cursor = 0;
-            for (ChatCoords.Found place : found) {
-                if (place.end() <= start || place.start() >= end) {
-                    continue;
-                }
-                int from = Math.max(place.start(), start) - start;
-                int to = Math.min(place.end(), end) - start;
-                if (from > cursor) {
-                    result.append(Component.literal(text.substring(cursor, from)).withStyle(style));
-                }
-                Style link = style.getClickEvent() != null ? style : style
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, ChatCoords.clickValue(place)))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Tr.c("hud.compass.click")))
-                        .withUnderlined(true).withColor(0x7DFFB0);
-                result.append(Component.literal(text.substring(from, to)).withStyle(link));
-                cursor = to;
-            }
-            if (cursor < text.length()) {
-                result.append(Component.literal(text.substring(cursor)).withStyle(style));
-            }
-            return java.util.Optional.empty();
-        }, Style.EMPTY);
-        return result;
     }
 
     private static Field findMessages() {
