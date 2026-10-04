@@ -1,10 +1,13 @@
 package com.omneria.fordix.client.chat;
 
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.FordixConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
@@ -53,6 +56,7 @@ public final class ChatLog {
         public final UUID sender;
         public final String senderName;
         public final boolean mention;
+        private String plain;
         private List<FormattedCharSequence> lines = List.of();
         private int linesWidth = -1;
 
@@ -63,6 +67,14 @@ public final class ChatLog {
             this.sender = sender;
             this.senderName = senderName;
             this.mention = mention;
+        }
+
+        /** The line as plain text (name and message), what the search looks through. */
+        public String plainText() {
+            if (plain == null) {
+                plain = (name == null ? "" : name.getString() + " ") + body.getString();
+            }
+            return plain;
         }
 
         /** The text wrapped to a width: "Name message" for a player, the line itself otherwise. */
@@ -172,8 +184,12 @@ public final class ChatLog {
             String me = minecraft.player.getGameProfile().getName().toLowerCase(Locale.ROOT);
             mention = !me.equalsIgnoreCase(senderName) && body.getString().toLowerCase(Locale.ROOT).contains(me);
         }
-        Entry entry = new Entry(kind, body, name, sender, senderName, mention);
+        boolean whisper = ChatKind.isIncomingPrivate(key, content.getString());
+        Entry entry = new Entry(kind, body, name, sender, senderName, mention || whisper);
         ENTRIES.add(entry);
+        if ((mention || whisper) && FordixConfig.CHAT_MENTION_SOUND.get()) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.get(), 1.4F, 0.7F));
+        }
         if (ENTRIES.size() > MAX_ENTRIES) {
             ENTRIES.remove(0);
         }
@@ -214,12 +230,17 @@ public final class ChatLog {
     }
 
     public static List<Entry> filtered(ChatTab tab) {
-        if (tab == ChatTab.ALL) {
+        return filtered(tab, "");
+    }
+
+    /** The lines a tab lists that also contain every word of the search. */
+    public static List<Entry> filtered(ChatTab tab, String query) {
+        if (tab == ChatTab.ALL && (query == null || query.isBlank())) {
             return ENTRIES;
         }
         List<Entry> result = new ArrayList<>();
         for (Entry entry : ENTRIES) {
-            if (tab.matches(entry.kind)) {
+            if (tab.matches(entry.kind) && ChatSearch.matches(entry.plainText(), query)) {
                 result.add(entry);
             }
         }

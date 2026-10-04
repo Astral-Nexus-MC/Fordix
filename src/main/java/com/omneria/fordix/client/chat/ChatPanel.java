@@ -48,6 +48,8 @@ public final class ChatPanel {
     private static final int TIME_COLOR = 0x8AA0AD;
     private static final int SYSTEM_BAR = 0xFFB347;
     private static final int SERVER_BAR = 0x7DFFB0;
+    private static final int PRIVATE_BAR = 0xC792EA;
+    private static final int SEARCH_MIN_WIDTH = 56;
     private static final int BADGE = 0xFF6B6B;
     private static final int MENTION = 0x30FFB347;
     private static final Field SUGGESTIONS = Reflect.uniqueField(ChatScreen.class, CommandSuggestions.class);
@@ -55,6 +57,9 @@ public final class ChatPanel {
 
     private static ChatTab selected = ChatTab.ALL;
     private static int scroll;
+    /** The search field on the tabs row and what it holds; null while the chat is closed. */
+    private static EditBox search;
+    private static String query = "";
     private static final List<Hit> HITS = new ArrayList<>();
 
     private ChatPanel() {
@@ -116,7 +121,7 @@ public final class ChatPanel {
         int width = panelWidth(screenWidth);
         HudSnap.Rect log = ChatLayout.log(screenWidth, screenHeight, width);
         HITS.clear();
-        List<ChatLog.Entry> source = open ? ChatLog.filtered(selected) : ChatLog.entries();
+        List<ChatLog.Entry> source = open ? ChatLog.filtered(selected, query) : ChatLog.entries();
         if (open) {
             ChatLog.markRead(selected);
             graphics.fill(log.x(), log.y(), log.right(), log.bottom(), PANEL_FILL);
@@ -167,6 +172,7 @@ public final class ChatPanel {
         int bar = switch (entry.kind) {
             case SYSTEM -> SYSTEM_BAR;
             case SERVER -> SERVER_BAR;
+            case PRIVATE -> PRIVATE_BAR;
             default -> -1;
         };
         if (bar != -1) {
@@ -201,7 +207,7 @@ public final class ChatPanel {
     // ---- tabs
 
     private static int tabWidth(Font font, ChatTab tab) {
-        return font.width(Tr.s("chat.tab." + tab.id())) + 14;
+        return font.width(Tr.s("chat.tab." + tab.id())) + 12;
     }
 
     private static HudSnap.Rect tabRect(Font font, int screenWidth, int screenHeight, int width, ChatTab target) {
@@ -217,12 +223,36 @@ public final class ChatPanel {
         return tabs;
     }
 
+    /** Where the search field sits: the rest of the tabs row, or null when the chat is too narrow for it. */
+    private static HudSnap.Rect searchRect(Font font, int screenWidth, int screenHeight, int width) {
+        HudSnap.Rect tabs = ChatLayout.tabs(screenWidth, screenHeight, width);
+        HudSnap.Rect last = tabRect(font, screenWidth, screenHeight, width, ChatTab.values()[ChatTab.values().length - 1]);
+        int x = last.right() + 6;
+        int w = tabs.right() - x;
+        return w >= SEARCH_MIN_WIDTH ? new HudSnap.Rect(x, tabs.y(), w, tabs.h()) : null;
+    }
+
+    private static boolean searching() {
+        return search != null && search.isFocused();
+    }
+
+    private static void focusSearch(ChatScreen screen, boolean focus) {
+        if (search == null) {
+            return;
+        }
+        search.setFocused(focus);
+        EditBox box = input(screen);
+        if (box != null) {
+            box.setFocused(!focus);
+        }
+    }
+
     private static void drawTabs(GuiGraphics graphics, Font font, int screenWidth, int screenHeight, int width) {
         for (ChatTab tab : ChatTab.values()) {
             HudSnap.Rect rect = tabRect(font, screenWidth, screenHeight, width, tab);
             boolean on = tab == selected;
             graphics.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), on ? withAlpha(FordixPalette.ACCENT, 255) : TAB_FILL);
-            graphics.drawString(font, Tr.s("chat.tab." + tab.id()), rect.x() + 7, rect.y() + 3,
+            graphics.drawString(font, Tr.s("chat.tab." + tab.id()), rect.x() + 6, rect.y() + 3,
                     on ? 0xFF05070A : withAlpha(TIME_COLOR, 255), false);
             int unread = ChatLog.unread(tab);
             if (!on && unread > 0) {
@@ -251,6 +281,15 @@ public final class ChatPanel {
         }
         scroll = 0;
         ChatLog.markRead(selected);
+        query = "";
+        search = new EditBox(Minecraft.getInstance().font, 0, 0, SEARCH_MIN_WIDTH, ChatLayout.TABS_HEIGHT, Tr.c("chat.search"));
+        search.setBordered(false);
+        search.setMaxLength(60);
+        search.setHint(Tr.c("chat.search").withStyle(style -> style.withColor(TIME_COLOR)));
+        search.setResponder(text -> {
+            query = text;
+            scroll = 0;
+        });
         EditBox box = input(screen);
         if (box != null) {
             box.setX(ChatLayout.MARGIN + 12);
@@ -284,6 +323,17 @@ public final class ChatPanel {
         if (box != null) {
             box.render(graphics, (int) mouseX, (int) mouseY, event.getPartialTick());
         }
+        HudSnap.Rect field = search == null ? null : searchRect(minecraft.font, screen.width, screen.height, panelWidth(screen.width));
+        if (field != null) {
+            graphics.fill(field.x(), field.y(), field.right(), field.bottom(), TAB_FILL);
+            if (search.isFocused()) {
+                graphics.fill(field.x(), field.bottom() - 1, field.right(), field.bottom(), accent);
+            }
+            search.setX(field.x() + 4);
+            search.setY(field.y() + (field.h() - 8) / 2);
+            search.setWidth(field.w() - 8);
+            search.render(graphics, (int) mouseX, (int) mouseY, event.getPartialTick());
+        }
         CommandSuggestions suggestions = suggestions(screen);
         if (suggestions != null) {
             suggestions.render(graphics, (int) mouseX, (int) mouseY);
@@ -313,6 +363,15 @@ public final class ChatPanel {
         double x = frame.toBlockX(event.getMouseX());
         double y = frame.toBlockY(event.getMouseY());
         int width = panelWidth(screen.width);
+        HudSnap.Rect field = search == null ? null : searchRect(font, screen.width, screen.height, width);
+        if (field != null && contains(field, x, y) && event.getButton() == 0) {
+            focusSearch(screen, true);
+            search.mouseClicked(x, y, event.getButton());
+            return;
+        }
+        if (searching()) {
+            focusSearch(screen, false);
+        }
         CommandSuggestions suggestions = suggestions(screen);
         if (suggestions != null && suggestions.mouseClicked(x, y, event.getButton())) {
             return;
@@ -366,7 +425,21 @@ public final class ChatPanel {
 
     /** Page Up and Page Down scroll the history. */
     public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (!enabled() || !(event.getScreen() instanceof ChatScreen)) {
+        if (!enabled() || !(event.getScreen() instanceof ChatScreen screen)) {
+            return;
+        }
+        if (event.getKeyCode() == GLFW.GLFW_KEY_F && Screen.hasControlDown() && search != null) {
+            focusSearch(screen, true);
+            event.setCanceled(true);
+            return;
+        }
+        if (searching() && event.getKeyCode() != GLFW.GLFW_KEY_ESCAPE) {
+            if (event.getKeyCode() == GLFW.GLFW_KEY_ENTER || event.getKeyCode() == GLFW.GLFW_KEY_KP_ENTER) {
+                focusSearch(screen, false);
+            } else {
+                search.keyPressed(event.getKeyCode(), event.getScanCode(), event.getModifiers());
+            }
+            event.setCanceled(true);
             return;
         }
         if (event.getKeyCode() == GLFW.GLFW_KEY_PAGE_UP) {
@@ -375,6 +448,21 @@ public final class ChatPanel {
         } else if (event.getKeyCode() == GLFW.GLFW_KEY_PAGE_DOWN) {
             scroll = Math.max(0, scroll - 6);
             event.setCanceled(true);
+        }
+    }
+
+    /** Letters typed while the search field has the focus go there instead of the chat line. */
+    public static void onCharTyped(ScreenEvent.CharacterTyped.Pre event) {
+        if (enabled() && event.getScreen() instanceof ChatScreen && searching()) {
+            search.charTyped(event.getCodePoint(), event.getModifiers());
+            event.setCanceled(true);
+        }
+    }
+
+    /** Types into the search field (used by the in-game test). */
+    public static void setSearch(String text) {
+        if (search != null) {
+            search.setValue(text);
         }
     }
 }

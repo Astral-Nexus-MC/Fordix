@@ -41,4 +41,16 @@ class ChatKindTest {
         assertTrue(ChatTab.SYSTEM.matches(ChatKind.SYSTEM));
         assertFalse(ChatTab.SERVER.matches(ChatKind.SYSTEM));
     }
+
+    @Test
+    void privateMessagesGetTheirOwnTab() {
+        assertEquals(ChatKind.PRIVATE, ChatKind.classify("commands.message.display.incoming", "X whispers to you: hi"));
+        assertEquals(ChatKind.PRIVATE, ChatKind.classify("commands.message.display.outgoing", "You whisper to X: hi"));
+        assertEquals(ChatKind.PRIVATE, ChatKind.classify(null, "X whispers to you: hi"));
+        assertTrue(ChatKind.isIncomingPrivate("commands.message.display.incoming", ""));
+        assertFalse(ChatKind.isIncomingPrivate("commands.message.display.outgoing", ""));
+        assertTrue(ChatTab.PRIVATE.matches(ChatKind.PRIVATE));
+        assertFalse(ChatTab.SYSTEM.matches(ChatKind.PRIVATE));
+        assertTrue(ChatTab.ALL.matches(ChatKind.PRIVATE));
+    }
 }

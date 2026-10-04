@@ -4,8 +4,10 @@ import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
+import com.omneria.fordix.client.gui.layout.HudProfiles;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
+import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.HudSlots;
 import com.omneria.fordix.client.gui.vanilla.JourneyMapHud;
 import com.omneria.fordix.client.gui.widget.FordixButton;
@@ -56,6 +58,8 @@ public class HudLayoutScreen extends FordixScreen {
     private FordixButton presetButton;
     private FordixButton hideButton;
     private int presetIndex;
+    private int profileSlot;
+    private FordixButton profileButton;
 
     public HudLayoutScreen(Screen parent) {
         super(Tr.c("hud.title"));
@@ -91,6 +95,28 @@ public class HudLayoutScreen extends FordixScreen {
             presetButton.setMessage(presetLabel());
         }));
         addRenderableWidget(new FordixButton(x, y + 90, TOOLBAR_WIDTH, 16, Tr.c("common.close"), this::onClose));
+
+        // Saved layouts: pick a slot, then fill it with the layout on screen or put its layout back.
+        profileSlot = Math.max(0, HudProfileActions.profiles().active());
+        profileButton = addRenderableWidget(new FordixButton(x, y + 114, TOOLBAR_WIDTH, 16, profileLabel(), () -> {
+            profileSlot = (profileSlot + 1) % HudProfiles.SLOTS;
+            profileButton.setMessage(profileLabel());
+        }));
+        addRenderableWidget(new FordixButton(x, y + 132, TOOLBAR_WIDTH, 16, Tr.c("hud.profile.save"), () -> {
+            HudProfileActions.save(profileSlot);
+            profileButton.setMessage(profileLabel());
+        }));
+        addRenderableWidget(new FordixButton(x, y + 150, TOOLBAR_WIDTH, 16, Tr.c("hud.profile.load"), () -> {
+            if (HudProfileActions.load(profileSlot)) {
+                presetIndex = 0;
+                presetButton.setMessage(presetLabel());
+            }
+        }));
+    }
+
+    private Component profileLabel() {
+        return Tr.c("hud.profile.slot", HudProfileActions.name(profileSlot),
+                HudProfileActions.profiles().has(profileSlot) ? "\u25CF" : "\u25CB");
     }
 
     private Component presetLabel() {
@@ -286,7 +312,7 @@ public class HudLayoutScreen extends FordixScreen {
     private void drawHelp(GuiGraphics guiGraphics) {
         List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.help"),
                 TOOLBAR_WIDTH + 70);
-        int y = 6 + 90 + 22;
+        int y = 6 + 150 + 22;
         for (FormattedCharSequence line : lines) {
             guiGraphics.drawString(this.font, line, 6, y, FordixPalette.TEXT_BRIGHT, true);
             y += 10;

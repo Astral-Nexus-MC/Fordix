@@ -43,7 +43,7 @@ public class FordixSettingsScreen extends FordixScreen {
 
     @Override
     protected void init() {
-        int panelHeight = 28 + ROW * 7 + 6 + BUTTON_HEIGHT + PADDING;
+        int panelHeight = 28 + ROW * 8 + 6 + BUTTON_HEIGHT + PADDING;
         int panelX = centerX(PANEL_WIDTH);
         int panelY = centerY(panelHeight);
         this.panel = new Panel(panelX, panelY, PANEL_WIDTH, panelHeight);
@@ -84,8 +84,11 @@ public class FordixSettingsScreen extends FordixScreen {
         addRenderableWidget(toggle(right, y + ROW * 5, COLUMN_WIDTH, Tr.s("settings.guide_hints"), FordixConfig.GUIDE_HINTS));
 
         addRenderableWidget(toggle(left, y + ROW * 6, COLUMN_WIDTH, Tr.s("settings.chat"), FordixConfig.VOIDFRAME_CHAT));
+        addRenderableWidget(toggle(left, y + ROW * 7, COLUMN_WIDTH, Tr.s("settings.chat_sound"), FordixConfig.CHAT_MENTION_SOUND));
+        addRenderableWidget(new FordixButton(right, y + ROW * 6, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.hud_lines"),
+                () -> this.minecraft.setScreen(new HudLinesScreen(this))));
 
-        addRenderableWidget(new FordixButton(left, y + ROW * 7 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
+        addRenderableWidget(new FordixButton(left, y + ROW * 8 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
                 Tr.c("common.close"), this::onClose));
     }
 

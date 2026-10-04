@@ -31,6 +31,16 @@ public final class FordixConfig {
     private static final Map<String, ForgeConfigSpec.ConfigValue<String>> HUD_ANCHORS = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_HIDDEN = new LinkedHashMap<>();
     private static final Map<String, ForgeConfigSpec.DoubleValue> HUD_SCALES = new LinkedHashMap<>();
+    /** Lines of the information panels the player can switch off, in the order the lines screen lists them. */
+    public static final List<String> HUD_LINES = List.of(
+            "coordinates_xyz", "coordinates_direction", "coordinates_biome",
+            "performance_fps", "performance_tps", "performance_ping",
+            "target_tool", "target_entity",
+            "gear_durability", "gear_ammo",
+            "clock_real", "clock_game", "clock_weather",
+            "compass_spawn", "compass_marker");
+    private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_LINE_VALUES = new LinkedHashMap<>();
+    public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -76,6 +86,15 @@ public final class FordixConfig {
             HUD_SCALES.put(element, scale);
         }
         builder.pop();
+        builder.comment("Which lines the information panels of the HUD show (coordinates, FPS/TPS/ping, target, gear, clock, compass).")
+                .push("hudLines");
+        for (String line : HUD_LINES) {
+            HUD_LINE_VALUES.put(line, builder.define(line, true));
+        }
+        builder.pop();
+        CHAT_MENTION_SOUND = builder
+                .comment("Play a short sound when a chat message mentions your name or whispers to you.")
+                .define("chatMentionSound", true);
         THEME = builder
                 .comment("Color theme for Fordix screens: " + String.join(", ", Theme.NAMES) + ".")
                 .defineInList("theme", Theme.DEFAULT, Theme.NAMES);
@@ -157,6 +176,19 @@ public final class FordixConfig {
             return new int[]{hudOffsetX(element).get(), hudOffsetY(element).get()};
         } catch (IllegalStateException notLoadedYet) {
             return new int[]{0, 0};
+        }
+    }
+
+    public static ForgeConfigSpec.BooleanValue hudLineValue(String line) {
+        return HUD_LINE_VALUES.get(line);
+    }
+
+    /** Whether a line of an information panel is shown (yes before the config has loaded). */
+    public static boolean hudLine(String line) {
+        try {
+            return HUD_LINE_VALUES.get(line).get();
+        } catch (IllegalStateException notLoadedYet) {
+            return true;
         }
     }
 

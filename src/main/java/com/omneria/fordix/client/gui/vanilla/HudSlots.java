@@ -5,6 +5,7 @@ import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.ModNames;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
+import com.omneria.fordix.client.gui.layout.HudProfiles;
 import com.omneria.fordix.client.gui.layout.HudSlot;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import net.minecraft.client.resources.language.I18n;
@@ -175,6 +176,19 @@ public final class HudSlots {
         } else {
             apply(id, HudAnchors.Entry.standard());
         }
+    }
+
+    /** What a HUD profile keeps of an element (JourneyMap's minimap lives in its own settings and is left out). */
+    public static HudProfiles.Placement snapshot(String id) {
+        int[] offset = offset(id);
+        return new HudProfiles.Placement(anchor(id).id(), offset[0], offset[1], hidden(id), scale(id));
+    }
+
+    public static void restore(String id, HudProfiles.Placement placement) {
+        HudAnchors.Anchor anchor = HudAnchors.Anchor.byId(placement.anchor);
+        setPlacement(id, anchor != null ? anchor : HudAnchors.Anchor.DEFAULT, placement.offsetX, placement.offsetY);
+        setHidden(id, placement.hidden);
+        setScale(id, placement.scale);
     }
 
     public static void save(String id) {

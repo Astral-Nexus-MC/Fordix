@@ -16,7 +16,9 @@ public enum ChatKind {
     /** Everything the game says on its own: advancements, joins, deaths... */
     SYSTEM,
     /** Feedback of a command. */
-    COMMAND;
+    COMMAND,
+    /** A private message (/msg, /tell, /w) received or sent. */
+    PRIVATE;
 
     private static final Pattern PLAIN_PLAYER = Pattern.compile("^<([^<>\\s]{1,32})> (.*)$", Pattern.DOTALL);
 
@@ -29,6 +31,9 @@ public enum ChatKind {
             if (translationKey.equals("chat.type.announcement") || translationKey.equals("chat.type.admin")) {
                 return SERVER;
             }
+            if (translationKey.startsWith("commands.message.display.")) {
+                return PRIVATE;
+            }
             if (translationKey.startsWith("commands.") || translationKey.startsWith("command.")) {
                 return COMMAND;
             }
@@ -39,10 +44,19 @@ public enum ChatKind {
             return PLAYER;
         }
         String lower = text.toLowerCase(Locale.ROOT);
+        if (lower.contains(" whispers to you:") || lower.contains(" vous chuchote")) {
+            return PRIVATE;
+        }
         if (lower.startsWith("[server]") || lower.startsWith("[serveur]")) {
             return SERVER;
         }
         return SYSTEM;
+    }
+
+    /** True for a private message somebody sent to the player (not the echo of one the player sent). */
+    public static boolean isIncomingPrivate(String translationKey, String plainText) {
+        return "commands.message.display.incoming".equals(translationKey)
+                || translationKey == null && plainText != null && plainText.toLowerCase(Locale.ROOT).contains(" whispers to you:");
     }
 
     /** {name, message} of a plain "&lt;Name&gt; message" line, or null. */

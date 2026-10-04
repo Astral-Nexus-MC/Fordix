@@ -5,7 +5,8 @@ public enum ChatTab {
     ALL("all"),
     PLAYERS("players"),
     SERVER("server"),
-    SYSTEM("system");
+    SYSTEM("system"),
+    PRIVATE("private");
 
     private final String id;
 
@@ -24,6 +25,7 @@ public enum ChatTab {
             case PLAYERS -> kind == ChatKind.PLAYER;
             case SERVER -> kind == ChatKind.SERVER;
             case SYSTEM -> kind == ChatKind.SYSTEM || kind == ChatKind.COMMAND;
+            case PRIVATE -> kind == ChatKind.PRIVATE;
         };
     }
 }

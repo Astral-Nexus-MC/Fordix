@@ -238,6 +238,72 @@ public final class DevTest {
             com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
             mc.player.setXRot(0F);
         }, 5, false));
+        steps.add(new Step("12i-hud-gear", () -> {
+            // Survival, a worn pickaxe and a bow with some arrows in the bag: the gear panel shows both rows.
+            cmd(mc, "gamemode survival");
+            cmd(mc, "item replace entity @s hotbar.3 with minecraft:iron_pickaxe{Damage:180}");
+            cmd(mc, "item replace entity @s hotbar.4 with minecraft:bow{Damage:60}");
+            mc.player.getInventory().setItem(9, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARROW, 23));
+            cmd(mc, "item replace entity @s weapon.offhand with minecraft:shield{Damage:200}");
+            mc.player.getInventory().selected = 4;
+        }, 30, false));
+        steps.add(new Step("12i2-hud-clock-compass", () -> {
+            cmd(mc, "time set 15000");
+            cmd(mc, "weather rain");
+            com.omneria.fordix.client.hud.InfoHud.onMarkerKey(mc);
+            cmd(mc, "tp @s ~25 ~ ~-30");
+            mc.player.getInventory().selected = 3;
+        }, 40, false));
+        steps.add(new Step("12i3-hud-target-entity", () -> {
+            cmd(mc, "weather clear");
+            cmd(mc, "execute at @s run summon minecraft:cow ^ ^ ^2.5 {Health:6f}");
+            mc.player.setXRot(22F);
+        }, 40, false));
+        steps.add(new Step("12i4-hud-lines-off", () -> {
+            com.omneria.fordix.FordixConfig.hudLineValue("coordinates_biome").set(false);
+            com.omneria.fordix.FordixConfig.hudLineValue("performance_ping").set(false);
+            com.omneria.fordix.FordixConfig.hudLineValue("clock_weather").set(false);
+            mc.player.setXRot(55F);
+        }, 25, false));
+        steps.add(new Step("12i5-hud-lines-screen", () -> {
+            for (String line : com.omneria.fordix.FordixConfig.HUD_LINES) {
+                com.omneria.fordix.FordixConfig.hudLineValue(line).set(true);
+            }
+            mc.setScreen(new com.omneria.fordix.client.gui.HudLinesScreen(null));
+        }, 15, false));
+        steps.add(new Step("12j-chat-private", () -> {
+            mc.setScreen(null);
+            cmd(mc, "tellraw @a {\"translate\":\"commands.message.display.incoming\",\"with\":[\"Ana\",\"Salut Dev, tu viens au spawn ?\"]}");
+            cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Bob\",\"quelqu'un a du fer ?\"]}");
+        }, 30, false));
+        steps.add(new Step("12j2-chat-private-tab", () -> {
+            mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen(""));
+            com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.PRIVATE);
+        }, 20, false));
+        steps.add(new Step("12j3-chat-search", () -> {
+            com.omneria.fordix.client.chat.ChatPanel.selectTab(com.omneria.fordix.client.chat.ChatTab.ALL);
+            com.omneria.fordix.client.chat.ChatPanel.setSearch("fer");
+        }, 20, false));
+        steps.add(new Step("12k-hud-profile-layout", () -> {
+            com.omneria.fordix.client.chat.ChatPanel.setSearch("");
+            mc.setScreen(null);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("fordix:coordinates", 1.4F);
+            com.omneria.fordix.client.gui.vanilla.HudProfileActions.save(0);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
+            com.omneria.fordix.client.gui.vanilla.HudProfileActions.save(1);
+            mc.setScreen(new HudLayoutScreen(null));
+        }, 25, false));
+        steps.add(new Step("12k2-hud-profile-loaded", () -> {
+            mc.setScreen(null);
+            com.omneria.fordix.client.gui.vanilla.HudProfileActions.loadNext(mc);
+        }, 25, false));
+        steps.add(new Step("12k3-hud-profile-reset", () -> {
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
+            com.omneria.fordix.client.gui.vanilla.ExtraHud.save();
+            cmd(mc, "gamemode creative");
+            cmd(mc, "kill @e[type=minecraft:cow]");
+            mc.player.setXRot(0F);
+        }, 8, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

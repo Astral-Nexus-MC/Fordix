@@ -24,6 +24,7 @@ import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.chat.ChatLog;
 import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.hud.InfoHud;
+import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HeldItemHud;
 import com.omneria.fordix.client.notification.NotificationOverlay;
@@ -88,6 +89,22 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
+    /** Puts the compass marker where the player stands (Shift + key takes it away). */
+    public static final KeyMapping SET_MARKER = new KeyMapping(
+            "key.fordix.set_marker",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F9,
+            "key.categories.fordix"
+    );
+
+    /** Loads the next saved HUD layout (profiles are filled from the HUD layout screen). */
+    public static final KeyMapping NEXT_PROFILE = new KeyMapping(
+            "key.fordix.next_hud_profile",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F8,
+            "key.categories.fordix"
+    );
+
     static {
         // Dev-only screenshot harness (see DevTest): only with FORDIX_DEVTEST set in the environment.
         if (DevTest.enabled()) {
@@ -121,6 +138,8 @@ public final class FordixClient {
             event.register(TOGGLE_DEMO);
             event.register(OPEN_SETTINGS);
             event.register(OPEN_GUIDE);
+            event.register(SET_MARKER);
+            event.register(NEXT_PROFILE);
         }
 
         /** Recolors the recipe book and advancement textures once resources are loaded, and again after each reload. */
@@ -177,6 +196,16 @@ public final class FordixClient {
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixDemoScreen());
+                }
+            }
+            while (SET_MARKER.consumeClick()) {
+                if (minecraft.screen == null) {
+                    InfoHud.onMarkerKey(minecraft);
+                }
+            }
+            while (NEXT_PROFILE.consumeClick()) {
+                if (minecraft.screen == null) {
+                    HudProfileActions.loadNext(minecraft);
                 }
             }
             while (OPEN_SETTINGS.consumeClick()) {
@@ -280,6 +309,11 @@ public final class FordixClient {
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatScreenScroll(ScreenEvent.MouseScrolled.Pre event) {
             ChatPanel.onMouseScrolled(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGHEST)
+        static void onChatScreenChar(ScreenEvent.CharacterTyped.Pre event) {
+            ChatPanel.onCharTyped(event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
