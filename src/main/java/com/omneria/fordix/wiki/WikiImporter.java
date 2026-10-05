@@ -71,6 +71,63 @@ public final class WikiImporter {
         }, WORKER);
     }
 
+    /** "iron_sword" becomes the page title "Iron_Sword". */
+    public static String titleOf(String path) {
+        StringBuilder title = new StringBuilder();
+        for (String word : path.split("_")) {
+            if (!word.isEmpty()) {
+                title.append(title.length() > 0 ? "_" : "").append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+            }
+        }
+        return title.toString();
+    }
+
+    /**
+     * Imports the pages of these titles (the wiki must already have its address), skipping the ones it has and the ones the
+     * wiki does not know; reports every 25 pages.
+     */
+    public static CompletableFuture<Report> importTitles(WikiStore store, ImageStore images, String wikiId, List<String> titles,
+                                                         Consumer<String> progress) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return new WikiImporter(store, images, progress).runTitles(wikiId, titles);
+            } catch (IOException | RuntimeException e) {
+                throw new IllegalStateException(e.getMessage() == null ? e.toString() : e.getMessage(), e);
+            }
+        }, WORKER);
+    }
+
+    private Report runTitles(String wikiId, List<String> titles) throws IOException {
+        WikiInfo info = store.info(wikiId);
+        if (info == null || info.source.isEmpty() || info.api.isEmpty()) {
+            throw new IOException("wiki '" + wikiId + "' has no address yet: import one page of it first");
+        }
+        List<String> failures = new ArrayList<>();
+        int done = 0;
+        int asked = 0;
+        int missing = 0;
+        for (String title : titles) {
+            if (store.page(wikiId, title) != null) {
+                continue;
+            }
+            pause();
+            try {
+                importOne(info, info.source, title, failures);
+                done++;
+            } catch (IOException e) {
+                missing++;
+                if (failures.size() < 20) {
+                    failures.add(title + " : " + e.getMessage());
+                }
+            }
+            if (++asked % 25 == 0) {
+                progress.accept(asked + "/" + titles.size());
+            }
+        }
+        progress.accept(missing + " pages not found on the wiki");
+        return new Report(done, importedImages, failures);
+    }
+
     private Report run(String wikiId, String input, boolean withLinks) throws IOException {
         String origin;
         String title;
@@ -220,6 +277,13 @@ public final class WikiImporter {
                 System.currentTimeMillis());
         page.links = new ArrayList<>(result.links());
         store.save(info.id, page);
+        // Asked as "Oak_Planks", answered as "Planks": the name asked leads to the page too (an item sheet looks it up by its id).
+        String requested = title.replace(' ', '_');
+        if (!requested.equals(slug) && store.page(info.id, requested) == null) {
+            WikiPage alias = new WikiPage(requested, requested.replace('_', ' '), "", page.source, System.currentTimeMillis());
+            alias.redirectTo = slug;
+            store.save(info.id, alias);
+        }
         return result.links();
     }
 

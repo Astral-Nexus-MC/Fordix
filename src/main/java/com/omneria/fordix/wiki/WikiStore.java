@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  * licence) and one JSON file per page. Everything is held in memory once read; files are written as pages are imported.
  */
 public final class WikiStore {
-    public static final int MAX_PAGES_PER_WIKI = 3000;
+    public static final int MAX_PAGES_PER_WIKI = 6000;
 
     /** A page in a list: no text. */
     public record Entry(String slug, String title) {

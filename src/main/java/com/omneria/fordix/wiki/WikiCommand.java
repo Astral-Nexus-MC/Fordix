@@ -29,6 +29,12 @@ public final class WikiCommand {
                                 .then(Commands.argument("wiki", StringArgumentType.word())
                                         .then(Commands.argument("page", StringArgumentType.greedyString())
                                                 .executes(context -> startImport(context, true)))))
+                        .then(Commands.literal("importall")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("what", StringArgumentType.word())
+                                                .suggests((context, builder) -> net.minecraft.commands.SharedSuggestionProvider
+                                                        .suggest(java.util.List.of("items", "mobs", "all"), builder))
+                                                .executes(WikiCommand::importAll))))
                         .then(Commands.literal("list").executes(WikiCommand::list))
                         .then(Commands.literal("remove")
                                 .then(Commands.argument("wiki", StringArgumentType.word())
@@ -81,6 +87,43 @@ public final class WikiCommand {
                     WikiService.broadcastList(server);
                 }));
         return 1;
+    }
+
+    /** {@code importall <wiki> <items|mobs|all>}: the page of every item and/or creature the mod of that name adds. */
+    private static int importAll(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String wiki = StringArgumentType.getString(context, "wiki");
+        String what = StringArgumentType.getString(context, "what");
+        if (WikiService.store().info(wiki) == null || WikiService.store().info(wiki).source.isEmpty()) {
+            source.sendFailure(Tr.c("cmd.wiki.need_first", wiki));
+            return 0;
+        }
+        if (!what.equals("items") && !what.equals("mobs") && !what.equals("all")) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_what"));
+            return 0;
+        }
+        java.util.LinkedHashSet<String> titles = new java.util.LinkedHashSet<>();
+        if (!what.equals("mobs")) {
+            net.minecraftforge.registries.ForgeRegistries.ITEMS.getKeys().stream().filter(key -> key.getNamespace().equals(wiki))
+                    .sorted().forEach(key -> titles.add(WikiImporter.titleOf(key.getPath())));
+        }
+        if (!what.equals("items")) {
+            net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKeys().stream().filter(key -> key.getNamespace().equals(wiki))
+                    .sorted().forEach(key -> titles.add(WikiImporter.titleOf(key.getPath())));
+        }
+        MinecraftServer server = source.getServer();
+        source.sendSuccess(() -> Tr.c("cmd.wiki.all_start", titles.size(), wiki), true);
+        WikiImporter.importTitles(WikiService.store(), WikiService.images(), wiki, new java.util.ArrayList<>(titles),
+                        message -> server.execute(() -> source.sendSuccess(() -> Tr.c("cmd.wiki.progress", message), false)))
+                .whenComplete((report, error) -> server.execute(() -> {
+                    if (error != null) {
+                        source.sendFailure(Tr.c("cmd.wiki.fail", error.getMessage()));
+                        return;
+                    }
+                    source.sendSuccess(() -> Tr.c("cmd.wiki.done", report.pages(), report.images()), true);
+                    WikiService.broadcastList(server);
+                }));
+        return titles.size();
     }
 
     /**
