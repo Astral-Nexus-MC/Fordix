@@ -105,7 +105,9 @@ public class FordixAdvancementsScreen extends FordixScreen {
     private int viewWidth;
     private int viewHeight;
     private int tabsY;
-    private int tabWidth;
+    /** Each tab is as wide as the mod name it carries (icon and padding included): names are never cut. */
+    private int[] tabStarts = new int[0];
+    private int[] tabWidths = new int[0];
 
     private double scrollX;
     private double scrollY;
@@ -273,21 +275,29 @@ public class FordixAdvancementsScreen extends FordixScreen {
             return;
         }
         int available = panelWidth - PAD * 2;
-        tabWidth = Math.max(64, Math.min(110, available / tabs.size()));
-        double maxScroll = Math.max(0, tabs.size() * tabWidth - available);
+        tabStarts = new int[tabs.size()];
+        tabWidths = new int[tabs.size()];
+        int total = 0;
+        for (int i = 0; i < tabs.size(); i++) {
+            tabStarts[i] = total;
+            tabWidths[i] = Math.max(64, this.font.width(ModNames.of(tabs.get(i).root.getId().getNamespace())) + 32);
+            total += tabWidths[i];
+        }
+        double maxScroll = Math.max(0, total - available);
         tabScroll = Math.max(0, Math.min(maxScroll, tabScroll));
         guiGraphics.enableScissor(left + PAD, tabsY, left + PAD + available, tabsY + TAB_HEIGHT);
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            int x = left + PAD + i * tabWidth - (int) tabScroll;
+            int x = left + PAD + tabStarts[i] - (int) tabScroll;
+            int width = tabWidths[i];
             boolean active = tab == selected;
-            boolean hover = mouseX >= x && mouseX < x + tabWidth && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT;
-            guiGraphics.fill(x, tabsY, x + tabWidth - 2, tabsY + TAB_HEIGHT,
+            boolean hover = mouseX >= x && mouseX < x + width && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT;
+            guiGraphics.fill(x, tabsY, x + width - 2, tabsY + TAB_HEIGHT,
                     active || hover ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL);
-            guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + tabWidth - 2, tabsY + TAB_HEIGHT,
+            guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + width - 2, tabsY + TAB_HEIGHT,
                     active ? FordixPalette.ACCENT : FordixPalette.BEVEL_SHADOW);
             guiGraphics.renderFakeItem(tab.root.getDisplay().getIcon(), x + 4, tabsY + 3);
-            String title = this.font.plainSubstrByWidth(ModNames.of(tab.root.getId().getNamespace()), tabWidth - 28);
+            String title = ModNames.of(tab.root.getId().getNamespace());
             guiGraphics.drawString(this.font, title, x + 23, tabsY + 7,
                     active ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
         }
@@ -448,7 +458,13 @@ public class FordixAdvancementsScreen extends FordixScreen {
         }
         if (button == 0 && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT
                 && mouseX >= left + PAD && mouseX < left + panelWidth - PAD) {
-            int index = (int) ((mouseX - left - PAD + tabScroll) / tabWidth);
+            double at = mouseX - left - PAD + tabScroll;
+            int index = -1;
+            for (int i = 0; i < tabStarts.length; i++) {
+                if (at >= tabStarts[i] && at < tabStarts[i] + tabWidths[i]) {
+                    index = i;
+                }
+            }
             if (index >= 0 && index < tabs.size() && tabs.get(index) != selected) {
                 select(tabs.get(index));
             }
