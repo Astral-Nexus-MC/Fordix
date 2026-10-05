@@ -7,6 +7,9 @@ import com.omneria.fordix.client.guide.GuideHints;
 import com.omneria.fordix.client.guide.ItemFacts;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
+import com.omneria.fordix.client.wiki.ClientWiki;
+import com.omneria.fordix.guide.PageMarkup;
+import com.omneria.fordix.wiki.WikiAnswers;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -21,7 +24,7 @@ import java.util.List;
  */
 public final class ItemSheetScreen extends FordixScreen {
     private static final int PANEL_WIDTH = 420;
-    private static final int PANEL_HEIGHT = 250;
+    private static final int PANEL_HEIGHT = 290;
     private static final int PADDING = 10;
     private static final int SLOT = 18;
     private static final int USES_PER_ROW = 16;
@@ -30,6 +33,10 @@ public final class ItemSheetScreen extends FordixScreen {
     private final ItemFacts.Sheet sheet;
     private final GuideEntry guide;
     private int recipeIndex;
+    private boolean showWiki;
+    private PageView pageView;
+    private WikiAnswers.Page shownPage;
+    private double pageScroll;
     private int panelWidth = PANEL_WIDTH;
     private int panelHeight = PANEL_HEIGHT;
     private Panel panel;
@@ -53,12 +60,21 @@ public final class ItemSheetScreen extends FordixScreen {
         int left = centerX(panelWidth);
         int top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
+        pageView = new PageView(this.font);
+        shownPage = null;
         int by = top + panelHeight - PADDING - 18;
         int x = left + PADDING;
-        addRenderableWidget(new FordixButton(x, by, 96, 18, Tr.c("sheet.wiki"), () -> {
-            ItemStack stack = sheet.stack();
-            GuideActions.run(GuideEntry.parse("minecraft | Wiki | minecraft:book | url:https://minecraft.wiki/w/{objet}"), stack);
-        }));
+        String namespace = sheet.id().contains(":") ? sheet.id().substring(0, sheet.id().indexOf(':')) : "minecraft";
+        if (ClientWiki.hasWiki(namespace)) {
+            addRenderableWidget(new FordixButton(x, by, 96, 18, Tr.c(showWiki ? "sheet.tab.uses" : "sheet.tab.wiki"), () -> {
+                showWiki = !showWiki;
+                this.rebuildWidgets();
+            }));
+        } else {
+            addRenderableWidget(new FordixButton(x, by, 96, 18, Tr.c("sheet.wiki"), () -> {
+                GuideActions.run(GuideEntry.parse("minecraft | Wiki | minecraft:book | url:https://minecraft.wiki/w/{objet}"), sheet.stack());
+            }));
+        }
         x += 100;
         if (guide != null && !(guide.action() == GuideEntry.Action.URL && guide.target().contains("{objet}"))) {
             String label = this.font.plainSubstrByWidth(guide.label(), 140);
@@ -123,32 +139,72 @@ public final class ItemSheetScreen extends FordixScreen {
             fy += 11;
         }
 
-        // Uses.
-        int uy = top + 156;
-        g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
-        g.drawString(this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy, FordixPalette.ACCENT, false);
-        int shown = 0;
-        for (ItemStack use : sheet.uses()) {
-            int column = shown % USES_PER_ROW;
-            int row = shown / USES_PER_ROW;
-            int ux = left + column * SLOT;
-            int uyy = uy + 12 + row * SLOT;
-            if (uyy + SLOT > top + panelHeight - PADDING - 22) {
-                break;
+        if (showWiki) {
+            drawWiki(g, left, top + 156, right, mouseX, mouseY);
+        } else {
+            // Uses.
+            int uy = top + 156;
+            g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
+            g.drawString(this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy, FordixPalette.ACCENT, false);
+            int shown = 0;
+            for (ItemStack use : sheet.uses()) {
+                int column = shown % USES_PER_ROW;
+                int row = shown / USES_PER_ROW;
+                int ux = left + column * SLOT;
+                int uyy = uy + 12 + row * SLOT;
+                if (uyy + SLOT > top + panelHeight - PADDING - 22) {
+                    break;
+                }
+                g.renderItem(use, ux + 1, uyy + 1);
+                hit(ux, uyy, SLOT, SLOT, use, mouseX, mouseY, true);
+                shown++;
             }
-            g.renderItem(use, ux + 1, uyy + 1);
-            hit(ux, uyy, SLOT, SLOT, use, mouseX, mouseY, true);
-            shown++;
-        }
-        if (shown < sheet.uses().size()) {
-            String more = "+" + (sheet.uses().size() - shown);
-            g.drawString(this.font, more, right - this.font.width(more), uy, FordixPalette.TEXT, false);
+            if (shown < sheet.uses().size()) {
+                String more = "+" + (sheet.uses().size() - shown);
+                g.drawString(this.font, more, right - this.font.width(more), uy, FordixPalette.TEXT, false);
+            }
         }
 
         super.render(g, mouseX, mouseY, partialTick);
         if (!hovered.isEmpty()) {
             g.renderTooltip(this.font, hovered, mouseX, mouseY);
         }
+    }
+
+    private void drawWiki(GuiGraphics g, int left, int uy, int right, int mouseX, int mouseY) {
+        g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
+        String path = sheet.id().substring(sheet.id().indexOf(':') + 1);
+        String namespace = sheet.id().contains(":") ? sheet.id().substring(0, sheet.id().indexOf(':')) : "minecraft";
+        WikiAnswers.Page page = ClientWiki.pageFor(namespace, path, sheet.name());
+        if (page == null) {
+            g.drawString(this.font, Tr.s("wiki.loading"), left, uy, FordixPalette.TEXT, false);
+            return;
+        }
+        if (ClientWiki.isMissing(page)) {
+            g.drawString(this.font, Tr.s("sheet.nowiki"), left, uy, FordixPalette.TEXT, false);
+            return;
+        }
+        if (page != shownPage) {
+            shownPage = page;
+            pageScroll = 0;
+            pageView.setBlocks(PageMarkup.parse(page.body()));
+        }
+        pageView.render(g, left, uy, right - left, wikiHeight(uy), pageScroll, mouseX, mouseY);
+    }
+
+    private int wikiHeight(int uy) {
+        return panel.getY() + panelHeight - PADDING - 22 - uy;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (showWiki && shownPage != null && mouseY > panel.getY() + 152) {
+            int width = panelWidth - 2 * PADDING;
+            int max = Math.max(0, pageView.contentHeight(width) - wikiHeight(panel.getY() + 156));
+            pageScroll = Math.max(0, Math.min(max, pageScroll - delta * 18));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private void drawRecipe(GuiGraphics g, ItemFacts.RecipeView view, int x, int y, int mouseX, int mouseY) {

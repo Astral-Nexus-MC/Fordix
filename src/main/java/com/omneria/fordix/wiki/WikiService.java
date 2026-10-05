@@ -1,11 +1,15 @@
 package com.omneria.fordix.wiki;
 
 import com.omneria.fordix.panel.network.PanelNetwork;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.loot.LootDataType;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -108,10 +112,26 @@ public final class WikiService {
                 }
                 reply(player, request, out.toString().getBytes(StandardCharsets.UTF_8));
             }
+            case LOOT -> reply(player, request, loot(player, request.key()).getBytes(StandardCharsets.UTF_8));
             case IMAGE -> WORKER.execute(() -> {
                 byte[] png = images().png(request.key());
                 reply(player, request, png == null ? new byte[0] : png);
             });
+        }
+    }
+
+    /** The drops of a creature type (its id, "minecraft:zombie"), read from its loot table as the server has it; empty when it has none. */
+    static String loot(ServerPlayer player, String entityId) {
+        try {
+            ResourceLocation id = ResourceLocation.tryParse(entityId);
+            if (id == null || !ForgeRegistries.ENTITY_TYPES.containsKey(id)) {
+                return "";
+            }
+            ResourceLocation tableId = ForgeRegistries.ENTITY_TYPES.getValue(id).getDefaultLootTable();
+            LootTable table = player.server.getLootData().getLootTable(tableId);
+            return LootSummary.toLines(LootSummary.parse(LootDataType.TABLE.parser().toJsonTree(table)));
+        } catch (RuntimeException e) {
+            return "";
         }
     }
 

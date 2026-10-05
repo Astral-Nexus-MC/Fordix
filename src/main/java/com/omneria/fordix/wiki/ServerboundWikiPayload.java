@@ -2,9 +2,9 @@ package com.omneria.fordix.wiki;
 
 import net.minecraft.network.FriendlyByteBuf;
 
-/** Client to server: asks for something from the in-game wiki (the list of wikis, a page index, a page, a picture, a search). */
+/** Client to server: asks for something from the in-game wiki (the list of wikis, a page index, a page, a picture, a search, the loot of a creature). */
 public record ServerboundWikiPayload(Kind kind, String wiki, String key) {
-    public enum Kind { LIST, INDEX, PAGE, IMAGE, SEARCH }
+    public enum Kind { LIST, INDEX, PAGE, IMAGE, SEARCH, LOOT }
 
     public static void encode(ServerboundWikiPayload payload, FriendlyByteBuf buf) {
         buf.writeByte(payload.kind().ordinal());

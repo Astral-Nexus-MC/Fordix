@@ -18,6 +18,10 @@ public final class WikiAnswers {
     public record Page(String title, String source, String license, String body) {
     }
 
+    /** A possible drop of a creature: item id, count range, chance in percent and the condition letters of {@link LootSummary}. */
+    public record Drop(String item, int min, int max, double chance, String flags) {
+    }
+
     private WikiAnswers() {
     }
 
@@ -54,12 +58,31 @@ public final class WikiAnswers {
         return list;
     }
 
+    public static List<Drop> parseLoot(String text) {
+        List<Drop> list = new ArrayList<>();
+        for (String line : text.split("\n")) {
+            String[] parts = line.split("\t", -1);
+            if (parts.length >= 5 && !parts[0].isEmpty()) {
+                list.add(new Drop(parts[0], parseInt(parts[1]), parseInt(parts[2]), parseDouble(parts[3]), parts[4]));
+            }
+        }
+        return list;
+    }
+
     public static Page parsePage(String text) {
         String[] parts = text.split("\n", 5);
         if (parts.length < 5 || !parts[3].equals("---")) {
             return new Page(parts.length > 0 ? parts[0] : "", "", "", text);
         }
         return new Page(parts[0], parts[1], parts[2], parts[4]);
+    }
+
+    private static double parseDouble(String text) {
+        try {
+            return Double.parseDouble(text.strip());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private static int parseInt(String text) {

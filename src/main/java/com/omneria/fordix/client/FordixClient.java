@@ -203,6 +203,13 @@ public final class FordixClient {
                     HudProfileActions.loadNext(minecraft);
                 }
             }
+            while (OPEN_GUIDE.consumeClick()) {
+                if (minecraft.screen == null && net.minecraft.client.gui.screens.Screen.hasShiftDown()
+                        && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+                        && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
+                    minecraft.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null, hit.getEntity().getType()));
+                }
+            }
             while (OPEN_SETTINGS.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixSettingsScreen(null));

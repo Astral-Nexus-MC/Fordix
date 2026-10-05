@@ -544,6 +544,12 @@ public final class DevTest {
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STICK))), 40, false));
         steps.add(new Step("17f-item-sheet-furnace", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT))), 40, false));
+        steps.add(new Step("17g-entity-zombie", () -> mc.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null,
+                net.minecraft.world.entity.EntityType.ZOMBIE)), 60, false));
+        steps.add(new Step("17h-entity-dragon", () -> mc.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null,
+                net.minecraft.world.entity.EntityType.ENDER_DRAGON)), 60, false));
+        steps.add(new Step("17i-item-sheet-tall", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
+                new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD))), 40, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));

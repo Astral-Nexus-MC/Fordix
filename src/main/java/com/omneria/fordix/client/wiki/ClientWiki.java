@@ -33,6 +33,7 @@ public final class ClientWiki {
     private static final Map<String, List<WikiAnswers.Entry>> INDEXES = new HashMap<>();
     private static final Map<String, WikiAnswers.Page> PAGES = new HashMap<>();
     private static final Map<String, List<WikiAnswers.Hit>> SEARCHES = new HashMap<>();
+    private static final Map<String, List<WikiAnswers.Drop>> LOOTS = new HashMap<>();
     private static final Map<String, Picture> PICTURES = new HashMap<>();
     private static final Map<String, WikiChunks.Assembly> ASSEMBLIES = new HashMap<>();
     private static final Map<String, Long> ASKED = new HashMap<>();
@@ -99,6 +100,27 @@ public final class ClientWiki {
         return page;
     }
 
+    /**
+     * The page of a game object (its id's path as a page title, else a page of that exact name found by a search) in the wiki named
+     * after its mod: null while it loads, a missing page when there is none (see {@link #isMissing}).
+     */
+    public static WikiAnswers.Page pageFor(String wiki, String path, String name) {
+        WikiAnswers.Page page = page(wiki, com.omneria.fordix.client.guide.GuideEntry.wikiPage(path));
+        if (page == null || !isMissing(page)) {
+            return page;
+        }
+        List<WikiAnswers.Hit> hits = search(wiki, name);
+        if (hits == null) {
+            return null;
+        }
+        for (WikiAnswers.Hit hit : hits) {
+            if (hit.title().equalsIgnoreCase(name)) {
+                return page(wiki, hit.slug());
+            }
+        }
+        return page;
+    }
+
     public static boolean isMissing(WikiAnswers.Page page) {
         return page == MISSING_PAGE;
     }
@@ -110,6 +132,15 @@ public final class ClientWiki {
             ask(ServerboundWikiPayload.Kind.SEARCH, wiki, query);
         }
         return hits;
+    }
+
+    /** What a creature (id such as "minecraft:zombie") can drop according to the server, or null while the answer is on its way. */
+    public static List<WikiAnswers.Drop> loot(String entityId) {
+        List<WikiAnswers.Drop> loot = LOOTS.get(entityId);
+        if (loot == null) {
+            ask(ServerboundWikiPayload.Kind.LOOT, "", entityId);
+        }
+        return loot;
     }
 
     /** A picture of the server's images folder, or null while it loads. */
@@ -131,6 +162,7 @@ public final class ClientWiki {
         INDEXES.clear();
         PAGES.clear();
         SEARCHES.clear();
+        LOOTS.clear();
         ASSEMBLIES.clear();
         ASKED.clear();
         for (Picture picture : PICTURES.values()) {
@@ -157,6 +189,7 @@ public final class ClientWiki {
             case INDEX -> INDEXES.put(payload.wiki(), WikiAnswers.parseIndex(text(data)));
             case PAGE -> PAGES.put(payload.wiki() + "/" + payload.key(), data.length == 0 ? MISSING_PAGE : WikiAnswers.parsePage(text(data)));
             case SEARCH -> SEARCHES.put(payload.wiki() + "\n" + payload.key(), WikiAnswers.parseHits(text(data)));
+            case LOOT -> LOOTS.put(payload.key(), WikiAnswers.parseLoot(text(data)));
             case IMAGE -> PICTURES.put(payload.key(), load(data));
         }
         // An index asked before the list changed (a page imported meanwhile) is asked again next time.
