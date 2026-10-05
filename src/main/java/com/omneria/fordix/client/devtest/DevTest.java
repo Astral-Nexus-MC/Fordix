@@ -357,6 +357,31 @@ public final class DevTest {
             }
             cmd(mc, "gamemode creative");
         }, 8, false));
+        steps.add(new Step("12n-tab-list", () -> {
+            com.omneria.fordix.client.hud.PlayerListHud.testForce = true;
+            mc.setScreen(null);
+        }, 20, false));
+        steps.add(new Step("12n2-damage-numbers", () -> {
+            com.omneria.fordix.client.hud.PlayerListHud.testForce = false;
+            cmd(mc, "execute at @s run summon minecraft:zombie ^ ^ ^3 {NoAI:1b,Health:30f,Silent:1b}");
+            mc.player.setXRot(10F);
+        }, 30, false));
+        steps.add(new Step("12n3-damage-hit", () -> {
+            cmd(mc, "damage @e[type=minecraft:zombie,limit=1,sort=nearest] 6 minecraft:generic");
+            cmd(mc, "damage @s 3 minecraft:generic");
+        }, 6, false));
+        steps.add(new Step("12n4-damage-big", () -> {
+            cmd(mc, "damage @e[type=minecraft:zombie,limit=1,sort=nearest] 12 minecraft:generic");
+        }, 5, false));
+        steps.add(new Step("12o-inventory-tools", () -> {
+            cmd(mc, "kill @e[type=minecraft:zombie]");
+            mc.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player));
+        }, 20, false));
+        steps.add(new Step("12o2-inventory-search", () -> com.omneria.fordix.client.gui.vanilla.InventoryTools.setSearch("iron"), 15, false));
+        steps.add(new Step("12o3-inventory-closed", () -> {
+            com.omneria.fordix.client.gui.vanilla.InventoryTools.setSearch("");
+            mc.setScreen(null);
+        }, 5, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

@@ -10,9 +10,7 @@ import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.welcome.ClientboundWelcomePayload;
 import com.omneria.fordix.welcome.ServerboundWelcomePayload;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.network.chat.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

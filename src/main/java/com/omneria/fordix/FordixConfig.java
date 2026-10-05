@@ -49,6 +49,9 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
     public static final ForgeConfigSpec.BooleanValue AUTO_COMBAT_PROFILE;
+    public static final ForgeConfigSpec.BooleanValue DAMAGE_NUMBERS;
+    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_PLAYER_LIST;
+    public static final ForgeConfigSpec.BooleanValue INVENTORY_TOOLS;
     public static final ForgeConfigSpec.IntValue ALERT_DURABILITY_PERCENT;
     public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
     public static final ForgeConfigSpec.BooleanValue HUD_REQUIRE_ITEMS;
@@ -120,6 +123,12 @@ public final class FordixConfig {
                 .define("hudCompact", false);
         HUD_EFFECTS_LIST = builder.comment("Replace the potion effect icons with a list showing name and time left.")
                 .define("hudEffectsList", true);
+        DAMAGE_NUMBERS = builder.comment("Floating numbers above creatures (and in front of you) when health goes down or up.")
+                .define("damageNumbers", true);
+        VOIDFRAME_PLAYER_LIST = builder.comment("Replace the Tab player list with the Voidframe panel (heads, ping, server header and footer).")
+                .define("voidframePlayerList", true);
+        INVENTORY_TOOLS = builder.comment("Add a search field and a sort button to the inventory and to chests, barrels and shulker boxes.")
+                .define("inventoryTools", true);
         AUTO_COMBAT_PROFILE = builder.comment("Load the second saved HUD profile (Combat) while a hostile creature is near, then go back.")
                 .define("autoCombatProfile", false);
         HUD_REQUIRE_ITEMS = builder

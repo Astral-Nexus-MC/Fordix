@@ -34,7 +34,7 @@ public class HudOptionsScreen extends FordixScreen {
 
     @Override
     protected void init() {
-        int rows = 5;
+        int rows = 6;
         int panelHeight = 24 + ROW * rows + 4 + BUTTON_HEIGHT + PADDING;
         int panelX = centerX(PANEL_WIDTH);
         int panelY = centerY(panelHeight);
@@ -52,6 +52,9 @@ public class HudOptionsScreen extends FordixScreen {
         addRenderableWidget(opacity(right, y + ROW));
         addRenderableWidget(toggle(right, y + ROW * 2, Tr.s("options.effects"), FordixConfig.HUD_EFFECTS_LIST));
         addRenderableWidget(toggle(right, y + ROW * 3, Tr.s("options.auto_combat"), FordixConfig.AUTO_COMBAT_PROFILE));
+        addRenderableWidget(toggle(right, y + ROW * 4, Tr.s("options.damage_numbers"), FordixConfig.DAMAGE_NUMBERS));
+        addRenderableWidget(toggle(right, y + ROW * 5, Tr.s("options.player_list"), FordixConfig.VOIDFRAME_PLAYER_LIST));
+        addRenderableWidget(toggle(left, y + ROW * 5, Tr.s("options.inventory_tools"), FordixConfig.INVENTORY_TOOLS));
         addRenderableWidget(new FordixButton(panelX + PADDING, y + ROW * rows + 4, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
                 Tr.c("common.close"), this::onClose));
     }

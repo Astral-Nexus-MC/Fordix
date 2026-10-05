@@ -1,7 +1,6 @@
 package com.omneria.fordix.welcome;
 
 import com.omneria.fordix.Fordix;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;

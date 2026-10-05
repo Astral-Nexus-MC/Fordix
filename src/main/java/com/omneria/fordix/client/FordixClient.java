@@ -24,8 +24,11 @@ import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.chat.ChatLog;
 import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.hud.ContainerMemory;
+import com.omneria.fordix.client.gui.vanilla.InventoryTools;
+import com.omneria.fordix.client.hud.DamageNumbers;
 import com.omneria.fordix.client.hud.HudAlerts;
 import com.omneria.fordix.client.hud.InfoHud;
+import com.omneria.fordix.client.hud.PlayerListHud;
 import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HeldItemHud;
@@ -37,7 +40,6 @@ import com.omneria.fordix.client.tooltip.TooltipStyle;
 import net.minecraft.client.KeyMapping;
 import com.omneria.fordix.client.gui.GuidesScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.client.ConfigScreenHandler;
@@ -49,7 +51,9 @@ import net.minecraftforge.client.event.RegisterItemDecorationsEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.ContainerScreenEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
@@ -187,6 +191,7 @@ public final class FordixClient {
             Minecraft minecraft = Minecraft.getInstance();
             TextureRecolor.onClientTick(minecraft);
             HudAlerts.tick(minecraft);
+            DamageNumbers.tick(minecraft);
             HudProfileActions.autoTick(minecraft);
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
@@ -212,6 +217,8 @@ public final class FordixClient {
             ServerPages.clear();
             ServerRarities.clear();
             HudAlerts.reset();
+            DamageNumbers.reset();
+            InventoryTools.reset();
             ContainerMemory.clear();
             HudProfileActions.onLoggingOut();
         }
@@ -227,15 +234,52 @@ public final class FordixClient {
             ContainerMemory.onScreenClosing(event);
         }
 
+        @SubscribeEvent
+        static void onInventoryRender(ScreenEvent.Render.Post event) {
+            InventoryTools.onScreenRenderPost(event);
+        }
+
+        @SubscribeEvent
+        static void onInventoryForeground(ContainerScreenEvent.Render.Foreground event) {
+            InventoryTools.onForeground(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        static void onInventoryMouse(ScreenEvent.MouseButtonPressed.Pre event) {
+            InventoryTools.onMousePressed(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        static void onInventoryKey(ScreenEvent.KeyPressed.Pre event) {
+            InventoryTools.onKeyPressed(event);
+        }
+
+        @SubscribeEvent(priority = EventPriority.HIGH)
+        static void onInventoryChar(ScreenEvent.CharacterTyped.Pre event) {
+            InventoryTools.onCharTyped(event);
+        }
+
+        @SubscribeEvent
+        static void onInventoryTick(TickEvent.ClientTickEvent event) {
+            InventoryTools.onClientTick(event);
+        }
+
+        @SubscribeEvent
+        static void onRenderLevel(RenderLevelStageEvent event) {
+            DamageNumbers.onRenderLevel(event);
+        }
+
         /** The effects list takes the place of vanilla's potion icons. */
         @SubscribeEvent
         static void onEffectsOverlayPre(RenderGuiOverlayEvent.Pre event) {
             InfoHud.onOverlayPre(event);
+            PlayerListHud.onOverlayPre(event);
         }
 
         @SubscribeEvent
         static void onScreenInit(ScreenEvent.Init.Post event) {
             VoidframeButtons.onScreenInit(event);
+            InventoryTools.onScreenInit(event);
             GuideTabs.onScreenInit(event);
         }
 

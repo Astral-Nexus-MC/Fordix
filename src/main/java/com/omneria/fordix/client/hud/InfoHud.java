@@ -12,11 +12,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -91,6 +89,7 @@ public final class InfoHud {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_MOB, InfoHud::drawTargetMob);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), GEAR, InfoHud::drawGear);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, InfoHud::drawEffects);
+        PlayerListHud.registerOverlays(event);
     }
 
     // ---- TPS: the game time packets, watched on their way to the game
@@ -106,6 +105,8 @@ public final class InfoHud {
                     public void channelRead(ChannelHandlerContext context, Object message) throws Exception {
                         if (message instanceof ClientboundSetTimePacket packet) {
                             METER.onGameTime(packet.getGameTime(), System.nanoTime());
+                        } else if (message instanceof net.minecraft.network.protocol.game.ClientboundTabListPacket packet) {
+                            PlayerListHud.onTabListPacket(packet);
                         }
                         super.channelRead(context, message);
                     }
@@ -123,6 +124,7 @@ public final class InfoHud {
 
     public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         METER.reset();
+        PlayerListHud.reset();
     }
 
     /** TPS: the integrated server's own figure when playing alone, the estimate from the packets on a server; -1 if unknown. */

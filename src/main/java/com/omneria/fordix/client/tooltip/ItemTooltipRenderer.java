@@ -80,7 +80,10 @@ public final class ItemTooltipRenderer {
         List<ClientTooltipComponent> components = event.getComponents();
         ClientTooltipComponent title = components.get(0);
         List<ClientTooltipComponent> rest = components.subList(1, components.size());
-        List<Section> sections = sections(stack);
+        List<GearCompare.Diff> diffs = new ArrayList<>();
+        String[] comparedWith = new String[1];
+        List<Section> sections = sections(stack, diffs, comparedWith);
+        GearCompare.Verdict verdict = diffs.isEmpty() ? null : GearCompare.verdict(diffs);
 
         String subLine = typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack);
         int width = Math.max(title.getWidth(font) + 30, compact ? 0 : font.width(subLine) + 30);
@@ -97,6 +100,11 @@ public final class ItemTooltipRenderer {
         int height = headerHeight + 2;
         for (Section section : sections) {
             height += sectionHeight + section.rows().size() * ROW_HEIGHT + 2;
+        }
+        String verdictLine = verdict == null ? null : Tr.s("tooltip.compare." + verdict.name().toLowerCase(java.util.Locale.ROOT), comparedWith[0]);
+        if (verdictLine != null) {
+            height += ROW_HEIGHT + 2;
+            width = Math.max(width, font.width(verdictLine) + 12);
         }
         if (!chips.isEmpty()) {
             height += SECTION_HEIGHT + chips.size() * CHIP_ROW_HEIGHT + 2;
@@ -147,6 +155,13 @@ public final class ItemTooltipRenderer {
                 cursorY += ROW_HEIGHT;
             }
             cursorY += 2;
+        }
+        if (verdictLine != null) {
+            int color = verdict == GearCompare.Verdict.BETTER ? UP : verdict == GearCompare.Verdict.WORSE ? DOWN
+                    : verdict == GearCompare.Verdict.MIXED ? 0xFFFFB347 : STEADY;
+            String mark = verdict == GearCompare.Verdict.BETTER ? "\u25B2 " : verdict == GearCompare.Verdict.WORSE ? "\u25BC " : "\u25C6 ";
+            guiGraphics.drawString(font, mark + verdictLine, contentX, cursorY + 1, color, false);
+            cursorY += ROW_HEIGHT + 2;
         }
         if (!chips.isEmpty()) {
             guiGraphics.drawString(font, Tr.s("tooltip.enchantments"), contentX, cursorY + 2, ENCHANT_SECTION, false);
@@ -231,7 +246,7 @@ public final class ItemTooltipRenderer {
     }
 
     /** One section per equipment slot the item gives attributes in, each row an attribute. */
-    private static List<Section> sections(ItemStack stack) {
+    private static List<Section> sections(ItemStack stack, List<GearCompare.Diff> diffs, String[] comparedWith) {
         Player player = Minecraft.getInstance().player;
         List<Section> sections = new ArrayList<>();
         for (EquipmentSlot slot : SLOTS) {
@@ -242,7 +257,10 @@ public final class ItemTooltipRenderer {
             ItemStack worn = player == null ? ItemStack.EMPTY : player.getItemBySlot(slot);
             List<Row> rows = new ArrayList<>();
             for (Attribute attribute : modifiers.keySet()) {
-                rows.add(row(stack, worn, slot, attribute, modifiers, player));
+                rows.add(row(stack, worn, slot, attribute, modifiers, player, diffs));
+            }
+            if (!worn.isEmpty() && !ItemStack.isSameItemSameTags(worn, stack) && comparedWith[0] == null) {
+                comparedWith[0] = worn.getHoverName().getString();
             }
             sections.add(new Section(Component.translatable("item.modifiers." + slot.getName()), rows));
         }
@@ -250,7 +268,7 @@ public final class ItemTooltipRenderer {
     }
 
     private static Row row(ItemStack stack, ItemStack worn, EquipmentSlot slot, Attribute attribute,
-                           Multimap<Attribute, AttributeModifier> modifiers, Player player) {
+                           Multimap<Attribute, AttributeModifier> modifiers, Player player, List<GearCompare.Diff> diffs) {
         String id = String.valueOf(ForgeRegistries.ATTRIBUTES.getKey(attribute));
         double base = slot == EquipmentSlot.MAINHAND && player != null ? player.getAttributeBaseValue(attribute) : 0.0;
         double value = AttributeMath.total(base, mods(modifiers.get(attribute)));
@@ -261,7 +279,13 @@ public final class ItemTooltipRenderer {
         } else if (!worn.isEmpty()) {
             reference = value;
         }
-        double difference = value + enchant - reference;
+        // What the worn item gets from its own enchantments counts too (a Sharpness sword against a plain one).
+        double wornEnchant = !worn.isEmpty() && !ItemStack.isSameItemSameTags(worn, stack) && id.equals("minecraft:generic.attack_damage")
+                ? EnchantmentHelper.getDamageBonus(worn, MobType.UNDEFINED) : 0.0;
+        double difference = value + enchant - reference - wornEnchant;
+        if (!worn.isEmpty() && !ItemStack.isSameItemSameTags(worn, stack)) {
+            diffs.add(new GearCompare.Diff(difference, scaleOf(id) > 0 ? scaleOf(id) : Math.max(1.0, Math.abs(value) + Math.abs(reference))));
+        }
         int deltaColor = Math.abs(difference) < 0.005 ? STEADY : difference > 0 ? UP : DOWN;
         int[] colors = colorsOf(id);
         return new Row(Component.translatable(attribute.getDescriptionId()).getString(), value, enchant,
