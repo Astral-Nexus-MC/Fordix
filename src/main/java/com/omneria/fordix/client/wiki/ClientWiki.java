@@ -105,6 +105,29 @@ public final class ClientWiki {
      * after its mod: null while it loads, a missing page when there is none (see {@link #isMissing}).
      */
     public static WikiAnswers.Page pageFor(String wiki, String path, String name) {
+        String local = localized(wiki);
+        if (!local.equals(wiki)) {
+            WikiAnswers.Page translated = pageIn(local, path, name);
+            if (translated == null || !isMissing(translated)) {
+                return translated;
+            }
+        }
+        return pageIn(wiki, path, name);
+    }
+
+    /** The wiki to read for the player's language: "minecraft_fr" for a French game when the server has it, else the wiki itself. */
+    public static String localized(String wiki) {
+        String code = Minecraft.getInstance().options.languageCode;
+        if (code != null && code.length() >= 2) {
+            String candidate = wiki + "_" + code.substring(0, 2).toLowerCase(java.util.Locale.ROOT);
+            if (!candidate.equals(wiki) && hasWiki(candidate)) {
+                return candidate;
+            }
+        }
+        return wiki;
+    }
+
+    private static WikiAnswers.Page pageIn(String wiki, String path, String name) {
         WikiAnswers.Page page = page(wiki, com.omneria.fordix.client.guide.GuideEntry.wikiPage(path));
         if (page == null || !isMissing(page)) {
             return page;

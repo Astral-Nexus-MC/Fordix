@@ -41,7 +41,9 @@ public final class HtmlToMarkup {
             "infobox-invimages", "invslot", "page-footer", "mw-references-wrap");
     private static final Set<String> SKIPPED_SECTIONS = Set.of("history", "trivia", "gallery", "references", "external links", "notes",
             "issues", "sounds", "data values", "achievements", "advancements", "video", "videos", "navigation", "see also", "footnotes",
-            "bugs", "screenshots", "in other languages", "notes and references", "sources", "category");
+            "bugs", "screenshots", "in other languages", "notes and references", "sources", "category",
+            "historique", "galerie", "anecdotes", "r\u00e9f\u00e9rences", "liens externes", "voir aussi", "dans d'autres langues",
+            "bogues", "sons", "succ\u00e8s", "progr\u00e8s", "vid\u00e9o", "vid\u00e9os", "notes et r\u00e9f\u00e9rences");
 
     private record Element(String name, boolean skip) {
     }

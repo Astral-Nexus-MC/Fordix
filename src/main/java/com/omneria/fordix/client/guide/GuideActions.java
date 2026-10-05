@@ -57,7 +57,8 @@ public final class GuideActions {
     }
 
     private static void openWiki(Minecraft minecraft, String wiki, String slug) {
-        minecraft.setScreen(new WikiScreen(minecraft.screen, wiki, slug));
+        // The wiki's main list in the player's language when the server has it; a page by item name stays in the main wiki.
+        minecraft.setScreen(new WikiScreen(minecraft.screen, slug == null ? ClientWiki.localized(wiki) : wiki, slug));
     }
 
     private static void openPonder(Minecraft minecraft, GuideEntry entry) {

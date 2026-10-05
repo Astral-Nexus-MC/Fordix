@@ -132,6 +132,106 @@ public final class WikiImporter {
         return new Report(done, importedImages, failures);
     }
 
+    /**
+     * Copies, from the same wiki in another language, the page of each page {@code sourceWiki} has: the source wiki's own
+     * API says what each page is called in {@code lang} ({@code prop=langlinks}), and the page of that name is imported into
+     * {@code targetWiki} under its own name, with the English name leading to it. A page the other language does not have
+     * is left out (the client falls back to the source wiki).
+     */
+    public static CompletableFuture<Report> translate(WikiStore store, ImageStore images, String sourceWiki, String targetWiki,
+                                                      String lang, Consumer<String> progress) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return new WikiImporter(store, images, progress).runTranslate(sourceWiki, targetWiki, lang);
+            } catch (IOException | RuntimeException e) {
+                throw new IllegalStateException(e.getMessage() == null ? e.toString() : e.getMessage(), e);
+            }
+        }, WORKER);
+    }
+
+    private Report runTranslate(String sourceWiki, String targetWiki, String lang) throws IOException {
+        WikiInfo from = store.info(sourceWiki);
+        WikiInfo to = store.info(targetWiki);
+        if (from == null || from.api.isEmpty() || to == null || to.source.isEmpty()) {
+            throw new IOException("both wikis must exist, and the source wiki needs an import first");
+        }
+        if (to.api.isEmpty()) {
+            to.api = discoverApi(to.source, to);
+            store.update(to);
+        }
+        List<WikiStore.Entry> english = store.index(sourceWiki);
+        List<String> failures = new ArrayList<>();
+        int done = 0;
+        int noTranslation = 0;
+        for (int at = 0; at < english.size(); at += 50) {
+            List<WikiStore.Entry> batch = english.subList(at, Math.min(english.size(), at + 50));
+            Map<String, String> translated = langlinks(from, batch, lang);
+            pause();
+            for (WikiStore.Entry entry : batch) {
+                String name = translated.get(entry.title());
+                if (name == null) {
+                    noTranslation++;
+                    continue;
+                }
+                if (store.page(targetWiki, entry.slug()) != null) {
+                    continue;
+                }
+                try {
+                    importOne(to, to.source, name.replace(' ', '_'), failures);
+                    String frSlug = name.replace(' ', '_');
+                    if (!frSlug.equals(entry.slug()) && store.page(targetWiki, entry.slug()) == null) {
+                        WikiPage alias = new WikiPage(entry.slug(), entry.title(), "", to.source, System.currentTimeMillis());
+                        alias.redirectTo = frSlug;
+                        store.save(targetWiki, alias);
+                    }
+                    done++;
+                } catch (IOException e) {
+                    if (failures.size() < 20) {
+                        failures.add(name + " : " + e.getMessage());
+                    }
+                }
+                pause();
+            }
+            progress.accept(Math.min(english.size(), at + 50) + "/" + english.size());
+        }
+        progress.accept(noTranslation + " pages without " + lang + " version");
+        return new Report(done, importedImages, failures);
+    }
+
+    /** The titles of a batch of pages in another language: {"Diamond Sword" -> "\u00c9p\u00e9e"} (a section anchor is dropped). */
+    private Map<String, String> langlinks(WikiInfo wiki, List<WikiStore.Entry> batch, String lang) throws IOException {
+        StringBuilder titles = new StringBuilder();
+        for (WikiStore.Entry entry : batch) {
+            titles.append(titles.length() > 0 ? "|" : "").append(entry.title());
+        }
+        String url = wiki.api + "?action=query&prop=langlinks&lllang=" + lang + "&lllimit=500&format=json&formatversion=2&titles="
+                + URLEncoder.encode(titles.toString(), StandardCharsets.UTF_8);
+        return langlinksOf(text(url));
+    }
+
+    /** Reads a {@code prop=langlinks} answer (format version 2) as source title to translated title. Public for tests. */
+    public static Map<String, String> langlinksOf(String json) {
+        Map<String, String> result = new LinkedHashMap<>();
+        try {
+            for (JsonElement page : JsonParser.parseString(json).getAsJsonObject().getAsJsonObject("query").getAsJsonArray("pages")) {
+                JsonObject object = page.getAsJsonObject();
+                if (!object.has("langlinks") || object.getAsJsonArray("langlinks").isEmpty()) {
+                    continue;
+                }
+                JsonObject link = object.getAsJsonArray("langlinks").get(0).getAsJsonObject();
+                String name = link.has("title") ? link.get("title").getAsString() : link.get("*").getAsString();
+                int anchor = name.indexOf('#');
+                name = (anchor >= 0 ? name.substring(0, anchor) : name).strip();
+                if (!name.isEmpty()) {
+                    result.put(object.get("title").getAsString(), name);
+                }
+            }
+        } catch (RuntimeException e) {
+            // an odd answer: nothing translated
+        }
+        return result;
+    }
+
     private Report run(String wikiId, String input, boolean withLinks) throws IOException {
         String origin;
         String title;

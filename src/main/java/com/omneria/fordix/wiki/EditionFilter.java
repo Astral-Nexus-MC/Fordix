@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
 public final class EditionFilter {
     /** Sections about other editions, dropped whole when only Java is kept. */
     public static final Set<String> OTHER_EDITION_SECTIONS = Set.of("bedrock edition", "bedrock", "education edition", "minecraft education",
-            "legacy console edition", "console edition", "new nintendo 3ds edition", "pocket edition", "pe", "be", "bedrock and education editions");
+            "legacy console edition", "console edition", "new nintendo 3ds edition", "pocket edition", "pe", "be", "bedrock and education editions",
+            "\u00e9dition bedrock", "\u00e9dition education", "\u00e9dition \u00e9ducation", "\u00e9ditions bedrock et education");
 
     private static final Pattern BEDROCK_PART = Pattern.compile("\\b(?:BE|Bedrock Edition):\\s*.*?(?=\\b(?:JE|Java Edition):|$)");
     private static final Pattern JAVA_LABEL = Pattern.compile("\\b(?:JE|Java Edition):\\s*");

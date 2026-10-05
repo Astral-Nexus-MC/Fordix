@@ -35,6 +35,11 @@ public final class WikiCommand {
                                                 .suggests((context, builder) -> net.minecraft.commands.SharedSuggestionProvider
                                                         .suggest(java.util.List.of("items", "mobs", "all"), builder))
                                                 .executes(WikiCommand::importAll))))
+                        .then(Commands.literal("translate")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("lang", StringArgumentType.word())
+                                                .then(Commands.argument("address", StringArgumentType.greedyString())
+                                                        .executes(WikiCommand::translate)))))
                         .then(Commands.literal("list").executes(WikiCommand::list))
                         .then(Commands.literal("remove")
                                 .then(Commands.argument("wiki", StringArgumentType.word())
@@ -84,6 +89,52 @@ public final class WikiCommand {
                     if (info != null && info.license.isEmpty()) {
                         source.sendSuccess(() -> Tr.c("cmd.wiki.license_missing", wiki), false);
                     }
+                    WikiService.broadcastList(server);
+                }));
+        return 1;
+    }
+
+    /**
+     * {@code translate <wiki> <lang> <address of that language's wiki>}: a wiki "<wiki>_<lang>" with the pages of the same wiki in
+     * another language, one for each page the wiki already has (the French players of the server read it instead).
+     */
+    private static int translate(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String wiki = StringArgumentType.getString(context, "wiki");
+        String lang = StringArgumentType.getString(context, "lang").toLowerCase(java.util.Locale.ROOT);
+        String address = StringArgumentType.getString(context, "address").strip();
+        WikiInfo from = WikiService.store().info(wiki);
+        if (from == null || from.api.isEmpty()) {
+            source.sendFailure(Tr.c("cmd.wiki.not_found"));
+            return 0;
+        }
+        if (!lang.matches("[a-z]{2,3}") || !(address.startsWith("https://") || address.startsWith("http://"))) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_translate"));
+            return 0;
+        }
+        String target = wiki + "_" + lang;
+        if (!WikiInfo.validId(target)) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_id"));
+            return 0;
+        }
+        java.net.URI uri = java.net.URI.create(address);
+        String origin = uri.getScheme() + "://" + uri.getAuthority();
+        WikiInfo created = WikiService.store().ensure(target, from.title + " (" + lang + ")", origin, "");
+        created.source = origin;
+        created.gameVersion = from.gameVersion;
+        created.asOf = from.asOf;
+        created.javaOnly = from.javaOnly;
+        WikiService.store().update(created);
+        MinecraftServer server = source.getServer();
+        source.sendSuccess(() -> Tr.c("cmd.wiki.translate_start", wiki, lang, WikiService.store().count(wiki)), true);
+        WikiImporter.translate(WikiService.store(), WikiService.images(), wiki, target, lang,
+                        message -> server.execute(() -> source.sendSuccess(() -> Tr.c("cmd.wiki.progress", message), false)))
+                .whenComplete((report, error) -> server.execute(() -> {
+                    if (error != null) {
+                        source.sendFailure(Tr.c("cmd.wiki.fail", error.getMessage()));
+                        return;
+                    }
+                    source.sendSuccess(() -> Tr.c("cmd.wiki.done", report.pages(), report.images()), true);
                     WikiService.broadcastList(server);
                 }));
         return 1;
