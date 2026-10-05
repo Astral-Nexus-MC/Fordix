@@ -99,8 +99,12 @@ public final class WikiImporter {
 
     private Report runTitles(String wikiId, List<String> titles) throws IOException {
         WikiInfo info = store.info(wikiId);
-        if (info == null || info.source.isEmpty() || info.api.isEmpty()) {
+        if (info == null || info.source.isEmpty()) {
             throw new IOException("wiki '" + wikiId + "' has no address yet: import one page of it first");
+        }
+        if (info.api.isEmpty()) {
+            info.api = discoverApi(info.source, info);
+            store.update(info);
         }
         List<String> failures = new ArrayList<>();
         int done = 0;

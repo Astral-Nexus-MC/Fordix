@@ -94,9 +94,22 @@ public final class WikiCommand {
         CommandSourceStack source = context.getSource();
         String wiki = StringArgumentType.getString(context, "wiki");
         String what = StringArgumentType.getString(context, "what");
-        if (WikiService.store().info(wiki) == null || WikiService.store().info(wiki).source.isEmpty()) {
-            source.sendFailure(Tr.c("cmd.wiki.need_first", wiki));
-            return 0;
+        WikiInfo known = WikiService.store().info(wiki);
+        if (known == null || known.source.isEmpty()) {
+            if (!wiki.equals("minecraft")) {
+                source.sendFailure(Tr.c("cmd.wiki.need_first", wiki, wiki));
+                return 0;
+            }
+            // The vanilla wiki's address is known: no need to import a page first.
+            WikiInfo created = WikiService.store().ensure(wiki, wiki, "https://minecraft.wiki", "");
+            if (created.source.isEmpty()) {
+                created.source = "https://minecraft.wiki";
+            }
+            if (created.gameVersion.isEmpty()) {
+                applyGameDefaults(created);
+            } else {
+                WikiService.store().update(created);
+            }
         }
         if (!what.equals("items") && !what.equals("mobs") && !what.equals("all")) {
             source.sendFailure(Tr.c("cmd.wiki.bad_what"));
