@@ -222,6 +222,7 @@
     "fordix.hud.overlay.scoreboard": "Scoreboard",
     "fordix.hud.overlay.subtitles": "Subtitles",
     "fordix.hud.overlay.target_block": "Targeted block",
+    "fordix.hud.overlay.target_mob": "Targeted creature",
     "fordix.hud.overlay.title_text": "Titles",
     "fordix.hud.preset": "Preset: %s",
     "fordix.hud.preset.classique": "Classic",

@@ -57,6 +57,7 @@ public final class InfoHud {
     public static final String COORDINATES = "coordinates";
     public static final String PERFORMANCE = "performance";
     public static final String TARGET_BLOCK = "target_block";
+    public static final String TARGET_MOB = "target_mob";
     public static final String GEAR = "gear";
     public static final String CLOCK = "clock";
     public static final String COMPASS = "compass";
@@ -86,7 +87,8 @@ public final class InfoHud {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), PERFORMANCE, InfoHud::drawPerformance);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), CLOCK, InfoHud::drawClock);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COMPASS, InfoHud::drawCompass);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_BLOCK, InfoHud::drawTarget);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_BLOCK, InfoHud::drawTargetBlock);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_MOB, InfoHud::drawTargetMob);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), GEAR, InfoHud::drawGear);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, InfoHud::drawEffects);
     }
@@ -491,57 +493,74 @@ public final class InfoHud {
 
     // ---- what is under the crosshair
 
-    private static void drawTarget(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+    /** The block under the crosshair, with its tool and, for a container, what was last seen in it. */
+    private static void drawTargetBlock(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
         Minecraft minecraft = Minecraft.getInstance();
         if (hidden(minecraft)) {
             return;
         }
-        HitResult hit = minecraft.hitResult;
-        int[] box = null;
+        if (!(minecraft.hitResult instanceof BlockHitResult blockHit) || blockHit.getType() != HitResult.Type.BLOCK) {
+            return;
+        }
+        int[] box = drawBlock(graphics, minecraft, width, blockHit);
+        if (box == null || !on("target_container")) {
+            return;
+        }
         List<ItemStack> contents = List.of();
         String caption = "";
-        if (hit instanceof BlockHitResult blockHit && hit.getType() == HitResult.Type.BLOCK) {
-            box = drawBlock(graphics, minecraft, width, blockHit);
-            if (box != null && on("target_container")) {
-                BlockPos pos = blockHit.getBlockPos();
-                BlockState state = minecraft.level.getBlockState(pos);
-                if (minecraft.level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox) {
-                    contents = jukebox.getFirstItem().isEmpty() ? List.of() : List.of(jukebox.getFirstItem());
-                    caption = Tr.s("hud.target.record");
-                } else {
-                    ContainerMemory.Snapshot snapshot = ContainerMemory.at(minecraft, pos, state);
-                    if (snapshot != null) {
-                        contents = snapshot.items();
-                        caption = Tr.s("hud.target.seen", age(System.currentTimeMillis() - snapshot.seenAt()));
-                        if (contents.isEmpty()) {
-                            caption = Tr.s("hud.target.empty") + " · " + caption;
-                        }
-                    }
-                }
-            }
-        } else if (hit instanceof EntityHitResult entityHit && on("target_entity")) {
-            Entity entity = entityHit.getEntity();
-            box = drawEntity(graphics, minecraft, width, entity);
-            if (on("target_container")) {
-                if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
-                    contents = List.of(frame.getItem());
-                    caption = Tr.s("hud.target.frame");
-                } else if (entity instanceof ItemEntity dropped) {
-                    contents = List.of(dropped.getItem());
-                    caption = Tr.s("hud.target.dropped");
-                } else if (entity instanceof LivingEntity living) {
-                    List<ItemStack> worn = new ArrayList<>();
-                    for (EquipmentSlot slot : EquipmentSlot.values()) {
-                        if (!living.getItemBySlot(slot).isEmpty()) {
-                            worn.add(living.getItemBySlot(slot));
-                        }
-                    }
-                    contents = worn;
-                    caption = Tr.s("hud.target.equipment");
+        BlockPos pos = blockHit.getBlockPos();
+        BlockState state = minecraft.level.getBlockState(pos);
+        if (minecraft.level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox) {
+            contents = jukebox.getFirstItem().isEmpty() ? List.of() : List.of(jukebox.getFirstItem());
+            caption = Tr.s("hud.target.record");
+        } else {
+            ContainerMemory.Snapshot snapshot = ContainerMemory.at(minecraft, pos, state);
+            if (snapshot != null) {
+                contents = snapshot.items();
+                caption = Tr.s("hud.target.seen", age(System.currentTimeMillis() - snapshot.seenAt()));
+                if (contents.isEmpty()) {
+                    caption = Tr.s("hud.target.empty") + " · " + caption;
                 }
             }
         }
-        if (box != null && (!contents.isEmpty() || !caption.isEmpty())) {
+        if (!contents.isEmpty() || !caption.isEmpty()) {
+            drawPreview(graphics, minecraft.font, box[0], box[1] + 2, box[2], caption, contents);
+        }
+    }
+
+    /** The creature (or item frame, dropped item...) under the crosshair, with its health and what it holds or wears. */
+    private static void drawTargetMob(ForgeGui gui, GuiGraphics graphics, float partialTick, int width, int height) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (hidden(minecraft) || !on("target_entity")) {
+            return;
+        }
+        if (!(minecraft.hitResult instanceof EntityHitResult entityHit)) {
+            return;
+        }
+        Entity entity = entityHit.getEntity();
+        int[] box = drawEntity(graphics, minecraft, width, entity);
+        if (box == null || !on("target_container")) {
+            return;
+        }
+        List<ItemStack> contents = List.of();
+        String caption = "";
+        if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
+            contents = List.of(frame.getItem());
+            caption = Tr.s("hud.target.frame");
+        } else if (entity instanceof ItemEntity dropped) {
+            contents = List.of(dropped.getItem());
+            caption = Tr.s("hud.target.dropped");
+        } else if (entity instanceof LivingEntity living) {
+            List<ItemStack> worn = new ArrayList<>();
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (!living.getItemBySlot(slot).isEmpty()) {
+                    worn.add(living.getItemBySlot(slot));
+                }
+            }
+            contents = worn;
+            caption = Tr.s("hud.target.equipment");
+        }
+        if (!contents.isEmpty() || !caption.isEmpty()) {
             drawPreview(graphics, minecraft.font, box[0], box[1] + 2, box[2], caption, contents);
         }
     }

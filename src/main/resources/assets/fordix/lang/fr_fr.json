@@ -222,6 +222,7 @@
     "fordix.hud.overlay.scoreboard": "Tableau des scores",
     "fordix.hud.overlay.subtitles": "Sous-titres",
     "fordix.hud.overlay.target_block": "Bloc visé",
+    "fordix.hud.overlay.target_mob": "Créature visée",
     "fordix.hud.overlay.title_text": "Titres",
     "fordix.hud.preset": "Modèle : %s",
     "fordix.hud.preset.classique": "Classique",
