@@ -217,6 +217,7 @@ public final class FordixClient {
             ServerPages.clear();
             ServerRarities.clear();
             HudAlerts.reset();
+            com.omneria.fordix.client.wiki.ClientWiki.clear();
             DamageNumbers.reset();
             InventoryTools.reset();
             ContainerMemory.clear();

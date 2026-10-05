@@ -57,4 +57,15 @@ class PageMarkupTest {
         assertTrue(store.deletePage("regles"));
         assertFalse(store.deletePage("regles"));
     }
+
+    @Test
+    void bulletsImagesAndLinks() {
+        List<PageMarkup.Block> blocks = PageMarkup.parse("## Sous-titre\n- un\n- deux\n@image map.png | La carte\n@image ../secret.png\n@image x.exe\n@link Naga | Le Naga");
+        assertEquals(new PageMarkup.Block(PageMarkup.Type.HEADING, "Sous-titre", "2"), blocks.get(0));
+        assertEquals(new PageMarkup.Block(PageMarkup.Type.BULLET, "un", ""), blocks.get(1));
+        assertEquals(new PageMarkup.Block(PageMarkup.Type.BULLET, "deux", ""), blocks.get(2));
+        assertEquals(new PageMarkup.Block(PageMarkup.Type.IMAGE, "La carte", "map.png"), blocks.get(3));
+        assertEquals(new PageMarkup.Block(PageMarkup.Type.LINK, "Le Naga", "Naga"), blocks.get(4));
+        assertEquals(5, blocks.size());
+    }
 }

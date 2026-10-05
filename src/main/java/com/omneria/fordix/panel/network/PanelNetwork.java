@@ -6,6 +6,10 @@ import com.omneria.fordix.admin.ClientboundAdminPayload;
 import com.omneria.fordix.admin.ServerboundAdminPayload;
 import com.omneria.fordix.client.admin.ClientAdminData;
 import com.omneria.fordix.client.guide.ServerGuides;
+import com.omneria.fordix.client.wiki.ClientWiki;
+import com.omneria.fordix.wiki.ClientboundWikiPayload;
+import com.omneria.fordix.wiki.ServerboundWikiPayload;
+import com.omneria.fordix.wiki.WikiService;
 import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.tooltip.ServerRarities;
 import com.omneria.fordix.client.notification.NotificationOverlay;
@@ -33,7 +37,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "6";
+    private static final String PROTOCOL_VERSION = "7";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -83,6 +87,21 @@ public final class PanelNetwork {
                 ClientboundGuidePagesPayload::encode,
                 ClientboundGuidePagesPayload::decode,
                 PanelNetwork::handleGuidePages);
+        CHANNEL.registerMessage(id++, ServerboundWikiPayload.class,
+                ServerboundWikiPayload::encode,
+                ServerboundWikiPayload::decode,
+                WikiService::handle);
+        CHANNEL.registerMessage(id++, ClientboundWikiPayload.class,
+                ClientboundWikiPayload::encode,
+                ClientboundWikiPayload::decode,
+                PanelNetwork::handleWiki);
+    }
+
+    private static void handleWiki(ClientboundWikiPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> ClientWiki.receive(payload))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleAdmin(ClientboundAdminPayload payload, Supplier<NetworkEvent.Context> ctx) {

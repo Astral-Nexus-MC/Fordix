@@ -52,6 +52,7 @@ public final class GuideBroadcaster {
 
     private static void send(ServerPlayer player) {
         sendPages(player);
+        com.omneria.fordix.wiki.WikiService.sendList(player);
         List<String> lines = List.copyOf(FordixServerConfig.GUIDES.get());
         List<String> rules = List.copyOf(FordixServerConfig.RARITY_RULES.get());
         PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundGuidesPayload(lines, rules));

@@ -12,6 +12,7 @@ import com.omneria.fordix.panel.network.PanelNetwork;
 import com.omneria.fordix.panel.server.PanelCommand;
 import com.omneria.fordix.panel.server.PanelRegistry;
 import net.minecraftforge.common.MinecraftForge;
+import com.omneria.fordix.wiki.WikiCommand;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -51,9 +52,11 @@ public class Fordix {
         PanelCommand.register(event.getDispatcher());
         NotifyCommand.register(event.getDispatcher());
         WelcomeCommand.register(event.getDispatcher());
+        WikiCommand.register(event.getDispatcher());
     }
 
     private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         PanelRegistry.forgetPlayer(event.getEntity().getUUID());
+        com.omneria.fordix.wiki.WikiService.forget(event.getEntity().getUUID());
     }
 }

@@ -6,6 +6,7 @@ import com.omneria.fordix.client.guide.GuideEntry;
 import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.SeenPages;
 import com.omneria.fordix.client.guide.ServerPages;
+import com.omneria.fordix.client.wiki.ClientWiki;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
 import com.omneria.fordix.guide.GuidePage;
@@ -43,10 +44,9 @@ public class GuidesScreen extends FordixScreen {
         }
     }
 
-    private record Drawn(int y, int height, PageMarkup.Block block, List<FormattedCharSequence> lines) {
-    }
-
     private final Screen parent;
+    private PageView pageView;
+    private GuidePage shown;
     private Panel panel;
     private EditBox search;
     private String query = "";
@@ -73,6 +73,8 @@ public class GuidesScreen extends FordixScreen {
         left = centerX(panelWidth);
         top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
+        pageView = new PageView(this.font);
+        shown = null;
         search = new EditBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("guides.search"));
         search.setHint(Tr.c("guides.search_hint"));
         search.setValue(query);
@@ -92,6 +94,14 @@ public class GuidesScreen extends FordixScreen {
             String title = ModNames.of(entry.modId()) + " : " + entry.label();
             if (needle.isEmpty() || title.toLowerCase(Locale.ROOT).contains(needle)) {
                 rows.add(new Row(Tr.s("guides.section.mods"), entry.label(), GuideTabs.iconFor(entry.icon()), entry, null));
+            }
+        }
+        // A word typed: also offer to search it in the server's wikis (whose text is searched on the server).
+        if (!needle.isEmpty() && !ClientWiki.wikis().isEmpty()) {
+            GuideEntry wikis = GuideEntry.parse("wikisearch | " + Tr.s("guides.search_wikis", query.strip()).replace("|", "/")
+                    + " | minecraft:compass | wiki:" + ClientWiki.wikis().get(0).id());
+            if (wikis != null) {
+                rows.add(new Row(Tr.s("guides.section.mods"), wikis.label(), new ItemStack(Items.COMPASS), wikis, null));
             }
         }
         for (GuidePage page : ServerPages.pages()) {
@@ -201,23 +211,8 @@ public class GuidesScreen extends FordixScreen {
         }
         int viewTop = y + 24;
         int viewBottom = top + panelHeight - PADDING;
-        guiGraphics.enableScissor(x, viewTop, right, viewBottom);
-        for (Drawn drawn : layoutPage(page, x, right, viewTop - (int) detailScroll)) {
-            int dy = drawn.y();
-            switch (drawn.block().type()) {
-                case HEADING -> guiGraphics.drawString(this.font, drawn.block().text(), x, dy, FordixPalette.ACCENT, false);
-                case TEXT -> {
-                    int ly = dy;
-                    for (FormattedCharSequence line : drawn.lines()) {
-                        guiGraphics.drawString(this.font, line, x, ly, FordixPalette.TEXT, false);
-                        ly += 10;
-                    }
-                }
-                case BUTTON -> drawButton(guiGraphics, x, dy, Math.min(right - x, this.font.width(drawn.block().text()) + 24),
-                        drawn.block().text(), mouseX, mouseY);
-            }
-        }
-        guiGraphics.disableScissor();
+        showPage(page);
+        pageView.render(guiGraphics, x, viewTop, right - x, viewBottom - viewTop, detailScroll, mouseX, mouseY);
     }
 
     private void drawButton(GuiGraphics guiGraphics, int x, int y, int w, String label, int mouseX, int mouseY) {
@@ -227,34 +222,12 @@ public class GuidesScreen extends FordixScreen {
         guiGraphics.drawCenteredString(this.font, label, x + w / 2, y + 4, FordixPalette.TEXT_BRIGHT);
     }
 
-    /** Positions of the page's blocks from {@code startY}, wrapped to the column. */
-    private List<Drawn> layoutPage(GuidePage page, int x, int right, int startY) {
-        List<Drawn> drawn = new ArrayList<>();
-        int y = startY;
-        for (PageMarkup.Block block : PageMarkup.parse(page.body)) {
-            switch (block.type()) {
-                case HEADING -> {
-                    y += drawn.isEmpty() ? 0 : 6;
-                    drawn.add(new Drawn(y, 12, block, List.of()));
-                    y += 14;
-                }
-                case TEXT -> {
-                    List<FormattedCharSequence> lines = this.font.split(Component.literal(block.text()), right - x);
-                    drawn.add(new Drawn(y, lines.size() * 10, block, lines));
-                    y += lines.size() * 10 + 4;
-                }
-                case BUTTON -> {
-                    drawn.add(new Drawn(y, 16, block, List.of()));
-                    y += 20;
-                }
-            }
+    /** Gives the page view this page's blocks (once per page: its layout is kept between frames). */
+    private void showPage(GuidePage page) {
+        if (shown != page) {
+            shown = page;
+            pageView.setBlocks(PageMarkup.parse(page.body));
         }
-        return drawn;
-    }
-
-    private int pageContentHeight(GuidePage page, int x, int right) {
-        List<Drawn> drawn = layoutPage(page, x, right, 0);
-        return drawn.isEmpty() ? 0 : drawn.get(drawn.size() - 1).y() + drawn.get(drawn.size() - 1).height();
     }
 
     private static String describe(GuideEntry entry) {
@@ -263,6 +236,7 @@ public class GuidesScreen extends FordixScreen {
             case PATCHOULI -> Tr.s("guides.describe.patchouli");
             case URL -> Tr.s("guides.describe.url", entry.target());
             case COMMAND -> Tr.s("guides.describe.command", entry.target());
+            case WIKI -> Tr.s("guides.describe.wiki");
         };
     }
 
@@ -293,6 +267,9 @@ public class GuidesScreen extends FordixScreen {
         if (row.entry() != null) {
             int y = top + 26 + 16 + this.font.split(Component.literal(describe(row.entry())), right - detailX).size() * 10 + 8;
             if (mouseX >= detailX && mouseX < detailX + 130 && mouseY >= y && mouseY < y + 16) {
+                if (row.entry().modId().equals("wikisearch")) {
+                    WikiScreen.nextQuery = query.strip();
+                }
                 GuideActions.run(row.entry());
                 return true;
             }
@@ -302,17 +279,14 @@ public class GuidesScreen extends FordixScreen {
         if (mouseY < viewTop || mouseY >= top + panelHeight - PADDING) {
             return false;
         }
-        for (Drawn drawn : layoutPage(row.page(), detailX, right, viewTop - (int) detailScroll)) {
-            if (drawn.block().type() == PageMarkup.Type.BUTTON) {
-                int w = Math.min(right - detailX, this.font.width(drawn.block().text()) + 24);
-                if (mouseX >= detailX && mouseX < detailX + w && mouseY >= drawn.y() && mouseY < drawn.y() + 16) {
-                    GuideEntry entry = GuideEntry.parse("minecraft | " + drawn.block().text() + " | minecraft:book | " + drawn.block().action());
-                    if (entry != null) {
-                        GuideActions.run(entry);
-                    }
-                    return true;
-                }
+        showPage(row.page());
+        PageMarkup.Block block = pageView.click(detailX, viewTop, right - detailX, top + panelHeight - PADDING - viewTop, detailScroll, mouseX, mouseY);
+        if (block != null && block.type() == PageMarkup.Type.BUTTON) {
+            GuideEntry entry = GuideEntry.parse("minecraft | " + block.text() + " | minecraft:book | " + block.action());
+            if (entry != null) {
+                GuideActions.run(entry);
             }
+            return true;
         }
         return false;
     }
@@ -327,7 +301,7 @@ public class GuidesScreen extends FordixScreen {
         if (!rows.isEmpty() && rows.get(selected).page() != null) {
             int right = left + panelWidth - PADDING;
             int visible = top + panelHeight - PADDING - (top + 26 + 24);
-            int max = Math.max(0, pageContentHeight(rows.get(selected).page(), detailX + 4, right) - visible);
+            int max = Math.max(0, pageView.contentHeight(right - (detailX + 4)) - visible);
             detailScroll = Math.max(0, Math.min(max, detailScroll - delta * 20));
             return true;
         }

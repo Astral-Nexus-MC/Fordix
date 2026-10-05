@@ -382,6 +382,13 @@ public final class DevTest {
             com.omneria.fordix.client.gui.vanilla.InventoryTools.setSearch("");
             mc.setScreen(null);
         }, 5, false));
+        steps.add(new Step("12p-wiki-import", () -> cmd(mc, "fordix wiki importlinks minecraft https://minecraft.wiki/w/Iron_Sword"), 700, false));
+        steps.add(new Step("12p2-wiki-page", () -> mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", "Iron_Sword")), 80, false));
+        steps.add(new Step("12p3-wiki-search", () -> {
+            com.omneria.fordix.client.gui.WikiScreen.nextQuery = "iron";
+            mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", null));
+        }, 60, false));
+        steps.add(new Step("12p4-wiki-closed", () -> mc.setScreen(null), 5, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

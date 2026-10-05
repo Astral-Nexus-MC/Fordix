@@ -2,6 +2,8 @@ package com.omneria.fordix.client.guide;
 
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.Fordix;
+import com.omneria.fordix.client.gui.WikiScreen;
+import com.omneria.fordix.client.wiki.ClientWiki;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
@@ -32,7 +34,14 @@ public final class GuideActions {
     /** Runs the entry's action; {@code stack} is the item the player was on (a link can name its wiki page). */
     public static void run(GuideEntry entry, net.minecraft.world.item.ItemStack stack) {
         Minecraft minecraft = Minecraft.getInstance();
+        ResourceLocation item = stack.isEmpty() ? null : net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(stack.getItem());
+        // A guide that links to a web wiki opens the server's own copy in the game when it has one (a wiki named after the mod).
+        if (entry.action() == GuideEntry.Action.URL && ClientWiki.hasWiki(entry.modId())) {
+            openWiki(minecraft, entry.modId(), item == null ? null : GuideEntry.wikiPage(item.getPath()));
+            return;
+        }
         switch (entry.action()) {
+            case WIKI -> openWiki(minecraft, entry.target(), item == null ? null : GuideEntry.wikiPage(item.getPath()));
             case PONDER -> openPonder(minecraft, entry);
             case PATCHOULI -> openPatchouli(minecraft, entry);
             case URL -> {
@@ -45,6 +54,10 @@ public final class GuideActions {
                 }
             }
         }
+    }
+
+    private static void openWiki(Minecraft minecraft, String wiki, String slug) {
+        minecraft.setScreen(new WikiScreen(minecraft.screen, wiki, slug));
     }
 
     private static void openPonder(Minecraft minecraft, GuideEntry entry) {

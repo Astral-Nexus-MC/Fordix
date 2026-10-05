@@ -9,7 +9,8 @@ package com.omneria.fordix.client.guide;
  *     <li>{@code patchouli:<book id>} - a Patchouli guide book;</li>
  *     <li>{@code url:<https link>} - a web page, after vanilla's link confirmation; {@code {objet}} in the link is
  *     replaced by the wiki page of the item the player was on (e.g. "Iron_Sword"), or by "Minecraft_Wiki" without an item;</li>
- *     <li>{@code command:<command>} - a command run as the player, without the slash.</li>
+ *     <li>{@code command:<command>} - a command run as the player, without the slash;</li>
+ *     <li>{@code wiki:<id>} - a wiki the server holds in the game (see {@code /fordix wiki import}).</li>
  * </ul>
  * Plain Java, unit tested.
  */
@@ -19,7 +20,9 @@ public record GuideEntry(String modId, String label, String icon, Action action,
         PONDER,
         PATCHOULI,
         URL,
-        COMMAND
+        COMMAND,
+        /** {@code wiki:<id>} - the server's in-game copy of a wiki. */
+        WIKI
     }
 
     /** Parses a config line; null when a part is missing or the action is unknown or unsafe. */
@@ -57,6 +60,7 @@ public record GuideEntry(String modId, String label, String icon, Action action,
                     ? new GuideEntry(modId, label, icon, Action.URL, target) : null;
             case "command" -> new GuideEntry(modId, label, icon, Action.COMMAND,
                     target.startsWith("/") ? target.substring(1) : target);
+            case "wiki" -> target.matches("[a-z0-9][a-z0-9_-]{0,31}") ? new GuideEntry(modId, label, icon, Action.WIKI, target) : null;
             default -> null;
         };
     }
