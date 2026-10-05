@@ -129,7 +129,9 @@ public final class WikiStore {
         load();
         List<Entry> entries = new ArrayList<>();
         for (WikiPage page : pages.getOrDefault(wiki, Map.of()).values()) {
-            entries.add(new Entry(page.slug, page.title));
+            if (page.redirectTo == null || page.redirectTo.isEmpty()) {
+                entries.add(new Entry(page.slug, page.title));
+            }
         }
         entries.sort(Comparator.comparing(entry -> entry.title().toLowerCase(java.util.Locale.ROOT)));
         return entries;
@@ -138,6 +140,15 @@ public final class WikiStore {
     public synchronized WikiPage page(String wiki, String slug) {
         load();
         return pages.getOrDefault(wiki, Map.of()).get(slug);
+    }
+
+    /** The page under this name, following redirects (an old name of a page leads to the page now called otherwise). */
+    public synchronized WikiPage resolve(String wiki, String slug) {
+        WikiPage page = page(wiki, slug);
+        for (int hop = 0; hop < 4 && page != null && page.redirectTo != null && !page.redirectTo.isEmpty(); hop++) {
+            page = page(wiki, page.redirectTo);
+        }
+        return page != null && page.redirectTo != null && !page.redirectTo.isEmpty() ? null : page;
     }
 
     /** Stores a page; false when the wiki is full or unknown. */
@@ -202,6 +213,9 @@ public final class WikiStore {
                 continue;
             }
             for (WikiPage page : entry.getValue().values()) {
+                if (page.redirectTo != null && !page.redirectTo.isEmpty()) {
+                    continue;
+                }
                 int score = WikiSearch.score(page.title, page.body, query);
                 if (score > 0) {
                     hits.add(new WikiSearch.Hit(entry.getKey(), page.slug, page.title, WikiSearch.snippet(page.body, query), score));

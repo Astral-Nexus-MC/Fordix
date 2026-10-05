@@ -93,6 +93,10 @@ public final class WikiImporter {
         if (info == null) {
             info = store.ensure(wikiId, wikiId, origin, "");
         }
+        if (info.source.isEmpty()) {
+            info.source = origin;
+            store.update(info);
+        }
         if (info.api.isEmpty()) {
             info.api = discoverApi(origin, info);
             store.update(info);
@@ -149,7 +153,14 @@ public final class WikiImporter {
 
     /** Imports one page; returns the pages it links to. */
     private List<String> importOne(WikiInfo info, String origin, String title, List<String> failures) throws IOException {
-        String url = info.api + "?action=parse&page=" + URLEncoder.encode(title, StandardCharsets.UTF_8)
+        return importOne(info, origin, title, failures, 0);
+    }
+
+    private List<String> importOne(WikiInfo info, String origin, String title, List<String> failures, int depth) throws IOException {
+        // A wiki frozen at a date takes the page as it was then: what did not exist yet is skipped, like newer content.
+        String target = info.asOf.isEmpty() ? "page=" + URLEncoder.encode(title, StandardCharsets.UTF_8)
+                : "oldid=" + revisionAt(info, title);
+        String url = info.api + "?action=parse&" + target
                 + "&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&disableeditsection=1&disablelimitreport=1&disabletoc=1";
         JsonObject root = JsonParser.parseString(text(url)).getAsJsonObject();
         if (root.has("error")) {
@@ -159,6 +170,20 @@ public final class WikiImporter {
         JsonObject parse = root.getAsJsonObject("parse");
         String pageTitle = parse.get("title").getAsString();
         String slug = pageTitle.replace(' ', '_');
+        // The old version of a page was only a redirect (the wiki has been reorganized since): copy what it led to.
+        String redirect = redirectTarget(parse.get("text").getAsString());
+        if (redirect != null && redirect.matches("^[A-Za-z_ ]{2,20}:.*")) {
+            // "Dungeons:Mace", "Earth:..." : another game's page, so this one is not part of the game on that date.
+            throw new IOException("only a redirect to " + redirect + " on that date");
+        }
+        if (redirect != null && depth < 3) {
+            String targetSlug = redirect.replace(' ', '_');
+            WikiPage stub = new WikiPage(slug, pageTitle, "", origin + "/index.php?title=" + URLEncoder.encode(slug, StandardCharsets.UTF_8),
+                    System.currentTimeMillis());
+            stub.redirectTo = targetSlug;
+            store.save(info.id, stub);
+            return store.page(info.id, targetSlug) != null ? List.of() : importOne(info, origin, redirect, failures, depth + 1);
+        }
         Map<String, String> downloads = new LinkedHashMap<>();
         HtmlToMarkup.Result result = HtmlToMarkup.convert(parse.get("text").getAsString(), image -> {
             String absolute = absolute(origin, image.src());
@@ -169,7 +194,7 @@ public final class WikiImporter {
             String name = ImageStore.nameFor(absolute);
             downloads.put(name, absolute);
             return name;
-        });
+        }, info.javaOnly);
         String markup = result.markup();
         for (Map.Entry<String, String> download : downloads.entrySet()) {
             if (images.exists(download.getKey())) {
@@ -196,6 +221,40 @@ public final class WikiImporter {
         page.links = new ArrayList<>(result.links());
         store.save(info.id, page);
         return result.links();
+    }
+
+    /** The page a redirect page leads to (from its HTML), or null when the page is not a redirect. */
+    public static String redirectTarget(String html) {
+        if (!html.contains("redirectMsg")) {
+            return null;
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("redirectText.*?<a [^>]*title=\"([^\"]+)\"", java.util.regex.Pattern.DOTALL).matcher(html);
+        return matcher.find() ? HtmlToMarkup.decode(matcher.group(1)) : null;
+    }
+
+    /** The revision of a page as it stood on the wiki's date ({@code asOf}), or an error when the page did not exist yet. */
+    private long revisionAt(WikiInfo info, String title) throws IOException {
+        String url = info.api + "?action=query&prop=revisions&titles=" + URLEncoder.encode(title, StandardCharsets.UTF_8)
+                + "&rvlimit=1&rvprop=ids%7Ctimestamp&rvdir=older&rvstart=" + info.asOf + "T23:59:59Z&redirects=1&format=json&formatversion=2";
+        Long revision = revisionId(text(url));
+        if (revision == null) {
+            throw new IOException("did not exist yet on " + info.asOf);
+        }
+        return revision;
+    }
+
+    /** The revision id in a {@code prop=revisions} answer, or null when the page is missing or has no revision at that date. */
+    public static Long revisionId(String json) {
+        try {
+            JsonObject query = JsonParser.parseString(json).getAsJsonObject().getAsJsonObject("query");
+            JsonObject page = query.getAsJsonArray("pages").get(0).getAsJsonObject();
+            if (page.has("missing") || !page.has("revisions") || page.getAsJsonArray("revisions").isEmpty()) {
+                return null;
+            }
+            return page.getAsJsonArray("revisions").get(0).getAsJsonObject().get("revid").getAsLong();
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     /** Fandom serves WebP unless asked for the original file, and the game only reads PNG. */

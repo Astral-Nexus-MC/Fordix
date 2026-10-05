@@ -93,10 +93,10 @@ public final class WikiService {
                 reply(player, request, out.toString().getBytes(StandardCharsets.UTF_8));
             }
             case PAGE -> {
-                WikiPage page = wikis.page(request.wiki(), request.key());
+                WikiPage page = wikis.resolve(request.wiki(), request.key());
                 WikiInfo info = wikis.info(request.wiki());
                 byte[] data = page == null ? new byte[0]
-                        : (clean(page.title) + "\n" + clean(page.source) + "\n" + clean(info == null ? "" : info.license) + "\n---\n"
+                        : (clean(page.title) + "\n" + clean(page.source) + "\n" + clean(info == null ? "" : info.credit()) + "\n---\n"
                         + page.body + related(wikis, request.wiki(), page)).getBytes(StandardCharsets.UTF_8);
                 reply(player, request, data);
             }
@@ -133,7 +133,7 @@ public final class WikiService {
         StringBuilder out = new StringBuilder();
         for (WikiInfo info : store().wikis()) {
             out.append(clean(info.id)).append('\t').append(clean(info.title)).append('\t').append(store().count(info.id)).append('\t')
-                    .append(clean(info.source)).append('\t').append(clean(info.license)).append('\n');
+                    .append(clean(info.source)).append('\t').append(clean(info.credit())).append('\n');
         }
         reply(player, new ServerboundWikiPayload(ServerboundWikiPayload.Kind.LIST, "", ""), out.toString().getBytes(StandardCharsets.UTF_8));
     }

@@ -12,6 +12,8 @@ public final class WikiPage {
     public long updatedAt;
     /** The pages this one links to (slugs); the ones that exist in the wiki are offered under the text. */
     public java.util.List<String> links = new java.util.ArrayList<>();
+    /** For a page that is only a redirect (an old name of another page): the slug it leads to. Empty otherwise. */
+    public String redirectTo = "";
 
     public WikiPage() {
     }

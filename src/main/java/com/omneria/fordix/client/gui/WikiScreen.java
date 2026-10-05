@@ -187,13 +187,16 @@ public class WikiScreen extends FordixScreen {
         if (index == null) {
             return;
         }
+        // The list gives the exact spelling of a page; a name that isn't in it (an old name that redirects) is asked for as is.
         String wanted = openSlug.toLowerCase(Locale.ROOT);
+        String slug = openSlug;
         for (WikiAnswers.Entry entry : index) {
             if (entry.slug().toLowerCase(Locale.ROOT).equals(wanted)) {
-                open(wikiId, entry.slug());
+                slug = entry.slug();
                 break;
             }
         }
+        open(wikiId, slug);
         openSlug = null;
     }
 

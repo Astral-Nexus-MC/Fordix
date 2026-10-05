@@ -35,6 +35,12 @@ public final class WikiCommand {
                                         .executes(context -> remove(context, ""))
                                         .then(Commands.argument("page", StringArgumentType.greedyString())
                                                 .executes(context -> remove(context, StringArgumentType.getString(context, "page"))))))
+                        .then(Commands.literal("asof")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("date", StringArgumentType.word()).executes(WikiCommand::asOf))))
+                        .then(Commands.literal("javaonly")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("on", StringArgumentType.word()).executes(WikiCommand::javaOnly))))
                         .then(Commands.literal("license")
                                 .then(Commands.argument("wiki", StringArgumentType.word())
                                         .then(Commands.argument("text", StringArgumentType.greedyString())
@@ -50,6 +56,12 @@ public final class WikiCommand {
             return 0;
         }
         MinecraftServer server = source.getServer();
+        if (WikiService.store().info(wiki) == null) {
+            WikiInfo created = WikiService.store().ensure(wiki, wiki, "", "");
+            applyGameDefaults(created);
+            source.sendSuccess(() -> Tr.c("cmd.wiki.defaults", wiki, created.gameVersion,
+                    created.asOf.isEmpty() ? "-" : created.asOf, created.javaOnly ? "Java" : "-"), true);
+        }
         source.sendSuccess(() -> Tr.c("cmd.wiki.start", page, wiki), true);
         WikiImporter.importPage(WikiService.store(), WikiService.images(), wiki, page, withLinks,
                         message -> server.execute(() -> source.sendSuccess(() -> Tr.c("cmd.wiki.progress", message), false)))
@@ -68,6 +80,57 @@ public final class WikiCommand {
                     }
                     WikiService.broadcastList(server);
                 }));
+        return 1;
+    }
+
+    /**
+     * A new wiki is set for the game version the server runs: its version is noted and, for the vanilla wiki, it is frozen two
+     * weeks after that version's release (the wiki then documents it) and keeps only the Java Edition.
+     */
+    private static void applyGameDefaults(WikiInfo info) {
+        var version = net.minecraft.SharedConstants.getCurrentVersion();
+        info.gameVersion = version.getName();
+        if (info.id.equals("minecraft")) {
+            info.asOf = java.time.LocalDate.ofInstant(version.getBuildTime().toInstant(), java.time.ZoneOffset.UTC).plusDays(14).toString();
+            info.javaOnly = true;
+        }
+        WikiService.store().update(info);
+    }
+
+    private static int asOf(CommandContext<CommandSourceStack> context) {
+        String wiki = StringArgumentType.getString(context, "wiki");
+        String date = StringArgumentType.getString(context, "date");
+        WikiInfo info = WikiService.store().info(wiki);
+        if (info == null) {
+            context.getSource().sendFailure(Tr.c("cmd.wiki.not_found"));
+            return 0;
+        }
+        if (date.equals("off")) {
+            info.asOf = "";
+            WikiService.store().update(info);
+            context.getSource().sendSuccess(() -> Tr.c("cmd.wiki.asof_off", wiki), true);
+            return 1;
+        }
+        if (!WikiInfo.validDate(date)) {
+            context.getSource().sendFailure(Tr.c("cmd.wiki.bad_date"));
+            return 0;
+        }
+        info.asOf = date;
+        WikiService.store().update(info);
+        context.getSource().sendSuccess(() -> Tr.c("cmd.wiki.asof_set", wiki, date), true);
+        return 1;
+    }
+
+    private static int javaOnly(CommandContext<CommandSourceStack> context) {
+        String wiki = StringArgumentType.getString(context, "wiki");
+        WikiInfo info = WikiService.store().info(wiki);
+        if (info == null) {
+            context.getSource().sendFailure(Tr.c("cmd.wiki.not_found"));
+            return 0;
+        }
+        info.javaOnly = StringArgumentType.getString(context, "on").equalsIgnoreCase("on");
+        WikiService.store().update(info);
+        context.getSource().sendSuccess(() -> Tr.c(info.javaOnly ? "cmd.wiki.javaonly_on" : "cmd.wiki.javaonly_off", wiki), true);
         return 1;
     }
 

@@ -47,6 +47,7 @@ public final class HtmlToMarkup {
     }
 
     private final Function<Image, String> imageNamer;
+    private boolean javaOnly;
     private final Deque<Element> stack = new ArrayDeque<>();
     private final List<String> blocks = new ArrayList<>();
     private final Set<String> links = new LinkedHashSet<>();
@@ -76,7 +77,13 @@ public final class HtmlToMarkup {
      * will be saved under, or null to leave it out.
      */
     public static Result convert(String html, Function<Image, String> imageNamer) {
+        return convert(html, imageNamer, false);
+    }
+
+    /** Same, keeping only the Java Edition of what is written for several editions when {@code javaOnly}. */
+    public static Result convert(String html, Function<Image, String> imageNamer, boolean javaOnly) {
         HtmlToMarkup converter = new HtmlToMarkup(imageNamer);
+        converter.javaOnly = javaOnly;
         converter.run(html == null ? "" : html);
         return new Result(String.join("\n\n", converter.blocks), List.copyOf(converter.links));
     }
@@ -250,7 +257,7 @@ public final class HtmlToMarkup {
         if (text.isEmpty()) {
             return;
         }
-        if (SKIPPED_SECTIONS.contains(text.toLowerCase(Locale.ROOT))) {
+        if (SKIPPED_SECTIONS.contains(text.toLowerCase(Locale.ROOT)) || javaOnly && EditionFilter.OTHER_EDITION_SECTIONS.contains(text.toLowerCase(Locale.ROOT))) {
             skippingSection = true;
             sectionLevel = level;
             return;
@@ -274,6 +281,13 @@ public final class HtmlToMarkup {
         if (texts.isEmpty()) {
             return;
         }
+        if (javaOnly) {
+            texts.replaceAll(EditionFilter::javaOnlyCell);
+            texts.removeIf(String::isEmpty);
+            if (texts.isEmpty()) {
+                return;
+            }
+        }
         String joined = texts.size() == 2 && cellHeaders.get(0) ? texts.get(0) + " : " + texts.get(1) : String.join(" | ", texts.subList(0, Math.min(6, texts.size())));
         add("- " + (joined.length() > MAX_ROW_TEXT ? joined.substring(0, MAX_ROW_TEXT - 1) + "…" : joined));
     }
@@ -281,6 +295,9 @@ public final class HtmlToMarkup {
     private void flushLine() {
         String text = line.toString().replaceAll("\\s+", " ").strip();
         line.setLength(0);
+        if (javaOnly) {
+            text = EditionFilter.javaOnly(text);
+        }
         // Some wikis print the JSON of their data modules as text: not a paragraph.
         if (text.isEmpty() || text.equals("[edit]") || text.startsWith("{ \"") || text.startsWith("[ {")) {
             return;
