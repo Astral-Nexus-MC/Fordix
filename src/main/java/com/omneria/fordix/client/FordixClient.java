@@ -95,6 +95,14 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
+    /** Hold while looking at a tamed creature of yours: its interaction wheel opens (slide to a sector, let go). */
+    public static final KeyMapping PET_WHEEL = new KeyMapping(
+            "key.fordix.pet_wheel",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_R,
+            "key.categories.fordix"
+    );
+
     /** Loads the next saved HUD layout (profiles are filled from the HUD layout screen). */
     public static final KeyMapping NEXT_PROFILE = new KeyMapping(
             "key.fordix.next_hud_profile",
@@ -136,6 +144,7 @@ public final class FordixClient {
             event.register(TOGGLE_DEMO);
             event.register(OPEN_SETTINGS);
             event.register(OPEN_GUIDE);
+            event.register(PET_WHEEL);
             event.register(NEXT_PROFILE);
         }
 
@@ -208,6 +217,13 @@ public final class FordixClient {
                         && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
                         && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
                     minecraft.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null, hit.getEntity().getType()));
+                }
+            }
+            while (PET_WHEEL.consumeClick()) {
+                if (minecraft.screen == null && minecraft.player != null && !minecraft.player.isSpectator()
+                        && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+                        && com.omneria.fordix.client.pet.PetWheelScreen.opensOn(hit.getEntity(), minecraft.player)) {
+                    minecraft.setScreen(new com.omneria.fordix.client.pet.PetWheelScreen((net.minecraft.world.entity.LivingEntity) hit.getEntity()));
                 }
             }
             while (OPEN_SETTINGS.consumeClick()) {

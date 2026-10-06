@@ -7,6 +7,8 @@ import com.omneria.fordix.admin.ServerboundAdminPayload;
 import com.omneria.fordix.client.admin.ClientAdminData;
 import com.omneria.fordix.client.guide.ServerGuides;
 import com.omneria.fordix.client.wiki.ClientWiki;
+import com.omneria.fordix.pet.PetService;
+import com.omneria.fordix.pet.ServerboundPetActionPayload;
 import com.omneria.fordix.wiki.ClientboundWikiPayload;
 import com.omneria.fordix.wiki.ServerboundWikiPayload;
 import com.omneria.fordix.wiki.WikiService;
@@ -37,7 +39,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "8";
+    private static final String PROTOCOL_VERSION = "9";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -95,6 +97,10 @@ public final class PanelNetwork {
                 ClientboundWikiPayload::encode,
                 ClientboundWikiPayload::decode,
                 PanelNetwork::handleWiki);
+        CHANNEL.registerMessage(id++, ServerboundPetActionPayload.class,
+                ServerboundPetActionPayload::encode,
+                ServerboundPetActionPayload::decode,
+                PetService::handle);
     }
 
     private static void handleWiki(ClientboundWikiPayload payload, Supplier<NetworkEvent.Context> ctx) {

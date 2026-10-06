@@ -550,6 +550,17 @@ public final class DevTest {
                 net.minecraft.world.entity.EntityType.ENDER_DRAGON)), 60, false));
         steps.add(new Step("17i-item-sheet-tall", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD))), 40, false));
+        steps.add(new Step("17j-pet-wheel", () -> {
+            net.minecraft.world.entity.animal.Wolf wolf = new net.minecraft.world.entity.animal.Wolf(net.minecraft.world.entity.EntityType.WOLF, mc.level);
+            wolf.setTame(true);
+            wolf.setOwnerUUID(mc.player.getUUID());
+            wolf.setCustomName(net.minecraft.network.chat.Component.literal("Rex"));
+            wolf.setHealth(14);
+            wolf.setOrderedToSit(true);
+            wolf.setPos(mc.player.position());
+            com.omneria.fordix.client.pet.PetWheelScreen.testKeepOpen = true;
+            mc.setScreen(new com.omneria.fordix.client.pet.PetWheelScreen(wolf));
+        }, 40, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
