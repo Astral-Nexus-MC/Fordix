@@ -53,7 +53,7 @@ public final class GuideHints {
     }
 
     public static void onItemTooltip(ItemTooltipEvent event) {
-        if (!FordixConfig.GUIDE_HINTS.get()) {
+        if (!FordixConfig.GUIDE_HINTS.get() || FordixClient.OPEN_GUIDE.isUnbound()) {
             return;
         }
         if (event.getItemStack().isEmpty()) {
@@ -68,8 +68,8 @@ public final class GuideHints {
 
     /** Shift + the guide key over an item in a container screen. */
     public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
-        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen) || !Screen.hasShiftDown()
-                || !FordixClient.OPEN_GUIDE.matches(event.getKeyCode(), event.getScanCode())) {
+        if (!(event.getScreen() instanceof AbstractContainerScreen<?> screen) || com.omneria.fordix.client.gui.vanilla.InventoryTools.typing()
+                || !FordixClient.pressed(FordixClient.OPEN_GUIDE, event.getKeyCode(), event.getScanCode())) {
             return;
         }
         Slot slot = screen.getSlotUnderMouse();

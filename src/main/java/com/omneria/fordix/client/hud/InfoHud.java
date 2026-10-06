@@ -675,6 +675,7 @@ public final class InfoHud {
         int boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(TARGET_WIDTH, Math.max(font.width(name), font.width(detail)) + 6 + iconSpace + 6));
         // A living creature other than a player has a sheet (its drops, its wiki page): the panel says which keys open it.
         String hint = entity instanceof LivingEntity && !(entity instanceof Player) && FordixConfig.GUIDE_HINTS.get()
+                && !com.omneria.fordix.client.FordixClient.OPEN_GUIDE.isUnbound()
                 ? "[" + com.omneria.fordix.client.guide.GuideHints.keyLabel() + "] " + Tr.s("hud.target.sheet") : null;
         if (hint != null) {
             boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(boxWidth, font.width(hint) + 12));

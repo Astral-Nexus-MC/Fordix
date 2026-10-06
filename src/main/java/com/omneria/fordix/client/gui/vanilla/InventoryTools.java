@@ -76,6 +76,11 @@ public final class InventoryTools {
         return screen instanceof InventoryScreen || menu instanceof ChestMenu || menu instanceof ShulkerBoxMenu;
     }
 
+    /** Whether the inventory search field is being typed in (the guide key must not fire on its letters). */
+    public static boolean typing() {
+        return search != null && search.isFocused();
+    }
+
     private static boolean active(Screen screen) {
         return enabled() && screen == current && search != null;
     }
@@ -186,7 +191,7 @@ public final class InventoryTools {
         if (!active(event.getScreen())) {
             return;
         }
-        if (event.getKeyCode() == GLFW.GLFW_KEY_F && Screen.hasControlDown()) {
+        if (!search.isFocused() && com.omneria.fordix.client.FordixClient.pressed(com.omneria.fordix.client.FordixClient.SEARCH_FIELD, event.getKeyCode(), event.getScanCode())) {
             search.setFocused(true);
             event.setCanceled(true);
         } else if (search.isFocused() && event.getKeyCode() != GLFW.GLFW_KEY_ESCAPE) {

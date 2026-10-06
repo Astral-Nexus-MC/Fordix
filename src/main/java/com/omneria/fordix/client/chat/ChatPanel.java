@@ -428,7 +428,7 @@ public final class ChatPanel {
         if (!enabled() || !(event.getScreen() instanceof ChatScreen screen)) {
             return;
         }
-        if (event.getKeyCode() == GLFW.GLFW_KEY_F && Screen.hasControlDown() && search != null) {
+        if (search != null && !searching() && com.omneria.fordix.client.FordixClient.pressed(com.omneria.fordix.client.FordixClient.SEARCH_FIELD, event.getKeyCode(), event.getScanCode())) {
             focusSearch(screen, true);
             event.setCanceled(true);
             return;

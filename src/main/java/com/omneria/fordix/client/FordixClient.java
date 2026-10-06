@@ -87,11 +87,26 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
-    /** Shift + this key over an item opens the guide of its mod (default G; Shift keeps it clear of text fields). */
+    /**
+     * This key over an item opens the sheet or guide of its mod, and aimed at a creature opens its sheet. Shift + G by default, and
+     * like any key of the game it can be set to another key with Shift, Ctrl or Alt, or to none (unbound).
+     */
     public static final KeyMapping OPEN_GUIDE = new KeyMapping(
             "key.fordix.open_guide",
+            net.minecraftforge.client.settings.KeyConflictContext.UNIVERSAL,
+            net.minecraftforge.client.settings.KeyModifier.SHIFT,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_G,
+            "key.categories.fordix"
+    );
+
+    /** Focuses the search field of the chat and of the inventories (Ctrl + F by default, changeable or unbound like the others). */
+    public static final KeyMapping SEARCH_FIELD = new KeyMapping(
+            "key.fordix.search_field",
+            net.minecraftforge.client.settings.KeyConflictContext.UNIVERSAL,
+            net.minecraftforge.client.settings.KeyModifier.CONTROL,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F,
             "key.categories.fordix"
     );
 
@@ -121,6 +136,11 @@ public final class FordixClient {
     private FordixClient() {
     }
 
+    /** Whether this key press is the key of the mapping, with the Shift / Ctrl / Alt it was set with (never when unbound). */
+    public static boolean pressed(KeyMapping mapping, int keyCode, int scanCode) {
+        return !mapping.isUnbound() && mapping.isActiveAndMatches(InputConstants.getKey(keyCode, scanCode));
+    }
+
     /** Pushes the client config's theme and accent color into {@link FordixPalette}. */
     public static void applyConfig() {
         Theme theme = Theme.byName(FordixConfig.THEME.get());
@@ -145,6 +165,7 @@ public final class FordixClient {
             event.register(OPEN_SETTINGS);
             event.register(OPEN_GUIDE);
             event.register(PET_WHEEL);
+            event.register(SEARCH_FIELD);
             event.register(NEXT_PROFILE);
         }
 
@@ -213,8 +234,7 @@ public final class FordixClient {
                 }
             }
             while (OPEN_GUIDE.consumeClick()) {
-                if (minecraft.screen == null && net.minecraft.client.gui.screens.Screen.hasShiftDown()
-                        && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+                if (minecraft.screen == null && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
                         && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
                     minecraft.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null, hit.getEntity().getType()));
                 }
