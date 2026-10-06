@@ -109,7 +109,9 @@ public final class PetWheelScreen extends Screen {
     private String unavailable(Slot slot) {
         switch (slot) {
             case FOLLOW:
-                return pet instanceof TamableAnimal animal && animal.isOrderedToSit() ? null : Tr.s("pet.no.follow");
+                // Always useful: it stands up if it sits, and walks to you; only a creature already beside you has nothing to do.
+                return pet instanceof TamableAnimal animal && animal.isOrderedToSit() || this.minecraft.player == null
+                        || pet.distanceToSqr(this.minecraft.player) > 9 ? null : Tr.s("pet.no.follow");
             case STAY:
                 return pet instanceof TamableAnimal animal && !animal.isOrderedToSit() ? null : Tr.s("pet.no.stay");
             case FEED:

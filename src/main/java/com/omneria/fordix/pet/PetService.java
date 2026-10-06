@@ -42,9 +42,13 @@ public final class PetService {
     private static void run(ServerPlayer player, LivingEntity pet, PetAction action) {
         switch (action) {
             case FOLLOW -> {
+                // Stands up if it was sitting, then walks to the player (a standing wolf only follows from 10 blocks away).
                 if (pet instanceof TamableAnimal animal) {
                     animal.setOrderedToSit(false);
                     animal.setInSittingPose(false);
+                }
+                if (pet instanceof net.minecraft.world.entity.Mob mob) {
+                    mob.getNavigation().moveTo(player, 1.3D);
                 }
             }
             case STAY -> {
