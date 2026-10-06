@@ -90,9 +90,7 @@ public class FordixSettingsScreen extends FordixScreen {
         addRenderableWidget(new FordixButton(right, y + ROW * 6, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.hud_lines"),
                 () -> this.minecraft.setScreen(new HudLinesScreen(this))));
 
-        addRenderableWidget(new FordixButton(left, y + ROW * 8 + 2, COLUMN_WIDTH, BUTTON_HEIGHT, Tr.c("settings.keys"),
-                () -> this.minecraft.setScreen(new net.minecraft.client.gui.screens.controls.KeyBindsScreen(this, this.minecraft.options))));
-        addRenderableWidget(new FordixButton(right, y + ROW * 8 + 2, COLUMN_WIDTH, BUTTON_HEIGHT,
+        addRenderableWidget(new FordixButton(left, y + ROW * 8 + 2, PANEL_WIDTH - PADDING * 2, BUTTON_HEIGHT,
                 Tr.c("common.close"), this::onClose));
     }
 
