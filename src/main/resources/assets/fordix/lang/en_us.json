@@ -256,6 +256,7 @@
     "fordix.hud.overlay.hotbar": "Hotbar",
     "fordix.hud.overlay.item_name": "Held item name",
     "fordix.hud.overlay.performance": "FPS / TPS",
+    "fordix.hud.overlay.pet_wheel": "Pet wheel (position and size)",
     "fordix.hud.overlay.player_list": "Player list (Tab)",
     "fordix.hud.overlay.potion_icons": "Effects",
     "fordix.hud.overlay.record_overlay": "Action bar",

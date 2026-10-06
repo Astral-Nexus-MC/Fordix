@@ -90,6 +90,9 @@ public final class InfoHud {
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_MOB, InfoHud::drawTargetMob);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), GEAR, InfoHud::drawGear);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, InfoHud::drawEffects);
+        // The pet wheel is a screen, drawn only when its key is held: this empty overlay lets the layout screen list and place it.
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "pet_wheel", (gui, graphics, partialTick, width, height) -> {
+        });
         PlayerListHud.registerOverlays(event);
     }
 

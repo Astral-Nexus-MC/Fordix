@@ -256,6 +256,7 @@
     "fordix.hud.overlay.hotbar": "Barre d'objets",
     "fordix.hud.overlay.item_name": "Nom de l'objet tenu",
     "fordix.hud.overlay.performance": "FPS / TPS",
+    "fordix.hud.overlay.pet_wheel": "Roue des créatures (position et taille)",
     "fordix.hud.overlay.player_list": "Liste des joueurs (Tab)",
     "fordix.hud.overlay.potion_icons": "Effets",
     "fordix.hud.overlay.record_overlay": "Barre d'action",

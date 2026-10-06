@@ -561,6 +561,22 @@ public final class DevTest {
             com.omneria.fordix.client.pet.PetWheelScreen.testKeepOpen = true;
             mc.setScreen(new com.omneria.fordix.client.pet.PetWheelScreen(wolf));
         }, 40, false));
+        steps.add(new Step("17k-pet-wheel-moved", () -> {
+            int w = mc.getWindow().getGuiScaledWidth();
+            int h = mc.getWindow().getGuiScaledHeight();
+            com.omneria.fordix.client.gui.vanilla.HudSlots.setScale(com.omneria.fordix.client.pet.PetWheelScreen.ID, 0.7F);
+            com.omneria.fordix.client.gui.vanilla.HudSlots.moveTo(com.omneria.fordix.client.pet.PetWheelScreen.ID, 20, 40, w, h);
+            net.minecraft.world.entity.animal.Wolf wolf = new net.minecraft.world.entity.animal.Wolf(net.minecraft.world.entity.EntityType.WOLF, mc.level);
+            wolf.setTame(true);
+            wolf.setOwnerUUID(mc.player.getUUID());
+            wolf.setPos(mc.player.position());
+            mc.setScreen(new com.omneria.fordix.client.pet.PetWheelScreen(wolf));
+        }, 30, false));
+        steps.add(new Step("17l-pet-wheel-reset", () -> {
+            com.omneria.fordix.client.gui.vanilla.HudSlots.reset(com.omneria.fordix.client.pet.PetWheelScreen.ID);
+            com.omneria.fordix.client.pet.PetWheelScreen.testKeepOpen = false;
+            mc.setScreen(null);
+        }, 5, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
         steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));

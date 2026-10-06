@@ -131,6 +131,7 @@ public final class ExtraHud {
             case "performance" -> new HudSnap.Rect(4, 32, 175, 14);
             case "clock" -> new HudSnap.Rect(4, 50, 150, 24);
             case "compass" -> new HudSnap.Rect(4, 78, 130, 24);
+            case "pet_wheel" -> new HudSnap.Rect(center - 112, height / 2 - 112, 224, 224);
             case "player_list" -> new HudSnap.Rect(center - 156, 28, 312, 120);
             case "effects" -> new HudSnap.Rect(width - 110, 102, 106, 36);
             case "gear" -> new HudSnap.Rect(width - 90, height - 28, 86, 24);

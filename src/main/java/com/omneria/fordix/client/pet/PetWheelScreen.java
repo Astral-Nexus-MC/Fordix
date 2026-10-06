@@ -63,7 +63,15 @@ public final class PetWheelScreen extends Screen {
     /** Dev test only: act as if the key were still held (no key is pressed while the screenshots are taken). */
     public static boolean testKeepOpen;
 
+    /** The wheel is a HUD element like the others: the layout screen moves and sizes it (see {@link #ID}). */
+    public static final String ID = "fordix:pet_wheel";
+    /** Its size at normal scale, the box the layout screen shows. */
+    public static final int BOX = 224;
+
     private final LivingEntity pet;
+    private double centerX;
+    private double centerY;
+    private float scale = 1.0F;
     private int hovered = -1;
     private int openTicks;
     private boolean releaseArmed;
@@ -76,6 +84,14 @@ public final class PetWheelScreen extends Screen {
     /** Whether the creature is tamed and belongs to the player: the only ones the wheel opens on. */
     public static boolean opensOn(net.minecraft.world.entity.Entity entity, net.minecraft.world.entity.player.Player player) {
         return entity instanceof LivingEntity && entity instanceof OwnableEntity ownable && player.getUUID().equals(ownable.getOwnerUUID());
+    }
+
+    @Override
+    protected void init() {
+        var placed = com.omneria.fordix.client.gui.vanilla.HudSlots.placed(ID, this.width, this.height);
+        scale = com.omneria.fordix.client.gui.vanilla.HudSlots.scale(ID);
+        centerX = placed.x() + placed.w() / 2.0;
+        centerY = placed.y() + placed.h() / 2.0;
     }
 
     @Override
@@ -165,7 +181,7 @@ public final class PetWheelScreen extends Screen {
             activate(hovered);
             return true;
         }
-        if (hovered < 0 && button == 0 && distanceFromCenter(mouseX, mouseY) > outerRadius()) {
+        if (hovered < 0 && button == 0 && distanceFromCenter(mouseX, mouseY) > outerRadius() * scale) {
             onClose();
             return true;
         }
@@ -183,11 +199,11 @@ public final class PetWheelScreen extends Screen {
     }
 
     private double distanceFromCenter(double x, double y) {
-        return Math.hypot(x - this.width / 2.0, y - this.height / 2.0);
+        return Math.hypot(x - centerX, y - centerY);
     }
 
     private double outerRadius() {
-        return Math.max(60, Math.min(112, Math.min(this.width, this.height) / 2.0 - 12));
+        return BOX / 2.0 - 8;
     }
 
     private double hubRadius() {
@@ -199,17 +215,21 @@ public final class PetWheelScreen extends Screen {
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, this.width, this.height, 0x55000000);
-        double cx = this.width / 2.0;
-        double cy = this.height / 2.0;
         double outer = outerRadius();
         double hub = hubRadius();
-        hovered = WheelGeometry.sectorAt(mouseX - cx, mouseY - cy, SLOTS.length, hub);
-        if (hovered >= 0 && distanceFromCenter(mouseX, mouseY) > outer + 24) {
+        // Everything is drawn around (0, 0) in the wheel's own units; the mouse is brought into them.
+        double mx = (mouseX - centerX) / scale;
+        double my = (mouseY - centerY) / scale;
+        hovered = WheelGeometry.sectorAt(mx, my, SLOTS.length, hub);
+        if (hovered >= 0 && Math.hypot(mx, my) > outer + 24) {
             hovered = -1;
         }
         if (hovered != SLOTS.length - 1) {
             releaseArmed = false;
         }
+        g.pose().pushPose();
+        g.pose().translate(centerX, centerY, 0);
+        g.pose().scale(scale, scale, 1);
         double width = 2 * Math.PI / SLOTS.length;
         for (int i = 0; i < SLOTS.length; i++) {
             double middle = WheelGeometry.middleOf(i, SLOTS.length);
@@ -217,13 +237,13 @@ public final class PetWheelScreen extends Screen {
             boolean on = i == hovered;
             int fill = on ? (usable ? withAlpha(FordixPalette.ACCENT, 0x66) : 0xCC2A3138) : (usable ? 0xDD101C24 : 0xCC0C1318);
             double grow = on && usable ? 6 : 0;
-            sector(g, cx, cy, hub + 3, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, fill);
+            sector(g, 0, 0, hub + 3, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, fill);
             if (on && usable) {
-                sector(g, cx, cy, outer + grow - 2, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, 0xFF000000 | FordixPalette.ACCENT);
+                sector(g, 0, 0, outer + grow - 2, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, 0xFF000000 | FordixPalette.ACCENT);
             }
             double labelRadius = (hub + outer) / 2 + grow / 2;
-            int lx = (int) Math.round(cx + labelRadius * Math.sin(middle));
-            int ly = (int) Math.round(cy - labelRadius * Math.cos(middle));
+            int lx = (int) Math.round(labelRadius * Math.sin(middle));
+            int ly = (int) Math.round(-labelRadius * Math.cos(middle));
             int color = !usable ? 0xFF5B6B75 : on ? FordixPalette.ACCENT : FordixPalette.TEXT_BRIGHT;
             g.pose().pushPose();
             g.pose().translate(lx - 12, ly - 22, 0);
@@ -240,16 +260,17 @@ public final class PetWheelScreen extends Screen {
             g.drawCenteredString(this.font, label, lx, ly + 6, i == SLOTS.length - 1 && releaseArmed ? 0xFFFF7A7A : color);
             g.drawCenteredString(this.font, String.valueOf(i + 1), lx, ly + 17, 0xFF5B6B75);
         }
-        drawHub(g, cx, cy, hub);
-        drawCaption(g, cy + outer + 18);
+        drawHub(g, hub);
+        g.pose().popPose();
+        drawCaption(g, centerY + (outer + 18) * scale);
         super.render(g, mouseX, mouseY, partialTick);
     }
 
-    private void drawHub(GuiGraphics g, double cx, double cy, double hub) {
-        sector(g, cx, cy, 0, hub, 0, 2 * Math.PI, 0xEE0C161D);
-        sector(g, cx, cy, hub - 2, hub, 0, 2 * Math.PI, 0xFF000000 | FordixPalette.ACCENT);
-        int x = (int) cx;
-        int y = (int) cy - 34;
+    private void drawHub(GuiGraphics g, double hub) {
+        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0xEE0C161D);
+        sector(g, 0, 0, hub - 2, hub, 0, 2 * Math.PI, 0xFF000000 | FordixPalette.ACCENT);
+        int x = 0;
+        int y = -34;
         g.drawCenteredString(this.font, this.font.plainSubstrByWidth(pet.getDisplayName().getString(), (int) hub * 2 - 10), x, y, 0xFFFFFFFF);
         UUID ownerId = pet instanceof OwnableEntity ownable ? ownable.getOwnerUUID() : null;
         String owner = ownerId != null && this.minecraft.player != null && ownerId.equals(this.minecraft.player.getUUID())

@@ -221,6 +221,7 @@ public final class FordixClient {
             }
             while (PET_WHEEL.consumeClick()) {
                 if (minecraft.screen == null && minecraft.player != null && !minecraft.player.isSpectator()
+                        && !com.omneria.fordix.client.gui.vanilla.HudSlots.hidden(com.omneria.fordix.client.pet.PetWheelScreen.ID)
                         && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
                         && com.omneria.fordix.client.pet.PetWheelScreen.opensOn(hit.getEntity(), minecraft.player)) {
                     minecraft.setScreen(new com.omneria.fordix.client.pet.PetWheelScreen((net.minecraft.world.entity.LivingEntity) hit.getEntity()));
