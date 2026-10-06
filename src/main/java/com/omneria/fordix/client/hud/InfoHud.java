@@ -68,6 +68,7 @@ public final class InfoHud {
     private static final int LEFT_COLUMN_WIDTH = 160;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int LABEL = 0xFF8AA0AD;
+    private static final int HINT = 0xFF55D8E8;
     private static final int GOOD = 0xFF7DFFB0;
     private static final int WARN = 0xFFFFB347;
     private static final int BAD = 0xFFFF6B6B;
@@ -669,9 +670,19 @@ public final class InfoHud {
         SpawnEggItem egg = entity instanceof net.minecraft.world.entity.Mob ? SpawnEggItem.byId(entity.getType()) : null;
         int iconSpace = egg != null ? 16 + 5 : 0;
         int boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(TARGET_WIDTH, Math.max(font.width(name), font.width(detail)) + 6 + iconSpace + 6));
+        // A living creature other than a player has a sheet (its drops, its wiki page): the panel says which keys open it.
+        String hint = entity instanceof LivingEntity && !(entity instanceof Player) && FordixConfig.GUIDE_HINTS.get()
+                ? "[" + com.omneria.fordix.client.guide.GuideHints.keyLabel() + "] " + Tr.s("hud.target.sheet") : null;
+        if (hint != null) {
+            boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(boxWidth, font.width(hint) + 12));
+        }
+        int boxHeight = TARGET_HEIGHT + (hint != null ? lineH() : 0);
         int x = targetLeft(width, boxWidth);
         int y = 26;
-        panel(graphics, x, y, boxWidth, TARGET_HEIGHT);
+        panel(graphics, x, y, boxWidth, boxHeight);
+        if (hint != null) {
+            graphics.drawString(font, font.plainSubstrByWidth(hint, boxWidth - 12), x + 6, y + 5 + 2 * lineH(), HINT, true);
+        }
         if (egg != null) {
             graphics.renderItem(new ItemStack(egg), x + 6, y + 6);
         }
@@ -680,11 +691,11 @@ public final class InfoHud {
         graphics.drawString(font, font.plainSubstrByWidth(name, textWidth), textX, y + 5, WHITE, true);
         graphics.drawString(font, font.plainSubstrByWidth(detail, textWidth), textX, y + 5 + lineH(), detailColor, true);
         if (entity instanceof LivingEntity) {
-            graphics.fill(x + 2, y + TARGET_HEIGHT - 2, x + boxWidth, y + TARGET_HEIGHT, 0x40FFFFFF);
-            graphics.fill(x + 2, y + TARGET_HEIGHT - 2, x + 2 + Math.round((boxWidth - 2) * left), y + TARGET_HEIGHT,
+            graphics.fill(x + 2, y + boxHeight - 2, x + boxWidth, y + boxHeight, 0x40FFFFFF);
+            graphics.fill(x + 2, y + boxHeight - 2, x + 2 + Math.round((boxWidth - 2) * left), y + boxHeight,
                     LEVEL_COLORS[HudFormat.level(left)]);
         }
-        return new int[]{x, y + TARGET_HEIGHT, boxWidth};
+        return new int[]{x, y + boxHeight, boxWidth};
     }
 
     private static String health(float value) {

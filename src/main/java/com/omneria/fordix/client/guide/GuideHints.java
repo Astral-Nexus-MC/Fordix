@@ -47,7 +47,8 @@ public final class GuideHints {
         return entry != null && entry.action() == GuideEntry.Action.PONDER;
     }
 
-    private static String keyLabel() {
+    /** "Maj + G": the shortcut as the player has it set. */
+    public static String keyLabel() {
         return Tr.s("guides.hint.shift") + " + " + FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString().toUpperCase();
     }
 
