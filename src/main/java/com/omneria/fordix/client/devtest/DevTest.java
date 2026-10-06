@@ -349,7 +349,10 @@ public final class DevTest {
             cmd(mc, "tellraw @a {\"translate\":\"chat.type.text\",\"with\":[\"Ana\",\"retrouve-moi a 120 64 -300 pour le portail\"]}");
         }, 25, false));
         steps.add(new Step("12m7-chat-coords-open", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("")), 20, false));
-        steps.add(new Step("12m8-options-screen", () -> mc.setScreen(new com.omneria.fordix.client.gui.HudOptionsScreen(null)), 15, false));
+        steps.add(new Step("12m8-settings-hud", () -> mc.setScreen(new FordixSettingsScreen(null, 1)), 15, false));
+        steps.add(new Step("12m9-settings-chat", () -> mc.setScreen(new FordixSettingsScreen(null, 2)), 15, false));
+        steps.add(new Step("12m9b-settings-game", () -> mc.setScreen(new FordixSettingsScreen(null, 3)), 15, false));
+        steps.add(new Step("12m9c-settings-admin", () -> mc.setScreen(new FordixSettingsScreen(null, 4)), 15, false));
         steps.add(new Step("12m9-reset", () -> {
             mc.setScreen(null);
             for (int piece = 0; piece < 4; piece++) {

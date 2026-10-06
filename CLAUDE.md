@@ -67,7 +67,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   L'onglet Livre de l'écran d'administration remplace ces étapes et la récompense (`AdminStore.welcomeSteps/welcomeReward`, sans
   redémarrage) ; « Fichier config » revient à `fordix-common.toml`.
 - Raccourcis : toutes les touches du mod sont des `KeyMapping` de la catégorie Fordix, réglables dans Options > Contrôles (pas d'onglet de raccourcis dans les réglages Fordix) avec Maj, Ctrl ou Alt (`KeyModifier`) ou sans aucune touche (non assignée) ; Maj + G (`OPEN_GUIDE`) et Ctrl + F (`SEARCH_FIELD`, chat et inventaires) sont des défauts, pas des règles codées : tester avec `FordixClient.pressed`, jamais avec `hasShiftDown`, et masquer l'indice quand `isUnbound()`.
-- Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`).
+- Les réglages joueur sont éditables en jeu (bouton Config de la liste des mods, `FordixSettingsScreen`) : onglets Apparence, HUD, Chat, Jeu et Administration (ops seulement), « Réinitialiser l'onglet » remet les valeurs par défaut de l'onglet ouvert ; un nouveau réglage se range dans un onglet (`buildAppearance`/`buildHud`/…) avec `toggle`/`choice`, ce qui l'inscrit aussi à la réinitialisation.
 - Le serveur peut imposer la liste des onglets Guides (`[guides] tabs` dans `fordix-common.toml`).
 
 ## Conventions
