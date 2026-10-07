@@ -84,7 +84,7 @@ public final class SiteImporter {
             String path = queue.poll();
             String url = origin + path;
             try {
-                String html = WikiImporter.text(url);
+                String html = fetch(url);
                 for (String link : links(html, URI.create(url), origin, prefix)) {
                     if (seen.size() < MAX_PAGES * 2 && seen.add(link)) {
                         queue.add(link);
@@ -103,6 +103,55 @@ public final class SiteImporter {
             WikiImporter.pause();
         }
         return new WikiImporter.Report(pages, imageCount, failures);
+    }
+
+    private static final java.net.http.HttpClient HTTP = java.net.http.HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(15)).followRedirects(java.net.http.HttpClient.Redirect.NEVER).build();
+
+    /**
+     * A page's HTML, following redirects by hand: the redirect Java refuses to follow by itself (https to http, which some static
+     * sites answer for an address without its final slash) is followed on the same host, kept in https.
+     */
+    static String fetch(String url) throws IOException {
+        String current = url;
+        for (int hop = 0; hop < 5; hop++) {
+            try {
+                java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder(URI.create(current))
+                        .timeout(java.time.Duration.ofSeconds(30)).header("User-Agent", "Fordix-wiki-import/1.0 (Minecraft server mod; in-game copy of a page)")
+                        .GET().build();
+                java.net.http.HttpResponse<byte[]> response = HTTP.send(request, java.net.http.HttpResponse.BodyHandlers.ofByteArray());
+                int status = response.statusCode();
+                if (status == 301 || status == 302 || status == 303 || status == 307 || status == 308) {
+                    String location = response.headers().firstValue("location").orElse("");
+                    if (location.isEmpty()) {
+                        throw new IOException("HTTP " + status);
+                    }
+                    URI next = URI.create(current).resolve(location);
+                    if (next.getScheme().equals("http") && URI.create(current).getScheme().equals("https")
+                            && next.getAuthority().equalsIgnoreCase(URI.create(current).getAuthority())) {
+                        next = URI.create("https" + next.toString().substring(4));
+                    }
+                    if (!next.getAuthority().equalsIgnoreCase(URI.create(url).getAuthority())) {
+                        throw new IOException("redirected to another site");
+                    }
+                    current = next.toString();
+                    continue;
+                }
+                if (status != 200) {
+                    throw new IOException("HTTP " + status);
+                }
+                if (response.body().length > 12_000_000) {
+                    throw new IOException("answer too big");
+                }
+                return new String(response.body(), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("interrupted");
+            } catch (IllegalArgumentException e) {
+                throw new IOException("bad address " + current);
+            }
+        }
+        throw new IOException("too many redirects");
     }
 
     private static int save(WikiStore store, ImageStore images, WikiInfo info, String origin, String prefix, String path, String url,
