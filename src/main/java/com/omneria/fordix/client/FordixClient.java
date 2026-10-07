@@ -256,8 +256,8 @@ public final class FordixClient {
                 }
             }
             while (OPEN_GUIDE.consumeClick()) {
-                if (minecraft.screen == null && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
-                        && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
+                net.minecraft.world.phys.EntityHitResult hit = minecraft.screen == null ? com.omneria.fordix.client.hud.FarTarget.entity(minecraft) : null;
+                if (hit != null && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
                     minecraft.setScreen(new com.omneria.fordix.client.gui.EntitySheetScreen(null, hit.getEntity().getType()));
                 }
             }

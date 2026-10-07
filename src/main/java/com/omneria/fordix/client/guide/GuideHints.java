@@ -49,7 +49,8 @@ public final class GuideHints {
 
     /** "Maj + G": the shortcut as the player has it set. */
     public static String keyLabel() {
-        return Tr.s("guides.hint.shift") + " + " + FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString().toUpperCase();
+        // The message already carries the Shift / Ctrl / Alt it was set with ("Shift + G"): nothing is added to it.
+        return FordixClient.OPEN_GUIDE.getTranslatedKeyMessage().getString();
     }
 
     public static void onItemTooltip(ItemTooltipEvent event) {

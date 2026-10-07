@@ -508,6 +508,10 @@ public final class InfoHud {
         if (!(minecraft.hitResult instanceof BlockHitResult blockHit) || blockHit.getType() != HitResult.Type.BLOCK) {
             return;
         }
+        // A creature in sight (seen from afar) takes the place of the block behind it.
+        if (on("target_entity") && FarTarget.entity(minecraft) != null) {
+            return;
+        }
         int[] box = drawBlock(graphics, minecraft, width, blockHit);
         if (box == null || !on("target_container")) {
             return;
@@ -540,7 +544,8 @@ public final class InfoHud {
         if (hidden(minecraft) || !on("target_entity")) {
             return;
         }
-        if (!(minecraft.hitResult instanceof EntityHitResult entityHit)) {
+        EntityHitResult entityHit = FarTarget.entity(minecraft);
+        if (entityHit == null) {
             return;
         }
         Entity entity = entityHit.getEntity();
@@ -601,7 +606,34 @@ public final class InfoHud {
 
     /** Centered under the boss bar, but never over the left column of panels on a narrow screen. */
     private static int targetLeft(int width, int boxWidth) {
-        return Math.max(width / 2 - boxWidth / 2, 4 + LEFT_COLUMN_WIDTH + GAP);
+        int left = Math.max(width / 2 - boxWidth / 2, 4 + LEFT_COLUMN_WIDTH + GAP);
+        // ... and never past the right edge of the screen, whatever the width of the text.
+        return Math.max(4, Math.min(left, width - 4 - boxWidth));
+    }
+
+    /** The width of a target panel for what it has to show, kept inside the screen. */
+    private static int targetWidth(int width, int wanted) {
+        return Math.max(60, Math.min(Math.min(TARGET_MAX_WIDTH, width - 8), Math.max(TARGET_WIDTH, wanted)));
+    }
+
+    /** The pieces of a line that fit in {@code room} pixels: the last one that does not is cut, the following ones dropped. */
+    private static List<Seg> fit(Font font, List<Seg> segs, int room) {
+        List<Seg> fitted = new ArrayList<>();
+        int used = 0;
+        for (Seg seg : segs) {
+            int wide = font.width(seg.text());
+            if (used + wide <= room) {
+                fitted.add(seg);
+                used += wide;
+            } else {
+                String cut = font.plainSubstrByWidth(seg.text(), Math.max(0, room - used));
+                if (!cut.isEmpty()) {
+                    fitted.add(new Seg(cut, seg.color()));
+                }
+                break;
+            }
+        }
+        return fitted;
     }
 
     private static int[] drawBlock(GuiGraphics graphics, Minecraft minecraft, int width, BlockHitResult hit) {
@@ -617,7 +649,8 @@ public final class InfoHud {
         for (Seg seg : tool) {
             toolWidth += font.width(seg.text());
         }
-        int boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(TARGET_WIDTH, Math.max(toolWidth, Math.max(font.width(name), font.width(id))) + 6 + 16 + 5 + 6));
+        int boxWidth = targetWidth(width, Math.max(toolWidth + 12, Math.max(font.width(name), font.width(id)) + 6 + 16 + 5 + 6));
+        tool = fit(font, tool, boxWidth - 12);
         int boxHeight = TARGET_HEIGHT + (tool.isEmpty() ? 0 : lineH());
         int x = targetLeft(width, boxWidth);
         int y = 26;
@@ -672,13 +705,13 @@ public final class InfoHud {
         }
         SpawnEggItem egg = entity instanceof net.minecraft.world.entity.Mob ? SpawnEggItem.byId(entity.getType()) : null;
         int iconSpace = egg != null ? 16 + 5 : 0;
-        int boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(TARGET_WIDTH, Math.max(font.width(name), font.width(detail)) + 6 + iconSpace + 6));
+        int boxWidth = targetWidth(width, Math.max(font.width(name), font.width(detail)) + 6 + iconSpace + 6);
         // A living creature other than a player has a sheet (its drops, its wiki page): the panel says which keys open it.
         String hint = entity instanceof LivingEntity && !(entity instanceof Player) && FordixConfig.GUIDE_HINTS.get()
                 && !com.omneria.fordix.client.FordixClient.OPEN_GUIDE.isUnbound()
                 ? "[" + com.omneria.fordix.client.guide.GuideHints.keyLabel() + "] " + Tr.s("hud.target.sheet") : null;
         if (hint != null) {
-            boxWidth = Math.min(TARGET_MAX_WIDTH, Math.max(boxWidth, font.width(hint) + 12));
+            boxWidth = targetWidth(width, Math.max(boxWidth, font.width(hint) + 12));
         }
         int boxHeight = TARGET_HEIGHT + (hint != null ? lineH() : 0);
         int x = targetLeft(width, boxWidth);

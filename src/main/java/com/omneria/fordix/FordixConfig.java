@@ -46,6 +46,9 @@ public final class FordixConfig {
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_ALERT_VALUES = new LinkedHashMap<>();
     public static final List<String> HUD_OPACITIES = List.of("100", "85", "70", "55", "40");
     public static final ForgeConfigSpec.ConfigValue<String> HUD_OPACITY;
+    /** How far (blocks) the targeted creature panel and the creature sheet key reach; 4 or less keeps the game's own reach. */
+    public static final List<String> HUD_TARGET_RANGES = List.of("4", "10", "20", "32");
+    public static final ForgeConfigSpec.ConfigValue<String> HUD_TARGET_RANGE;
     public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
     public static final ForgeConfigSpec.BooleanValue AUTO_COMBAT_PROFILE;
@@ -119,6 +122,8 @@ public final class FordixConfig {
         builder.pop();
         HUD_OPACITY = builder.comment("Opacity of the information panels in percent: " + String.join(", ", HUD_OPACITIES) + ".")
                 .define("hudOpacity", "70", value -> value instanceof String text && HUD_OPACITIES.contains(text));
+        HUD_TARGET_RANGE = builder.comment("How far in blocks a creature is targeted by its panel and the sheet key: " + String.join(", ", HUD_TARGET_RANGES) + ".")
+                .define("hudTargetRange", "20", value -> value instanceof String text && HUD_TARGET_RANGES.contains(text));
         HUD_COMPACT = builder.comment("Tighter information panels (less padding and line spacing), for small screens.")
                 .define("hudCompact", false);
         HUD_EFFECTS_LIST = builder.comment("Replace the potion effect icons with a list showing name and time left.")
@@ -233,6 +238,14 @@ public final class FordixConfig {
             return new int[]{hudOffsetX(element).get(), hudOffsetY(element).get()};
         } catch (IllegalStateException notLoadedYet) {
             return new int[]{0, 0};
+        }
+    }
+
+    public static int hudTargetRange() {
+        try {
+            return Integer.parseInt(HUD_TARGET_RANGE.get());
+        } catch (IllegalStateException | NumberFormatException notReady) {
+            return 4;
         }
     }
 

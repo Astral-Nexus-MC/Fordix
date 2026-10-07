@@ -155,6 +155,7 @@ public class FordixSettingsScreen extends FordixScreen {
             add(toggle(Tr.s("hud.alert." + alert), FordixConfig.hudAlertValue(alert)));
         }
         add(toggle(Tr.s("options.compact"), FordixConfig.HUD_COMPACT));
+        add(choice(Tr.s("options.target_range"), FordixConfig.HUD_TARGET_RANGES, FordixConfig.HUD_TARGET_RANGE, " " + Tr.s("options.blocks")));
         add(choice(Tr.s("options.opacity"), FordixConfig.HUD_OPACITIES, FordixConfig.HUD_OPACITY, " %"));
         add(toggle(Tr.s("options.auto_combat"), FordixConfig.AUTO_COMBAT_PROFILE));
         add(button(Tr.c("settings.hud_layout"), () -> this.minecraft.setScreen(new HudLayoutScreen(this))));

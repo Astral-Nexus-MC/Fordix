@@ -260,6 +260,17 @@ public final class DevTest {
             cmd(mc, "execute at @s run summon minecraft:cow ^ ^ ^2.5 {Health:6f}");
             mc.player.setXRot(22F);
         }, 40, false));
+        steps.add(new Step("12i3b-hud-target-far", () -> {
+            // A hostile creature twelve blocks away, in the line of sight: its panel and the sheet key already work.
+            cmd(mc, "kill @e[type=minecraft:cow]");
+            cmd(mc, "execute at @s run summon minecraft:villager ~ ~ ~12 {NoAI:1b}");
+            mc.player.setXRot(0F);
+        }, 40, false));
+        steps.add(new Step("12i3c-hud-target-block-long", () -> {
+            cmd(mc, "kill @e[type=minecraft:villager]");
+            cmd(mc, "execute at @s run setblock ~ ~ ~3 minecraft:polished_blackstone_brick_stairs");
+            mc.player.setXRot(28F);
+        }, 40, false));
         steps.add(new Step("12i4-hud-lines-off", () -> {
             com.omneria.fordix.FordixConfig.hudLineValue("coordinates_biome").set(false);
             com.omneria.fordix.FordixConfig.hudLineValue("performance_ping").set(false);
@@ -377,7 +388,7 @@ public final class DevTest {
             cmd(mc, "damage @e[type=minecraft:zombie,limit=1,sort=nearest] 12 minecraft:generic");
         }, 5, false));
         steps.add(new Step("12o-inventory-tools", () -> {
-            cmd(mc, "kill @e[type=minecraft:zombie]");
+            cmd(mc, "kill @e[type=minecraft:villager]");
             mc.setScreen(new net.minecraft.client.gui.screens.inventory.InventoryScreen(mc.player));
         }, 20, false));
         steps.add(new Step("12o2-inventory-search", () -> com.omneria.fordix.client.gui.vanilla.InventoryTools.setSearch("iron"), 15, false));
