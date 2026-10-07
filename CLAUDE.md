@@ -59,7 +59,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `AttributeMath`) ; `/fordixdump` écrit `fordix-analysis.json` (objets, attributs, enchantements des mods).
 - Écran d'administration (`FordixAdminScreen`, ops) : envoi de notifications, planification (`AdminStore`,
   `NotificationScheduler`, sauvegardée dans `fordix-admin.json` du monde), modèles et éditeur de panels.
-- Guides : onglets de l'inventaire (`GuideTabs`), écran Guides ouvert depuis le menu pause, bouton réservé aux opérateurs (`GuidesScreen` : pages du serveur
+- Guides : onglets de l'inventaire (`GuideTabs`), écran Guides ouvert depuis le menu pause, bouton réservé aux opérateurs, le bouton Progrès du menu pause est retiré pour tous (`GuidesScreen` : pages du serveur
   `GuidePage`/`PageMarkup` seulement, les guides des mods sont les onglets de l'inventaire ; stockées dans `AdminStore`, édités dans l'onglet Pages de l'admin, envoyées par
   `ClientboundGuidePagesPayload`), indice Maj + G dans l'infobulle des objets d'un mod avec guide (`GuideHints`) ; Maj + G ouvre la scène Ponder de l'objet (Create 0.5.x, `PonderScenes`, par réflexion) quand il en a une, sinon sa fiche (`ItemSheetScreen`, `ItemFacts` : recettes, usages et caractéristiques lus dans le jeu, sans réseau ; un clic sur un objet ouvre sa fiche). Un lien `url:` peut contenir `{objet}` (page du wiki de l'objet) ; sans entrée « minecraft » dans la liste, `GuideTabs` ajoute un guide vanilla vers minecraft.wiki ; l'option client `guideHints` masque la ligne d'indice.
 - Livre de bienvenue (item `fordix:welcome_book`, `welcome/`) : liste d'étapes `[welcomeBook] steps` de `fordix-common.toml`

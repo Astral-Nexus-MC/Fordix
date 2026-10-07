@@ -509,13 +509,11 @@ public final class FordixClient {
             GuideHints.onItemTooltip(event);
         }
 
-        /** A "Guides" button in the pause menu (operators only), lit when a server page changed since it was read. */
+        /** The pause menu loses its Advancements button; operators get a "Guides" button, lit when a server page changed since it was read. */
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {
             Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.player == null || !minecraft.player.hasPermissions(2)) {
-                return;
-            }
+            boolean operator = minecraft.player != null && minecraft.player.hasPermissions(2);
             if (event.getScreen() instanceof net.minecraft.client.gui.screens.PauseScreen screen) {
                 net.minecraft.client.gui.components.AbstractWidget back = null;
                 net.minecraft.client.gui.components.AbstractWidget advancements = null;
@@ -538,7 +536,15 @@ public final class FordixClient {
                     return;
                 }
                 int step = back.getHeight() + 4;
+                // The Advancements button goes for everyone (Statistics takes its row); the Guides row is for operators.
                 event.removeListener(advancements);
+                if (!operator) {
+                    if (advancements != null && stats != null) {
+                        stats.setX(back.getX());
+                        stats.setWidth(back.getWidth());
+                    }
+                    return;
+                }
                 for (net.minecraft.client.gui.components.AbstractWidget widget : widgets) {
                     if (widget != back && widget != advancements) {
                         widget.setY(widget.getY() + step);
