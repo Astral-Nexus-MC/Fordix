@@ -232,13 +232,24 @@ public final class WikiImporter {
         return result;
     }
 
+    /** A wiki installed in a folder ("/tfwiki/index.php/Main_Page" or "/folder/wiki/Page") keeps that folder in its address. */
+    static String wikiRoot(String path) {
+        for (String marker : List.of("/index.php", "/wiki/")) {
+            int at = path == null ? -1 : path.indexOf(marker);
+            if (at > 0) {
+                return path.substring(0, at);
+            }
+        }
+        return "";
+    }
+
     private Report run(String wikiId, String input, boolean withLinks) throws IOException {
         String origin;
         String title;
         WikiInfo info = store.info(wikiId);
         if (input.startsWith("http://") || input.startsWith("https://")) {
             URI uri = URI.create(input);
-            origin = uri.getScheme() + "://" + uri.getAuthority();
+            origin = uri.getScheme() + "://" + uri.getAuthority() + wikiRoot(uri.getRawPath());
             String path = uri.getRawPath() + (uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery());
             title = HtmlToMarkup.pageOf(path);
             if (title == null) {
@@ -438,7 +449,8 @@ public final class WikiImporter {
             return "https:" + src;
         }
         if (src.startsWith("/")) {
-            return origin + src;
+            // A root-relative address starts at the host, not at the wiki's folder.
+            return URI.create(origin).resolve(src).toString();
         }
         return src.startsWith("http://") || src.startsWith("https://") ? src : null;
     }

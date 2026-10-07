@@ -349,7 +349,7 @@ public final class HtmlToMarkup {
         }
     }
 
-    /** The wiki page a link points to ("/wiki/Naga", "/w/Naga#Drops", "index.php?title=Naga"), or null for anything else. */
+    /** The wiki page a link points to ("/wiki/Naga", "/w/Naga#Drops", "/index.php/Naga", "index.php?title=Naga"), or null for anything else. */
     public static String pageOf(String href) {
         String path = decode(href);
         int hash = path.indexOf('#');
@@ -361,6 +361,8 @@ public final class HtmlToMarkup {
             path = path.substring(title + 6);
             int amp = path.indexOf('&');
             path = amp < 0 ? path : path.substring(0, amp);
+        } else if (path.contains("/index.php/")) {
+            path = path.substring(path.indexOf("/index.php/") + 11);
         } else if (path.contains("/wiki/")) {
             path = path.substring(path.indexOf("/wiki/") + 6);
         } else if (path.startsWith("/w/")) {
