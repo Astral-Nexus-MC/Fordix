@@ -140,12 +140,6 @@ public final class WikiCommand {
         return 1;
     }
 
-    /** Wikis whose address {@code importall} knows, by mod id. */
-    private static final java.util.Map<String, String> KNOWN_WIKIS = java.util.Map.of(
-            "minecraft", "https://minecraft.wiki",
-            "twilightforest", "https://twilightforestwiki.com",
-            "mowziesmobs", "https://mowziesmobs.fandom.com");
-
     /** {@code importall <wiki> <items|mobs|all>}: the page of every item and/or creature the mod of that name adds. */
     private static int importAll(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
@@ -153,15 +147,14 @@ public final class WikiCommand {
         String what = StringArgumentType.getString(context, "what");
         WikiInfo known = WikiService.store().info(wiki);
         if (known == null || known.source.isEmpty()) {
-            String address = KNOWN_WIKIS.get(wiki);
-            if (address == null) {
+            if (!wiki.equals("minecraft")) {
                 source.sendFailure(Tr.c("cmd.wiki.need_first", wiki, wiki));
                 return 0;
             }
-            // The address of these wikis is known: no need to import a page first.
-            WikiInfo created = WikiService.store().ensure(wiki, wiki, address, "");
+            // The vanilla wiki's address is known: no need to import a page first.
+            WikiInfo created = WikiService.store().ensure(wiki, wiki, "https://minecraft.wiki", "");
             if (created.source.isEmpty()) {
-                created.source = address;
+                created.source = "https://minecraft.wiki";
             }
             if (created.gameVersion.isEmpty()) {
                 applyGameDefaults(created);
