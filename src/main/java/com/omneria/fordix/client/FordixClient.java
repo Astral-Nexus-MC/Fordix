@@ -90,7 +90,7 @@ public final class FordixClient {
         }
     };
 
-    public static final KeyMapping TOGGLE_DEMO = new KeyMapping(
+    public static final KeyMapping TOGGLE_DEMO = new FordixKeyMapping(
             "key.fordix.toggle_demo",
             net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
@@ -99,7 +99,7 @@ public final class FordixClient {
     );
 
     /** No default key: settings are meant to be reached from the Mods list, this is a shortcut for those who want one. */
-    public static final KeyMapping OPEN_SETTINGS = new KeyMapping(
+    public static final KeyMapping OPEN_SETTINGS = new FordixKeyMapping(
             "key.fordix.open_settings",
             net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
@@ -111,7 +111,7 @@ public final class FordixClient {
      * This key over an item opens the sheet or guide of its mod, and aimed at a creature opens its sheet. Shift + G by default, and
      * like any key of the game it can be set to another key with Shift, Ctrl or Alt, or to none (unbound).
      */
-    public static final KeyMapping OPEN_GUIDE = new KeyMapping(
+    public static final KeyMapping OPEN_GUIDE = new FordixKeyMapping(
             "key.fordix.open_guide",
             GUIDE_CONTEXT,
             net.minecraftforge.client.settings.KeyModifier.SHIFT,
@@ -121,7 +121,7 @@ public final class FordixClient {
     );
 
     /** Focuses the search field of the chat and of the inventories (Ctrl + F by default, changeable or unbound like the others). */
-    public static final KeyMapping SEARCH_FIELD = new KeyMapping(
+    public static final KeyMapping SEARCH_FIELD = new FordixKeyMapping(
             "key.fordix.search_field",
             net.minecraftforge.client.settings.KeyConflictContext.GUI,
             net.minecraftforge.client.settings.KeyModifier.CONTROL,
@@ -131,7 +131,7 @@ public final class FordixClient {
     );
 
     /** Hold while looking at a tamed creature of yours: its interaction wheel opens (slide to a sector, let go). */
-    public static final KeyMapping PET_WHEEL = new KeyMapping(
+    public static final KeyMapping PET_WHEEL = new FordixKeyMapping(
             "key.fordix.pet_wheel",
             net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
@@ -140,7 +140,7 @@ public final class FordixClient {
     );
 
     /** Loads the next saved HUD layout (profiles are filled from the HUD layout screen). */
-    public static final KeyMapping NEXT_PROFILE = new KeyMapping(
+    public static final KeyMapping NEXT_PROFILE = new FordixKeyMapping(
             "key.fordix.next_hud_profile",
             net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
