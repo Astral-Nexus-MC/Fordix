@@ -22,6 +22,16 @@ public final class FordixKeyMapping extends KeyMapping {
         super(name, context, type, code, category);
     }
 
+    /**
+     * Forge also warns when a combination uses a modifier that is itself bound alone (Ctrl + F against the Ctrl key, which the
+     * game uses to sprint). Controlling lists those warnings with the clashes. A combination of ours is not the lone modifier, and
+     * the contexts keep them apart where it matters, so no such warning is raised.
+     */
+    @Override
+    public boolean hasKeyModifierConflict(KeyMapping other) {
+        return false;
+    }
+
     @Override
     public boolean same(KeyMapping other) {
         boolean overlap = getKeyConflictContext().conflicts(other.getKeyConflictContext())
