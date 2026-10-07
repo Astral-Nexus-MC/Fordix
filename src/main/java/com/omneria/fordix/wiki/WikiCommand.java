@@ -87,7 +87,7 @@ public final class WikiCommand {
                     }
                     WikiInfo info = WikiService.store().info(wiki);
                     if (info != null && info.license.isEmpty()) {
-                        source.sendSuccess(() -> Tr.c("cmd.wiki.license_missing", wiki), false);
+                        source.sendSuccess(() -> Tr.c("cmd.wiki.license_missing", wiki, wiki), false);
                     }
                     WikiService.broadcastList(server);
                 }));
