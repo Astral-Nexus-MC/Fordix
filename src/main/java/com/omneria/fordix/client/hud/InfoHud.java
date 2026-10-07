@@ -62,9 +62,8 @@ public final class InfoHud {
     public static final String EFFECTS = "effects";
 
     private static final int GAP = 4;
-    private static final int TARGET_WIDTH = 160;
+    private static final int TARGET_WIDTH = 200;
     private static final int TARGET_HEIGHT = 28;
-    private static final int TARGET_MAX_WIDTH = 230;
     private static final int LEFT_COLUMN_WIDTH = 160;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int LABEL = 0xFF8AA0AD;
@@ -611,9 +610,17 @@ public final class InfoHud {
         return Math.max(4, Math.min(left, width - 4 - boxWidth));
     }
 
-    /** The width of a target panel for what it has to show, kept inside the screen. */
-    private static int targetWidth(int width, int wanted) {
-        return Math.max(60, Math.min(Math.min(TARGET_MAX_WIDTH, width - 8), Math.max(TARGET_WIDTH, wanted)));
+    /**
+     * The width of a target panel: always the same, whatever its text. A panel that grew with its text re-centered itself, so the
+     * HUD moved by half the difference (and out of the screen when the player had put it at an edge): the text is cut instead.
+     */
+    private static int targetWidth(int width, int ignoredWanted) {
+        return Math.max(60, Math.min(TARGET_WIDTH, width - 8));
+    }
+
+    /** Where the target panels start by default: the same for the block and the creature, and what the layout screen assumes. */
+    public static int targetDefaultLeft(int width) {
+        return targetLeft(width, Math.max(60, Math.min(TARGET_WIDTH, width - 8)));
     }
 
     /** The pieces of a line that fit in {@code room} pixels: the last one that does not is cut, the following ones dropped. */

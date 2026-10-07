@@ -135,8 +135,8 @@ public final class ExtraHud {
             case "player_list" -> new HudSnap.Rect(center - 156, 28, 312, 120);
             case "effects" -> new HudSnap.Rect(width - 110, 102, 106, 36);
             case "gear" -> new HudSnap.Rect(width - 90, height - 28, 86, 24);
-            case "target_mob" -> new HudSnap.Rect(center - 80, 26, 160, 28);
-            case "target_block" -> new HudSnap.Rect(center - 80, 26, 160, 38);
+            case "target_mob" -> new HudSnap.Rect(com.omneria.fordix.client.hud.InfoHud.targetDefaultLeft(width), 26, Math.max(60, Math.min(200, width - 8)), 28);
+            case "target_block" -> new HudSnap.Rect(com.omneria.fordix.client.hud.InfoHud.targetDefaultLeft(width), 26, Math.max(60, Math.min(200, width - 8)), 38);
             case "scoreboard" -> new HudSnap.Rect(width - 100, height / 2 - 30, 100, 60);
             case "potion_icons" -> new HudSnap.Rect(width - 25, 1, 24, 24);
             case "item_name" -> new HudSnap.Rect(center - 80, height - 74, 160, 22);

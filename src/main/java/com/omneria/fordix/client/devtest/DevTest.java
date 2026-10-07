@@ -271,6 +271,16 @@ public final class DevTest {
             cmd(mc, "execute at @s run setblock ~ ~ ~3 minecraft:polished_blackstone_brick_stairs");
             mc.player.setXRot(28F);
         }, 40, false));
+        steps.add(new Step("12i3d-block-left-stairs", () -> {
+            // The block panel moved to the left edge: a long name must not push it out of the screen.
+            com.omneria.fordix.client.gui.vanilla.HudSlots.moveTo("fordix:target_block", 4, 80,
+                    mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        }, 30, false));
+        steps.add(new Step("12i3e-block-left-stone", () -> {
+            cmd(mc, "execute at @s run setblock ~ ~ ~3 minecraft:stone");
+        }, 30, false));
+        steps.add(new Step("12i3f-block-left-reset", () ->
+                com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:target_block"), 5, false));
         steps.add(new Step("12i4-hud-lines-off", () -> {
             com.omneria.fordix.FordixConfig.hudLineValue("coordinates_biome").set(false);
             com.omneria.fordix.FordixConfig.hudLineValue("performance_ping").set(false);
