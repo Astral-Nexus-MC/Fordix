@@ -40,6 +40,11 @@ public final class WikiCommand {
                                         .then(Commands.argument("lang", StringArgumentType.word())
                                                 .then(Commands.argument("address", StringArgumentType.greedyString())
                                                         .executes(WikiCommand::translate)))))
+                        .then(Commands.literal("autotranslate")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("lang", StringArgumentType.word())
+                                                .executes(context -> autoTranslate(context, false))
+                                                .then(Commands.literal("estimate").executes(context -> autoTranslate(context, true))))))
                         .then(Commands.literal("list").executes(WikiCommand::list))
                         .then(Commands.literal("remove")
                                 .then(Commands.argument("wiki", StringArgumentType.word())
@@ -138,6 +143,73 @@ public final class WikiCommand {
                     WikiService.broadcastList(server);
                 }));
         return 1;
+    }
+
+    /**
+     * {@code autotranslate <wiki> <lang> [estimate]}: the pages the wiki already has, translated by the Claude API into a wiki
+     * "<wiki>_<lang>" (same page names); {@code estimate} only says how many pages and roughly what it costs.
+     */
+    private static int autoTranslate(CommandContext<CommandSourceStack> context, boolean estimateOnly) {
+        CommandSourceStack source = context.getSource();
+        String wiki = StringArgumentType.getString(context, "wiki");
+        String lang = StringArgumentType.getString(context, "lang").toLowerCase(java.util.Locale.ROOT);
+        WikiInfo from = WikiService.store().info(wiki);
+        if (from == null) {
+            source.sendFailure(Tr.c("cmd.wiki.not_found"));
+            return 0;
+        }
+        String target = wiki + "_" + lang;
+        if (!lang.matches("[a-z]{2,3}") || !WikiInfo.validId(target)) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_autotranslate"));
+            return 0;
+        }
+        WikiTranslator.Estimate estimate = WikiTranslator.estimate(WikiService.store(), wiki, target);
+        if (estimate.pages() == 0) {
+            source.sendFailure(Tr.c("cmd.wiki.autotranslate_nothing", wiki));
+            return 0;
+        }
+        String cost = String.format(java.util.Locale.ROOT, "%.2f", estimate.dollars());
+        if (estimateOnly) {
+            source.sendSuccess(() -> Tr.c("cmd.wiki.autotranslate_estimate", estimate.pages(), estimate.characters() / 1000, cost), false);
+            return estimate.pages();
+        }
+        String key = com.omneria.fordix.FordixServerConfig.WIKI_API_KEY.get().strip();
+        if (key.isEmpty()) {
+            String env = System.getenv("ANTHROPIC_API_KEY");
+            key = env == null ? "" : env.strip();
+        }
+        if (key.isEmpty()) {
+            source.sendFailure(Tr.c("cmd.wiki.autotranslate_no_key"));
+            return 0;
+        }
+        String model = com.omneria.fordix.FordixServerConfig.WIKI_TRANSLATION_MODEL.get().strip();
+        WikiInfo created = WikiService.store().ensure(target, from.title + " (" + lang + ")", from.source, from.license);
+        created.source = from.source;
+        created.api = from.api;
+        created.gameVersion = from.gameVersion;
+        created.asOf = from.asOf;
+        created.javaOnly = from.javaOnly;
+        String note = lang.equals("fr") ? "traduction automatique (Claude)" : "machine translation (Claude)";
+        created.license = from.license.isEmpty() ? note : from.license + " \u00B7 " + note;
+        WikiService.store().update(created);
+        MinecraftServer server = source.getServer();
+        source.sendSuccess(() -> Tr.c("cmd.wiki.autotranslate_start", estimate.pages(), lang, model, cost), true);
+        WikiTranslator.translateWiki(WikiService.store(), wiki, target, lang, key, model,
+                        message -> server.execute(() -> source.sendSuccess(() -> Tr.c("cmd.wiki.progress", message), false)))
+                .whenComplete((result, error) -> server.execute(() -> {
+                    if (error != null) {
+                        source.sendFailure(Tr.c("cmd.wiki.fail", error.getMessage()));
+                        WikiService.broadcastList(server);
+                        return;
+                    }
+                    source.sendSuccess(() -> Tr.c("cmd.wiki.autotranslate_done", result.translated(), result.copied(), result.failed(),
+                            result.inputTokens(), result.outputTokens()), true);
+                    for (String failure : result.failures().stream().limit(5).toList()) {
+                        source.sendFailure(Tr.c("cmd.wiki.skipped", failure));
+                    }
+                    WikiService.broadcastList(server);
+                }));
+        return estimate.pages();
     }
 
     /** {@code importall <wiki> <items|mobs|all>}: the page of every item and/or creature the mod of that name adds. */

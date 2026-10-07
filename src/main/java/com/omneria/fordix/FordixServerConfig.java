@@ -32,6 +32,9 @@ public final class FordixServerConfig {
 
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
 
+    public static final ForgeConfigSpec.ConfigValue<String> WIKI_API_KEY;
+    public static final ForgeConfigSpec.ConfigValue<String> WIKI_TRANSLATION_MODEL;
+
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> RARITY_RULES;
     public static final ForgeConfigSpec.BooleanValue WELCOME_BOOK_GIVE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> WELCOME_BOOK_STEPS;
@@ -103,6 +106,13 @@ public final class FordixServerConfig {
         WELCOME_BOOK_REWARD = builder.comment("Command run once by the server when a player has ticked every step; %player% is his name.",
                         "Example: give %player% minecraft:diamond 3. Empty for no reward.")
                 .define("reward", "");
+        builder.pop();
+        builder.comment("Automatic translation of the wiki pages kept on the server (/fordix wiki autotranslate).")
+                .push("wiki");
+        WIKI_API_KEY = builder.comment("Claude API key used to translate wiki pages. Empty: the ANTHROPIC_API_KEY environment variable of the server.",
+                "Keep this file private: the key is read on the server only and never sent to players.")
+                .define("anthropicApiKey", "");
+        WIKI_TRANSLATION_MODEL = builder.comment("Claude model that translates the pages.").define("translationModel", "claude-opus-5-5");
         builder.pop();
         SPEC = builder.build();
     }
