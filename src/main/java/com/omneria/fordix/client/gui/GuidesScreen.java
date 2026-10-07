@@ -3,7 +3,6 @@ package com.omneria.fordix.client.gui;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.guide.GuideActions;
 import com.omneria.fordix.client.guide.GuideEntry;
-import com.omneria.fordix.client.guide.GuideTabs;
 import com.omneria.fordix.client.guide.SeenPages;
 import com.omneria.fordix.client.guide.ServerPages;
 import com.omneria.fordix.client.wiki.ClientWiki;
@@ -90,18 +89,13 @@ public class GuidesScreen extends FordixScreen {
     private void rebuildRows() {
         rows.clear();
         String needle = query.toLowerCase(Locale.ROOT).trim();
-        for (GuideEntry entry : GuideTabs.installedEntries()) {
-            String title = ModNames.of(entry.modId()) + " : " + entry.label();
-            if (needle.isEmpty() || title.toLowerCase(Locale.ROOT).contains(needle)) {
-                rows.add(new Row(Tr.s("guides.section.mods"), entry.label(), GuideTabs.iconFor(entry.icon()), entry, null));
-            }
-        }
+        // The guides of the mods are the tabs of the inventory: this screen holds the server's pages.
         // A word typed: also offer to search it in the server's wikis (whose text is searched on the server).
         if (!needle.isEmpty() && !ClientWiki.wikis().isEmpty()) {
             GuideEntry wikis = GuideEntry.parse("wikisearch | " + Tr.s("guides.search_wikis", query.strip()).replace("|", "/")
                     + " | minecraft:compass | wiki:" + ClientWiki.wikis().get(0).id());
             if (wikis != null) {
-                rows.add(new Row(Tr.s("guides.section.mods"), wikis.label(), new ItemStack(Items.COMPASS), wikis, null));
+                rows.add(new Row(Tr.s("guides.section.server"), wikis.label(), new ItemStack(Items.COMPASS), wikis, null));
             }
         }
         for (GuidePage page : ServerPages.pages()) {

@@ -509,9 +509,13 @@ public final class FordixClient {
             GuideHints.onItemTooltip(event);
         }
 
-        /** A "Guides" button in the pause menu, lit when a server page changed since it was read. */
+        /** A "Guides" button in the pause menu (operators only), lit when a server page changed since it was read. */
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.player == null || !minecraft.player.hasPermissions(2)) {
+                return;
+            }
             if (event.getScreen() instanceof net.minecraft.client.gui.screens.PauseScreen screen) {
                 net.minecraft.client.gui.components.AbstractWidget back = null;
                 net.minecraft.client.gui.components.AbstractWidget advancements = null;
