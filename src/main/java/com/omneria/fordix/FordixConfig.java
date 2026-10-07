@@ -159,6 +159,8 @@ public final class FordixConfig {
                         "Ponder index), patchouli:<book id>, url:<https link> (asks before opening), command:<command>.")
                 .defineList("guides", List.of(
                         "create | Create : Ponder | create:wrench | ponder",
+                        "create | Create : Wiki | create:andesite_alloy | url:https://create.fandom.com/wiki/Create_Mod_Wiki",
+                        "minecolonies | MineColonies : Wiki | minecolonies:blockhuttownhall | url:https://minecolonies.com/wiki/",
                         "mowziesmobs | Mowzie's Mobs : Wiki | mowziesmobs:foliaath_seed | url:https://mowziesmobs.fandom.com/",
                         "twilightforest | Twilight Forest : Wiki | twilightforest:naga_scale | url:https://twilightforestwiki.com/"
                 ), value -> value instanceof String text && GuideEntry.parse(text) != null);
