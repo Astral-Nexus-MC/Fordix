@@ -72,8 +72,27 @@ import org.lwjgl.glfw.GLFW;
  * registration fires on the mod bus, tick events on the game (forge) bus.
  */
 public final class FordixClient {
+    /**
+     * Where the guide key works: in screens (over an item) and in the world (aimed at a creature). It only clashes with the
+     * keys that also work in screens, so Shift + G is not reported against plain Shift (sneak) or plain G of the game, which
+     * is what the "universal" context of Forge does to every combination (Controlling and the controls screen then flag it).
+     */
+    private static final net.minecraftforge.client.settings.IKeyConflictContext GUIDE_CONTEXT = new net.minecraftforge.client.settings.IKeyConflictContext() {
+        @Override
+        public boolean isActive() {
+            return true;
+        }
+
+        @Override
+        public boolean conflicts(net.minecraftforge.client.settings.IKeyConflictContext other) {
+            return other == this || other == net.minecraftforge.client.settings.KeyConflictContext.GUI
+                    || other == net.minecraftforge.client.settings.KeyConflictContext.UNIVERSAL;
+        }
+    };
+
     public static final KeyMapping TOGGLE_DEMO = new KeyMapping(
             "key.fordix.toggle_demo",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_RIGHT_BRACKET,
             "key.categories.fordix"
@@ -82,6 +101,7 @@ public final class FordixClient {
     /** No default key: settings are meant to be reached from the Mods list, this is a shortcut for those who want one. */
     public static final KeyMapping OPEN_SETTINGS = new KeyMapping(
             "key.fordix.open_settings",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_UNKNOWN,
             "key.categories.fordix"
@@ -93,7 +113,7 @@ public final class FordixClient {
      */
     public static final KeyMapping OPEN_GUIDE = new KeyMapping(
             "key.fordix.open_guide",
-            net.minecraftforge.client.settings.KeyConflictContext.UNIVERSAL,
+            GUIDE_CONTEXT,
             net.minecraftforge.client.settings.KeyModifier.SHIFT,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_G,
@@ -103,7 +123,7 @@ public final class FordixClient {
     /** Focuses the search field of the chat and of the inventories (Ctrl + F by default, changeable or unbound like the others). */
     public static final KeyMapping SEARCH_FIELD = new KeyMapping(
             "key.fordix.search_field",
-            net.minecraftforge.client.settings.KeyConflictContext.UNIVERSAL,
+            net.minecraftforge.client.settings.KeyConflictContext.GUI,
             net.minecraftforge.client.settings.KeyModifier.CONTROL,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_F,
@@ -113,6 +133,7 @@ public final class FordixClient {
     /** Hold while looking at a tamed creature of yours: its interaction wheel opens (slide to a sector, let go). */
     public static final KeyMapping PET_WHEEL = new KeyMapping(
             "key.fordix.pet_wheel",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_R,
             "key.categories.fordix"
@@ -121,6 +142,7 @@ public final class FordixClient {
     /** Loads the next saved HUD layout (profiles are filled from the HUD layout screen). */
     public static final KeyMapping NEXT_PROFILE = new KeyMapping(
             "key.fordix.next_hud_profile",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_F8,
             "key.categories.fordix"
