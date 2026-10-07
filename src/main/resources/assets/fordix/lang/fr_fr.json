@@ -103,6 +103,7 @@
     "fordix.cmd.wiki.bad_autotranslate": "Syntaxe : /fordix wiki autotranslate <wiki> <code de langue, ex. fr> [estimate].",
     "fordix.cmd.wiki.bad_date": "Date invalide : écrivez AAAA-MM-JJ (par exemple 2023-06-26), ou « off ».",
     "fordix.cmd.wiki.bad_id": "Nom de wiki invalide : minuscules, chiffres, - et _ (32 caractères au plus).",
+    "fordix.cmd.wiki.bad_site": "Syntaxe : /fordix wiki importsite <wiki> <adresse de la première page du site, https://...>.",
     "fordix.cmd.wiki.bad_translate": "Syntaxe : /fordix wiki translate <wiki> <code de langue, ex. fr> <adresse du wiki dans cette langue>.",
     "fordix.cmd.wiki.bad_what": "Choisissez items, mobs ou all.",
     "fordix.cmd.wiki.defaults": "Wiki %s créé pour Minecraft %s : état du wiki au %s, édition : %s.",

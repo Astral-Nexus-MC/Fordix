@@ -437,14 +437,14 @@ public final class WikiImporter {
     }
 
     /** Fandom serves WebP unless asked for the original file, and the game only reads PNG. */
-    private static String original(String url) {
+    static String original(String url) {
         if (url.contains("nocookie.net") && !url.contains("format=original")) {
             return url + (url.contains("?") ? "&" : "?") + "format=original";
         }
         return url;
     }
 
-    private static String absolute(String origin, String src) {
+    static String absolute(String origin, String src) {
         if (src.startsWith("//")) {
             return "https:" + src;
         }
@@ -455,7 +455,7 @@ public final class WikiImporter {
         return src.startsWith("http://") || src.startsWith("https://") ? src : null;
     }
 
-    private static void pause() {
+    static void pause() {
         try {
             Thread.sleep(PAUSE_MS);
         } catch (InterruptedException e) {
@@ -463,11 +463,11 @@ public final class WikiImporter {
         }
     }
 
-    private static String text(String url) throws IOException {
+    static String text(String url) throws IOException {
         return new String(bytes(url, 12_000_000), StandardCharsets.UTF_8);
     }
 
-    private static byte[] bytes(String url, int limit) throws IOException {
+    static byte[] bytes(String url, int limit) throws IOException {
         for (int attempt = 0; ; attempt++) {
             try {
                 HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(25))

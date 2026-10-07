@@ -29,6 +29,10 @@ public final class WikiCommand {
                                 .then(Commands.argument("wiki", StringArgumentType.word())
                                         .then(Commands.argument("page", StringArgumentType.greedyString())
                                                 .executes(context -> startImport(context, true)))))
+                        .then(Commands.literal("importsite")
+                                .then(Commands.argument("wiki", StringArgumentType.word())
+                                        .then(Commands.argument("address", StringArgumentType.greedyString())
+                                                .executes(WikiCommand::importSite))))
                         .then(Commands.literal("importall")
                                 .then(Commands.argument("wiki", StringArgumentType.word())
                                         .then(Commands.argument("what", StringArgumentType.word())
@@ -140,6 +144,41 @@ public final class WikiCommand {
                         return;
                     }
                     source.sendSuccess(() -> Tr.c("cmd.wiki.done", report.pages(), report.images()), true);
+                    WikiService.broadcastList(server);
+                }));
+        return 1;
+    }
+
+    /** {@code importsite <wiki> <address>}: a documentation site that is not a MediaWiki, page by page from its start page. */
+    private static int importSite(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String wiki = StringArgumentType.getString(context, "wiki");
+        String address = StringArgumentType.getString(context, "address").strip();
+        if (!WikiInfo.validId(wiki)) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_id"));
+            return 0;
+        }
+        if (!(address.startsWith("https://") || address.startsWith("http://"))) {
+            source.sendFailure(Tr.c("cmd.wiki.bad_site"));
+            return 0;
+        }
+        MinecraftServer server = source.getServer();
+        source.sendSuccess(() -> Tr.c("cmd.wiki.start", address, wiki), true);
+        SiteImporter.importSite(WikiService.store(), WikiService.images(), wiki, address,
+                        message -> server.execute(() -> source.sendSuccess(() -> Tr.c("cmd.wiki.progress", message), false)))
+                .whenComplete((report, error) -> server.execute(() -> {
+                    if (error != null) {
+                        source.sendFailure(Tr.c("cmd.wiki.fail", error.getMessage()));
+                        return;
+                    }
+                    source.sendSuccess(() -> Tr.c("cmd.wiki.done", report.pages(), report.images()), true);
+                    for (String failure : report.failures().stream().limit(5).toList()) {
+                        source.sendFailure(Tr.c("cmd.wiki.skipped", failure));
+                    }
+                    WikiInfo info = WikiService.store().info(wiki);
+                    if (info != null && info.license.isEmpty()) {
+                        source.sendSuccess(() -> Tr.c("cmd.wiki.license_missing", wiki, wiki), false);
+                    }
                     WikiService.broadcastList(server);
                 }));
         return 1;
