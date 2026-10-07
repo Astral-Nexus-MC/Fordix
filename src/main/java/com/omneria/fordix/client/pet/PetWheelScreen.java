@@ -105,15 +105,23 @@ public final class PetWheelScreen extends Screen {
         return this.minecraft.player == null ? ItemStack.EMPTY : this.minecraft.player.getMainHandItem();
     }
 
+    /**
+     * Whether the creature sits. The client never gets the "ordered to sit" order (it is not synchronized, so it always reads
+     * false here): only the sitting pose is, and that is what is drawn on the creature.
+     */
+    private boolean sitting() {
+        return pet instanceof TamableAnimal animal && (animal.isInSittingPose() || animal.isOrderedToSit());
+    }
+
     /** Null when the sector can be used, else the reason it cannot (shown when hovered). */
     private String unavailable(Slot slot) {
         switch (slot) {
             case FOLLOW:
                 // Always useful: it stands up if it sits, and walks to you; only a creature already beside you has nothing to do.
-                return pet instanceof TamableAnimal animal && animal.isOrderedToSit() || this.minecraft.player == null
+                return sitting() || !(pet instanceof TamableAnimal) || this.minecraft.player == null
                         || pet.distanceToSqr(this.minecraft.player) > 9 ? null : Tr.s("pet.no.follow");
             case STAY:
-                return pet instanceof TamableAnimal animal && !animal.isOrderedToSit() ? null : Tr.s("pet.no.stay");
+                return pet instanceof TamableAnimal && !sitting() ? null : Tr.s("pet.no.stay");
             case FEED:
                 return pet instanceof Animal animal && !held().isEmpty() && animal.isFood(held()) && pet.getHealth() < pet.getMaxHealth()
                         ? null : Tr.s("pet.no.feed");
@@ -285,7 +293,7 @@ public final class PetWheelScreen extends Screen {
         g.fill(barLeft, y + 38, barLeft + 72, y + 41, 0xFF2C4150);
         g.fill(barLeft, y + 38, barLeft + Math.round(72 * left), y + 41, 0xFFFF7A7A);
         if (pet instanceof TamableAnimal animal) {
-            g.drawCenteredString(this.font, Tr.s(animal.isOrderedToSit() ? "pet.state.sitting" : "pet.state.standing"), x, y + 46, FordixPalette.ACCENT);
+            g.drawCenteredString(this.font, Tr.s(sitting() ? "pet.state.sitting" : "pet.state.standing"), x, y + 46, FordixPalette.ACCENT);
         }
     }
 
