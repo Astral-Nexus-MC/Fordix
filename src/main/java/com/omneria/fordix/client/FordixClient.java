@@ -148,6 +148,15 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
+    /** Freezes the HUD's automatic situation (exploring, fighting...) or lets it follow the player again. */
+    public static final KeyMapping LOCK_CONTEXT = new FordixKeyMapping(
+            "key.fordix.lock_hud_context",
+            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_F9,
+            "key.categories.fordix"
+    );
+
     static {
         // Dev-only screenshot harness (see DevTest): only with FORDIX_DEVTEST set in the environment.
         if (DevTest.enabled()) {
@@ -189,6 +198,7 @@ public final class FordixClient {
             event.register(PET_WHEEL);
             event.register(SEARCH_FIELD);
             event.register(NEXT_PROFILE);
+            event.register(LOCK_CONTEXT);
         }
 
         /** Recolors the recipe book and advancement textures once resources are loaded, and again after each reload. */
@@ -247,6 +257,12 @@ public final class FordixClient {
             HudAlerts.tick(minecraft);
             DamageNumbers.tick(minecraft);
             HudProfileActions.autoTick(minecraft);
+            com.omneria.fordix.client.hud.HudContextTicker.tick(minecraft);
+            while (LOCK_CONTEXT.consumeClick()) {
+                if (minecraft.screen == null) {
+                    com.omneria.fordix.client.hud.HudContextTicker.toggleLock(minecraft);
+                }
+            }
             while (TOGGLE_DEMO.consumeClick()) {
                 if (minecraft.screen == null) {
                     minecraft.setScreen(new FordixDemoScreen());

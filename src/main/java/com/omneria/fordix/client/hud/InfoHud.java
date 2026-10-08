@@ -81,14 +81,14 @@ public final class InfoHud {
     }
 
     public static void registerOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COORDINATES, InfoHud::drawCoordinates);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), PERFORMANCE, InfoHud::drawPerformance);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), CLOCK, InfoHud::drawClock);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COMPASS, InfoHud::drawCompass);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COORDINATES, HudContextTicker.fade(COORDINATES, InfoHud::drawCoordinates));
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), PERFORMANCE, HudContextTicker.fade(PERFORMANCE, InfoHud::drawPerformance));
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), CLOCK, HudContextTicker.fade(CLOCK, InfoHud::drawClock));
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), COMPASS, HudContextTicker.fade(COMPASS, InfoHud::drawCompass));
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_BLOCK, InfoHud::drawTargetBlock);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), TARGET_MOB, InfoHud::drawTargetMob);
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), GEAR, InfoHud::drawGear);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, InfoHud::drawEffects);
+        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), EFFECTS, HudContextTicker.fade(EFFECTS, InfoHud::drawEffects));
         // The pet wheel is a screen, drawn only when its key is held: this empty overlay lets the layout screen list and place it.
         event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "pet_wheel", (gui, graphics, partialTick, width, height) -> {
         });

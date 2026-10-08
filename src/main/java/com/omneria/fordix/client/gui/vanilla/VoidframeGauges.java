@@ -154,6 +154,11 @@ HudPlacement.end(guiGraphics, sized);
         }
     }
 
+    /** Whether a boss bar is on screen. */
+    public static boolean bossActive(Minecraft minecraft) {
+        return Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events && !events.isEmpty();
+    }
+
     /** A soft accent halo around the selected hotbar slot (drawn inside the hotbar's own transform, so it follows a moved one). */
     private static void drawSelectedGlow(RenderGuiOverlayEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
