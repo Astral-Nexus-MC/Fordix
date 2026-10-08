@@ -550,6 +550,10 @@ public class WikiScreen extends FordixScreen {
         pageView.toggleHeadingNumber(heading);
     }
 
+    public void testScroll(double scroll) {
+        detailScroll = scroll;
+    }
+
     public void testHome() {
         selectedSlug = "";
     }

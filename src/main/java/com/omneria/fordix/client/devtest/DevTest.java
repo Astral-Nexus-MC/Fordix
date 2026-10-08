@@ -418,6 +418,7 @@ public final class DevTest {
             wiki.testFavorite();
             wiki.testFold(0);
             wiki.testFold(2);
+            wiki.testScroll(105);
         }, 20, false));
         steps.add(new Step("12p2e-wiki-category", () -> {
             com.omneria.fordix.client.gui.WikiScreen wiki = (com.omneria.fordix.client.gui.WikiScreen) mc.screen;
