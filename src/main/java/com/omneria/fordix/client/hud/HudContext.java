@@ -56,9 +56,23 @@ public final class HudContext {
         return current;
     }
 
-    /** How much of its normal opacity a panel keeps in this situation, 0..1; panels not listed are never dimmed. */
-    public static float factor(Kind kind, String element) {
+    /** The panels the situations can fade, in the order the table screen lists them. */
+    public static final java.util.List<String> PANELS = java.util.List.of("coordinates", "performance", "clock", "compass", "effects");
+
+    /** The built-in value: how much of its normal opacity a panel keeps in this situation, 0..1; panels not listed are never dimmed. */
+    public static float defaultFactor(Kind kind, String element) {
         float[] row = FACTORS.get(element);
         return row == null ? 1.0F : row[kind.ordinal()];
+    }
+
+    /** The value in use: the player's table when there is one, else the built-in value. */
+    public static float factor(Kind kind, String element) {
+        return matrix != null ? matrix.factor(kind, element) : defaultFactor(kind, element);
+    }
+
+    private static HudContextMatrix matrix;
+
+    public static void useMatrix(HudContextMatrix table) {
+        matrix = table;
     }
 }

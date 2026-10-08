@@ -39,4 +39,19 @@ class HudContextTest {
         assertEquals(0.0F, HudContext.factor(Kind.BOSS, "clock"), 0);
         assertEquals(1.0F, HudContext.factor(Kind.COMBAT, "gear"), 0);
     }
+
+    @Test
+    void theTableOverridesTheDefaultsAndCycles() {
+        HudContextMatrix table = new HudContextMatrix(null);
+        assertEquals(0.30F, table.factor(Kind.COMBAT, "coordinates"), 0);
+        table.cycle(Kind.COMBAT, "coordinates");
+        assertEquals(0.15F, table.factor(Kind.COMBAT, "coordinates"), 0);
+        table.cycle(Kind.COMBAT, "coordinates");
+        assertEquals(0.0F, table.factor(Kind.COMBAT, "coordinates"), 0);
+        table.cycle(Kind.COMBAT, "coordinates");
+        assertEquals(1.0F, table.factor(Kind.COMBAT, "coordinates"), 0);
+        assertEquals(1.0F, table.factor(Kind.EXPLORE, "coordinates"), 0);
+        table.reset();
+        assertEquals(0.30F, table.factor(Kind.COMBAT, "coordinates"), 0);
+    }
 }

@@ -22,7 +22,18 @@ public final class HudContextTicker {
     private static HudContext.Kind locked;
     private static long lastFrame;
 
+    private static HudContextMatrix matrix;
+
     private HudContextTicker() {
+    }
+
+    /** The player's table of situations, loaded once. */
+    public static HudContextMatrix matrix() {
+        if (matrix == null) {
+            matrix = new HudContextMatrix(net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("fordix-hud-contexts.json"));
+            HudContext.useMatrix(matrix);
+        }
+        return matrix;
     }
 
     public static boolean enabled() {
@@ -56,6 +67,7 @@ public final class HudContextTicker {
 
     /** Opacity multiplier for a panel, eased over 200 ms so a change of situation is a fade and never a jump. */
     public static float factor(String element) {
+        matrix();
         float target = enabled() ? HudContext.factor(kind(), element) : 1.0F;
         long now = System.currentTimeMillis();
         float dt = Math.min(0.1F, (now - lastFrame) / 1000.0F);

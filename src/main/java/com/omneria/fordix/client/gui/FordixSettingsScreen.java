@@ -161,6 +161,7 @@ public class FordixSettingsScreen extends FordixScreen {
         add(toggle(Tr.s("options.auto_context"), FordixConfig.AUTO_HUD_CONTEXT));
         add(button(Tr.c("settings.hud_layout"), () -> this.minecraft.setScreen(new HudLayoutScreen(this))));
         add(button(Tr.c("settings.hud_lines"), () -> this.minecraft.setScreen(new HudLinesScreen(this))));
+        add(button(Tr.c("settings.hud_contexts"), () -> this.minecraft.setScreen(new HudContextsScreen(this))));
     }
 
     private void buildChat() {
