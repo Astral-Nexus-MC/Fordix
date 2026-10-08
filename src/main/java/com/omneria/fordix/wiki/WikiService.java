@@ -120,7 +120,7 @@ public final class WikiService {
                 WikiInfo info = wikis.info(request.wiki());
                 byte[] data = page == null ? new byte[0]
                         : (clean(page.title) + "\n" + clean(page.source) + "\n" + clean(info == null ? "" : info.credit()) + "\n---\n"
-                        + page.body + related(wikis, request.wiki(), page)).getBytes(StandardCharsets.UTF_8);
+                        + PageCleaner.clean(page.body, info != null && info.javaOnly) + related(wikis, request.wiki(), page)).getBytes(StandardCharsets.UTF_8);
                 reply(player, request, data);
             }
             case SEARCH -> {

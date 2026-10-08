@@ -39,7 +39,7 @@ public final class HtmlToMarkup {
     private static final List<String> SKIPPED_CLASSES = List.of("navbox", "toc", "mw-editsection", "reference", "reflist", "noprint",
             "hatnote", "catlinks", "printfooter", "mw-empty-elt", "hidden-alt-text", "sr-only", "mbox", "metadata", "mw-authority-control",
             "infobox-invimages", "invslot", "page-footer", "mw-references-wrap");
-    private static final Set<String> SKIPPED_SECTIONS = Set.of("history", "trivia", "gallery", "references", "external links", "notes",
+    static final Set<String> SKIPPED_SECTIONS = Set.of("history", "trivia", "gallery", "references", "external links", "notes",
             "issues", "sounds", "data values", "achievements", "advancements", "video", "videos", "navigation", "see also", "footnotes",
             "bugs", "screenshots", "in other languages", "notes and references", "sources", "category",
             "historique", "galerie", "anecdotes", "r\u00e9f\u00e9rences", "liens externes", "voir aussi", "dans d'autres langues",
