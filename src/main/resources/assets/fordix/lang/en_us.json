@@ -213,6 +213,8 @@
     "fordix.hud.alert.alert_ammo": "No ammunition alert",
     "fordix.hud.alert.alert_durability": "Worn item alert",
     "fordix.hud.alert.alert_sound": "Alert sounds",
+    "fordix.hud.alert.alert_critical": "Critical health alert",
+    "fordix.hud.critical": "Critical health: eat",
     "fordix.hud.alert.alert_tps": "Slow server alert",
     "fordix.hud.alert.ammo": "Out of ammunition",
     "fordix.hud.alert.durability": "%s is about to break",

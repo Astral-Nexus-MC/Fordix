@@ -1,9 +1,12 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.FordixConfig;
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.chat.ChatPanel;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.anim.Smoothing;
+import com.omneria.fordix.client.hud.HudStyle;
+import com.omneria.fordix.client.hud.HudTokens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -101,7 +104,13 @@ public final class VoidframeHud {
                 : FordixPalette.ERROR;
         boolean hurt = player.invulnerableTime > 10 && (player.invulnerableTime / 3) % 2 == 1;
 
-        frame(guiGraphics, x, y, true, hurt ? FordixPalette.TEXT_BRIGHT : FordixPalette.BEVEL_SHADOW);
+        boolean critical = HudTokens.isCritical(health, max) && FordixConfig.hudAlert("alert_critical");
+        long clock = System.currentTimeMillis();
+        float pulse = critical ? HudTokens.pulse(clock) : 0.0F;
+        if (critical) {
+            color = HudTokens.mix(color, 0xFFFF8A7A, pulse * 0.6F);
+        }
+        frame(guiGraphics, x, y, true, hurt ? FordixPalette.TEXT_BRIGHT : critical ? HudTokens.mix(FordixPalette.BEVEL_SHADOW, 0xFFE5534B, pulse) : FordixPalette.BEVEL_SHADOW);
         int inner = BAR_WIDTH - 2;
         int trail = Math.round(inner * (float) (shownHealth / max));
         int real = Math.round(inner * (health / max));
@@ -111,6 +120,11 @@ public final class VoidframeHud {
         fillRange(guiGraphics, x, y, true, 0, real, 0, INNER_ROWS, color);
         fillRange(guiGraphics, x, y, true, 0, real, 0, 1, brighten(color));
 
+        float glint = HudTokens.glint(clock);
+        if (glint >= 0.0F && real > 0) {
+            int at = Math.round(real * glint);
+            fillRange(guiGraphics, x, y, true, Math.max(0, at - 6), Math.min(real, at), 0, INNER_ROWS, 0x55FFFFFF);
+        }
         float absorption = player.getAbsorptionAmount();
         if (absorption > 0.0F) {
             int gold = Math.round(inner * Math.min(1.0F, absorption / max));
@@ -118,6 +132,13 @@ public final class VoidframeHud {
         }
         String text = Mth.ceil(health) + (absorption > 0.0F ? "+" + Mth.ceil(absorption) : "");
         guiGraphics.drawString(font, text, x + 5, y + 1, FordixPalette.TEXT_BRIGHT, true);
+        if (critical) {
+            // Never the color alone: a written warning above the bar, and a red glow at the screen's edge.
+            String warning = "\u26A0 " + Tr.s("hud.critical");
+            guiGraphics.drawString(font, warning, x, y - 11, HudTokens.mix(0xFFFFB4AD, 0xFFFFFFFF, pulse), true);
+            var window = Minecraft.getInstance().getWindow();
+            HudStyle.vignette(guiGraphics, window.getGuiScaledWidth(), window.getGuiScaledHeight(), 0.45F + 0.55F * pulse);
+        }
     }
 
     private static void drawHungerBar(GuiGraphics guiGraphics, Font font, Player player, int x, int y) {

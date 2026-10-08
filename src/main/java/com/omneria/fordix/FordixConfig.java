@@ -42,7 +42,7 @@ public final class FordixConfig {
             "compass_spawn");
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_LINE_VALUES = new LinkedHashMap<>();
     /** Alerts that can be switched off, in the order the options screen lists them. */
-    public static final List<String> HUD_ALERTS = List.of("alert_durability", "alert_ammo", "alert_tps", "alert_sound");
+    public static final List<String> HUD_ALERTS = List.of("alert_durability", "alert_ammo", "alert_tps", "alert_critical", "alert_sound");
     private static final Map<String, ForgeConfigSpec.BooleanValue> HUD_ALERT_VALUES = new LinkedHashMap<>();
     public static final List<String> HUD_OPACITIES = List.of("100", "85", "70", "55", "40");
     public static final ForgeConfigSpec.ConfigValue<String> HUD_OPACITY;

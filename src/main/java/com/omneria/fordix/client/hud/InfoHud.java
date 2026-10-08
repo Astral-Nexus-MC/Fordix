@@ -214,8 +214,7 @@ public final class InfoHud {
     }
 
     private static void panel(GuiGraphics graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, panelFill());
-        graphics.fill(x, y, x + 2, y + height, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+        HudStyle.panel(graphics, x, y, width, height, FordixPalette.ACCENT, panelFill() >>> 24);
     }
 
     /** Draws the non-empty lines as one panel at (x, y); nothing at all when there is no line. */

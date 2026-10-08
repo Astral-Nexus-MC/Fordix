@@ -213,6 +213,8 @@
     "fordix.hud.alert.alert_ammo": "Alerte sans munitions",
     "fordix.hud.alert.alert_durability": "Alerte objet usé",
     "fordix.hud.alert.alert_sound": "Son des alertes",
+    "fordix.hud.alert.alert_critical": "Alerte de vie critique",
+    "fordix.hud.critical": "Vie critique : mangez",
     "fordix.hud.alert.alert_tps": "Alerte serveur lent",
     "fordix.hud.alert.ammo": "Plus de munitions",
     "fordix.hud.alert.durability": "%s va se casser",

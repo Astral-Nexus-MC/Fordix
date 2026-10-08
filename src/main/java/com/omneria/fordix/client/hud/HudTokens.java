@@ -1,0 +1,60 @@
+package com.omneria.fordix.client.hud;
+
+/**
+ * The numbers of the Voidframe 2 HUD language, without any Minecraft dependency (unit tested): the three opacity levels,
+ * the motion durations and the thresholds of the vital bars.
+ */
+public final class HudTokens {
+    /** Opacity of a quiet element, of an element the situation asks for, and of an element drawn over an open screen. */
+    public static final float CALM = 0.42F;
+    public static final float ACTIVE = 0.72F;
+    public static final float SCREEN = 0.94F;
+    /** Fade lengths in milliseconds: a state change, and a whole context change. */
+    public static final long FAST_MS = 120L;
+    public static final long FADE_MS = 200L;
+    /** Health fractions: below LOW the bar changes color, below CRITICAL it pulses and the screen warns. */
+    public static final float LOW = 0.30F;
+    public static final float CRITICAL = 0.15F;
+    private static final long PULSE_MS = 1000L;
+    private static final long GLINT_MS = 3200L;
+
+    private HudTokens() {
+    }
+
+    /** 0..1 smooth wave at 1 Hz, the only continuous motion the HUD allows (critical state). */
+    public static float pulse(long timeMs) {
+        double phase = (timeMs % PULSE_MS) / (double) PULSE_MS;
+        return (float) (0.5D - 0.5D * Math.cos(phase * Math.PI * 2.0D));
+    }
+
+    /** Position 0..1 of the light sweeping across a bar, or -1 while it rests (most of the cycle). */
+    public static float glint(long timeMs) {
+        long cycle = timeMs % GLINT_MS;
+        long start = 2400L;
+        return cycle < start ? -1.0F : (cycle - start) / (float) (GLINT_MS - start);
+    }
+
+    public static boolean isLow(float health, float max) {
+        return max > 0.0F && health / max <= LOW;
+    }
+
+    public static boolean isCritical(float health, float max) {
+        return max > 0.0F && health / max <= CRITICAL;
+    }
+
+    /** Mixes two ARGB colors, {@code t} 0..1 from {@code from} to {@code to}. */
+    public static int mix(int from, int to, float t) {
+        float k = Math.max(0.0F, Math.min(1.0F, t));
+        int out = 0;
+        for (int shift = 24; shift >= 0; shift -= 8) {
+            int a = (from >> shift) & 0xFF;
+            int b = (to >> shift) & 0xFF;
+            out |= Math.round(a + (b - a) * k) << shift;
+        }
+        return out;
+    }
+
+    public static int withAlpha(int color, int alpha) {
+        return (Math.max(0, Math.min(255, alpha)) << 24) | (color & 0x00FFFFFF);
+    }
+}
