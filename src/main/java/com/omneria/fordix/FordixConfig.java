@@ -53,6 +53,7 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
     public static final ForgeConfigSpec.BooleanValue AUTO_COMBAT_PROFILE;
     public static final ForgeConfigSpec.BooleanValue DAMAGE_NUMBERS;
+    public static final ForgeConfigSpec.BooleanValue BORDERLESS_FULLSCREEN;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_PLAYER_LIST;
     public static final ForgeConfigSpec.BooleanValue INVENTORY_TOOLS;
     public static final ForgeConfigSpec.IntValue ALERT_DURABILITY_PERCENT;
@@ -130,6 +131,8 @@ public final class FordixConfig {
                 .define("hudEffectsList", true);
         DAMAGE_NUMBERS = builder.comment("Floating numbers above creatures (and in front of you) when health goes down or up.")
                 .define("damageNumbers", true);
+        BORDERLESS_FULLSCREEN = builder.comment("F11 (the game's Toggle Fullscreen key) gives a borderless window over the whole monitor instead of a video mode change: Alt-Tab is instant.")
+                .define("borderlessFullscreen", false);
         VOIDFRAME_PLAYER_LIST = builder.comment("Replace the Tab player list with the Voidframe panel (heads, ping, server header and footer).")
                 .define("voidframePlayerList", true);
         INVENTORY_TOOLS = builder.comment("Add a search field and a sort button to the inventory and to chests, barrels and shulker boxes.")

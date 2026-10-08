@@ -343,6 +343,7 @@
     "fordix.msg.unknown_action": "Unknown action.",
     "fordix.options.auto_combat": "Automatic Combat profile",
     "fordix.options.blocks": "blocks",
+    "fordix.options.borderless_fullscreen": "Borderless full screen (F11)",
     "fordix.options.compact": "Compact panels",
     "fordix.options.damage_numbers": "Damage numbers",
     "fordix.options.effects": "Effects list",

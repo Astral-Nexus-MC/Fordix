@@ -430,6 +430,8 @@ public final class DevTest {
             mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", null));
         }, 60, false));
         steps.add(new Step("12p4-wiki-closed", () -> mc.setScreen(null), 5, false));
+        steps.add(new Step("12q-borderless-on", () -> com.omneria.fordix.client.BorderlessFullscreen.toggle(mc), 30, false));
+        steps.add(new Step("12q2-borderless-off", () -> com.omneria.fordix.client.BorderlessFullscreen.toggle(mc), 30, false));
         if (net.minecraftforge.fml.ModList.get().isLoaded("journeymap")) {
             steps.add(new Step("10f-hud-journeymap", () -> {
                 HudLayoutScreen layout = new HudLayoutScreen(null);

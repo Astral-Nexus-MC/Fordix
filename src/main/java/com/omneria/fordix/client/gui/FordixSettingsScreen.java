@@ -169,6 +169,7 @@ public class FordixSettingsScreen extends FordixScreen {
 
     private void buildGame() {
         add(toggle(Tr.s("options.damage_numbers"), FordixConfig.DAMAGE_NUMBERS));
+        add(toggle(Tr.s("options.borderless_fullscreen"), FordixConfig.BORDERLESS_FULLSCREEN));
         add(toggle(Tr.s("options.inventory_tools"), FordixConfig.INVENTORY_TOOLS));
         add(toggle(Tr.s("options.player_list"), FordixConfig.VOIDFRAME_PLAYER_LIST));
         add(toggle(Tr.s("settings.hud_items"), FordixConfig.HUD_REQUIRE_ITEMS));

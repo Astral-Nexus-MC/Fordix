@@ -208,6 +208,7 @@ public final class FordixClient {
         static void onClientSetup(FMLClientSetupEvent event) {
             com.omneria.fordix.client.tooltip.AttributeMath.separator = () ->
                     Minecraft.getInstance().getLanguageManager().getSelected().startsWith("fr") ? ',' : '.';
+            event.enqueueWork(() -> BorderlessFullscreen.install(Minecraft.getInstance()));
             ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
                     () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parent) -> new FordixSettingsScreen(parent)));
         }
@@ -237,6 +238,7 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onClientTick(TickEvent.ClientTickEvent event) {
+            BorderlessFullscreen.onClientTick(event);
             if (event.phase != TickEvent.Phase.END) {
                 return;
             }
