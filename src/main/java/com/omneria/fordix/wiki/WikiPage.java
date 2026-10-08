@@ -14,6 +14,8 @@ public final class WikiPage {
     public java.util.List<String> links = new java.util.ArrayList<>();
     /** For a page that is only a redirect (an old name of another page): the slug it leads to. Empty otherwise. */
     public String redirectTo = "";
+    /** What kind of page this is for the list of a wiki ("buildings" for a site imported by folder); empty when not known. */
+    public String category = "";
 
     public WikiPage() {
     }

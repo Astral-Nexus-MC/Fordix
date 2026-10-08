@@ -408,6 +408,22 @@ public final class DevTest {
         }, 5, false));
         steps.add(new Step("12p-wiki-import", () -> cmd(mc, "fordix wiki importlinks minecraft https://minecraft.wiki/w/Iron_Sword"), 700, false));
         steps.add(new Step("12p2-wiki-page", () -> mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", "Iron_Sword")), 80, false));
+        steps.add(new Step("12p2b-wiki-import-more", () -> {
+            cmd(mc, "fordix wiki import minecraft Creeper");
+            cmd(mc, "fordix wiki import minecraft Stone");
+        }, 500, false));
+        steps.add(new Step("12p2c-wiki-creeper", () -> mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", "Creeper")), 90, false));
+        steps.add(new Step("12p2d-wiki-folded", () -> {
+            com.omneria.fordix.client.gui.WikiScreen wiki = (com.omneria.fordix.client.gui.WikiScreen) mc.screen;
+            wiki.testFavorite();
+            wiki.testFold(0);
+            wiki.testFold(2);
+        }, 20, false));
+        steps.add(new Step("12p2e-wiki-category", () -> {
+            com.omneria.fordix.client.gui.WikiScreen wiki = (com.omneria.fordix.client.gui.WikiScreen) mc.screen;
+            wiki.testCategory("mob");
+            wiki.testHome();
+        }, 20, false));
         steps.add(new Step("12p3-wiki-search", () -> {
             com.omneria.fordix.client.gui.WikiScreen.nextQuery = "iron";
             mc.setScreen(new com.omneria.fordix.client.gui.WikiScreen(null, "minecraft", null));

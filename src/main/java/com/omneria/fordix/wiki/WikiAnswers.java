@@ -8,7 +8,11 @@ public final class WikiAnswers {
     public record Info(String id, String title, int pages, String source, String license) {
     }
 
-    public record Entry(String slug, String title) {
+    /** A page in a list; the category ("item", "block", "mob" or a folder name) is empty from a server that doesn't send it. */
+    public record Entry(String slug, String title, String category) {
+        public Entry(String slug, String title) {
+            this(slug, title, "");
+        }
     }
 
     public record Hit(String wiki, String slug, String title, String snippet) {
@@ -41,7 +45,7 @@ public final class WikiAnswers {
         for (String line : text.split("\n")) {
             String[] parts = line.split("\t", -1);
             if (parts.length >= 2 && !parts[0].isEmpty()) {
-                list.add(new Entry(parts[0], parts[1]));
+                list.add(new Entry(parts[0], parts[1], parts.length >= 3 ? parts[2] : ""));
             }
         }
         return list;

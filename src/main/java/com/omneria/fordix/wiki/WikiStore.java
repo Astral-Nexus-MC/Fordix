@@ -22,7 +22,10 @@ public final class WikiStore {
     public static final int MAX_PAGES_PER_WIKI = 6000;
 
     /** A page in a list: no text. */
-    public record Entry(String slug, String title) {
+    public record Entry(String slug, String title, String category) {
+        public Entry(String slug, String title) {
+            this(slug, title, "");
+        }
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -130,7 +133,7 @@ public final class WikiStore {
         List<Entry> entries = new ArrayList<>();
         for (WikiPage page : pages.getOrDefault(wiki, Map.of()).values()) {
             if (page.redirectTo == null || page.redirectTo.isEmpty()) {
-                entries.add(new Entry(page.slug, page.title));
+                entries.add(new Entry(page.slug, page.title, page.category == null ? "" : page.category));
             }
         }
         entries.sort(Comparator.comparing(entry -> entry.title().toLowerCase(java.util.Locale.ROOT)));

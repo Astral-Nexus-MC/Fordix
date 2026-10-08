@@ -194,7 +194,9 @@ public final class SiteImporter {
         if (firstLine.equalsIgnoreCase(title)) {
             markup = markup.length() > firstLine.length() ? markup.substring(firstLine.length()).stripLeading() : "";
         }
-        store.save(info.id, new WikiPage(slug, title, markup.strip(), url, System.currentTimeMillis()));
+        WikiPage page = new WikiPage(slug, title, markup.strip(), url, System.currentTimeMillis());
+        page.category = categoryOf(path, prefix);
+        store.save(info.id, page);
         return saved;
     }
 
@@ -218,6 +220,14 @@ public final class SiteImporter {
             result = result.substring(0, result.length() - 1);
         }
         return result;
+    }
+
+    /** The first folder under the site's folder ("buildings" for "/wiki/buildings/builder"), or empty for a page at the top. */
+    static String categoryOf(String path, String prefix) {
+        String relative = path.startsWith(prefix) ? path.substring(prefix.length()) : path;
+        relative = relative.replaceAll("^/+|/+$", "");
+        int slash = relative.indexOf('/');
+        return slash > 0 ? relative.substring(0, slash) : "";
     }
 
     /** "/wiki/buildings/builder" under "/wiki/" is "buildings_builder"; the folder's own page is "Home". */

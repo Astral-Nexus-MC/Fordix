@@ -85,6 +85,24 @@ public final class WikiService {
         return text.replace('\t', ' ').replace('\n', ' ').replace('\r', ' ');
     }
 
+    /** The kind of page for the list: the one stored with the page, else what the mod of that name registers under the page's name. */
+    static String categoryOf(String wiki, WikiStore.Entry entry) {
+        if (!entry.category().isEmpty()) {
+            return entry.category();
+        }
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(wiki + ":" + entry.slug().toLowerCase(java.util.Locale.ROOT));
+        if (id == null) {
+            return "";
+        }
+        if (net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.containsKey(id)) {
+            return "mob";
+        }
+        if (net.minecraftforge.registries.ForgeRegistries.BLOCKS.containsKey(id)) {
+            return "block";
+        }
+        return net.minecraftforge.registries.ForgeRegistries.ITEMS.containsKey(id) ? "item" : "";
+    }
+
     private static void answer(ServerPlayer player, ServerboundWikiPayload request) {
         WikiStore wikis = store();
         switch (request.kind()) {
@@ -92,7 +110,8 @@ public final class WikiService {
             case INDEX -> {
                 StringBuilder out = new StringBuilder();
                 for (WikiStore.Entry entry : wikis.index(request.wiki())) {
-                    out.append(clean(entry.slug())).append('\t').append(clean(entry.title())).append('\n');
+                    out.append(clean(entry.slug())).append('\t').append(clean(entry.title())).append('\t')
+                            .append(clean(categoryOf(request.wiki(), entry))).append('\n');
                 }
                 reply(player, request, out.toString().getBytes(StandardCharsets.UTF_8));
             }
