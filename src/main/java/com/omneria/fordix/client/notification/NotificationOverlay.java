@@ -148,8 +148,7 @@ public final class NotificationOverlay {
         int height = placed.height();
         int width = shown.width();
         int color = colorOf(shown.style());
-        Panel.draw(guiGraphics, x, y, width, height);
-        guiGraphics.fill(x, y, x + STRIPE, y + height, color);
+        com.omneria.fordix.client.hud.HudStyle.panel(guiGraphics, x, y, width, height, color, 0xE6);
 
         int iconX = x + STRIPE + PADDING;
         int iconY = y + PADDING;
@@ -169,7 +168,7 @@ public final class NotificationOverlay {
 
         // Time left, as a thin bar along the bottom edge.
         int barWidth = Math.round((width - STRIPE - 4) * placed.remaining());
-        guiGraphics.fill(x + STRIPE + 2, y + height - 3, x + STRIPE + 2 + barWidth, y + height - 2, Easing.withAlpha(color, 0.6F));
+        com.omneria.fordix.client.hud.HudStyle.bar(guiGraphics, x + STRIPE + 2, y + height - 4, Math.max(0, barWidth), 2, 1.0F, Easing.withAlpha(color, 0.75F));
     }
 
     /**

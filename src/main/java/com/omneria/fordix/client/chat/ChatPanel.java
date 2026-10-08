@@ -124,8 +124,8 @@ public final class ChatPanel {
         List<ChatLog.Entry> source = open ? ChatLog.filtered(selected, query) : ChatLog.entries();
         if (open) {
             ChatLog.markRead(selected);
-            graphics.fill(log.x(), log.y(), log.right(), log.bottom(), PANEL_FILL);
-            graphics.fill(log.x(), log.y(), log.x() + 2, log.bottom(), withAlpha(FordixPalette.ACCENT, 255));
+            com.omneria.fordix.client.hud.HudStyle.panel(graphics, log.x(), log.y(), log.right() - log.x(), log.bottom() - log.y(),
+                    FordixPalette.ACCENT, PANEL_FILL >>> 24);
             scroll = Mth.clamp(scroll, 0, Math.max(0, source.size() - 1));
         }
         int skip = open ? scroll : 0;
