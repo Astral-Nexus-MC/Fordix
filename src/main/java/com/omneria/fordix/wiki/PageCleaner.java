@@ -275,7 +275,8 @@ public final class PageCleaner {
         List<String> cells = new ArrayList<>();
         for (String row : rows) {
             String cell = firstCell(row).toLowerCase(Locale.ROOT);
-            if (!cell.isEmpty() && !HEADER_CELLS.contains(cell) && !cell.matches("[-+0-9.,/⁄%() ×x–]+")) {
+            if (!cell.isEmpty() && !HEADER_CELLS.contains(cell) && !ROW_NOISE.contains(cell) && !cell.matches("[-+0-9.,/⁄%() ×x–]+")
+                    && !cells.contains(cell)) {
                 cells.add(cell);
             }
         }
@@ -284,7 +285,7 @@ public final class PageCleaner {
 
     /** True when most of the table's first cells were already in a table of the same section: the same figures written again. */
     private static boolean repeats(List<String> firsts, List<List<String>> seen) {
-        if (firsts.size() < 2) {
+        if (firsts.isEmpty()) {
             return false;
         }
         for (List<String> earlier : seen) {
