@@ -16,7 +16,7 @@ import java.util.Map;
  * layout screen and flips between filled slots with a key. Pure Java (Gson), unit tested.
  */
 public final class HudProfiles {
-    public static final int SLOTS = 3;
+    public static final int SLOTS = 6;
 
     /** One element's saved placement. */
     public static final class Placement {

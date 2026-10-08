@@ -11,6 +11,7 @@ import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.HudSlots;
 import com.omneria.fordix.client.gui.vanilla.JourneyMapHud;
 import com.omneria.fordix.client.gui.widget.FordixButton;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -33,7 +34,7 @@ public class HudLayoutScreen extends FordixScreen {
     private static final int GRID = 20;
     private static final long DOUBLE_CLICK_MS = 300L;
     private static final int TOOLBAR_WIDTH = 120;
-    private static final int TOOLBAR_HEIGHT = 148;
+    private static final int TOOLBAR_HEIGHT = 180;
     private static final int HANDLE = 7;
     private static final float WHEEL_STEP = 0.05F;
     private static final float FINE_STEP = 0.01F;
@@ -118,11 +119,21 @@ public class HudLayoutScreen extends FordixScreen {
                 presetButton.setMessage(presetLabel());
             }
         }));
+        // Share: the layout on screen as one line of text, and the reverse.
+        addRenderableWidget(new FordixButton(x, y + 150, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.copy"), () -> {
+            Minecraft.getInstance().keyboardHandler.setClipboard(HudProfileActions.exportCode());
+            Minecraft.getInstance().gui.setOverlayMessage(Tr.c("hud.profile.copied"), false);
+        }));
+        addRenderableWidget(new FordixButton(x, y + 166, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.paste"), () -> {
+            boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard(), profileSlot);
+            Minecraft.getInstance().gui.setOverlayMessage(Tr.c(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), false);
+            profileButton.setMessage(profileLabel());
+        }));
     }
 
     private Component profileLabel() {
         return Tr.c("hud.profile.slot", HudProfileActions.name(profileSlot),
-                HudProfileActions.profiles().has(profileSlot) ? "\u25CF" : "\u25CB");
+                HudProfileActions.profiles().has(profileSlot) ? "\u25CF" : HudProfileActions.usable(profileSlot) ? "\u25D0" : "\u25CB");
     }
 
     /** The settings column sits at the middle of the screen's left edge. */

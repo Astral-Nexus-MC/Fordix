@@ -55,13 +55,59 @@ public final class HudProfileActions {
         ExtraHud.save();
     }
 
+    /** Ready-made layouts for the slots nobody has filled yet: the panels each one hides, the rest at their default spot. */
+    private static final Map<Integer, java.util.List<String>> PRESET_HIDDEN = Map.of(
+            3, java.util.List.of("fordix:clock", "fordix:compass", "fordix:target_mob", "fordix:gear"),
+            4, java.util.List.of("fordix:coordinates", "fordix:performance", "fordix:clock", "fordix:compass"),
+            5, java.util.List.of("fordix:coordinates", "fordix:performance", "fordix:clock", "fordix:compass", "fordix:target_block",
+                    "fordix:target_mob", "fordix:gear", "fordix:effects"));
+
+    /** What a slot holds: the player's saved layout, else the ready-made one of that slot, else nothing. */
+    public static Map<String, HudProfiles.Placement> layoutOf(int slot) {
+        Map<String, HudProfiles.Placement> saved = profiles().get(slot);
+        if (saved != null) {
+            return saved;
+        }
+        java.util.List<String> hidden = PRESET_HIDDEN.get(slot);
+        if (hidden == null) {
+            return null;
+        }
+        Map<String, HudProfiles.Placement> layout = new LinkedHashMap<>();
+        for (String id : hidden) {
+            HudProfiles.Placement placement = new HudProfiles.Placement();
+            placement.hidden = true;
+            layout.put(id, placement);
+        }
+        return layout;
+    }
+
+    public static boolean usable(int slot) {
+        return layoutOf(slot) != null;
+    }
+
+    /** The share code of what is on screen now. */
+    public static String exportCode() {
+        return com.omneria.fordix.client.gui.layout.HudProfileCodec.encode(snapshotAll());
+    }
+
+    /** Puts a pasted code on screen and files it in the slot; false when the text is not a valid code. */
+    public static boolean importCode(String text, int slot) {
+        Map<String, HudProfiles.Placement> layout = com.omneria.fordix.client.gui.layout.HudProfileCodec.decode(text);
+        if (layout == null) {
+            return false;
+        }
+        restoreAll(layout);
+        profiles().put(slot, layout);
+        return true;
+    }
+
     public static void save(int slot) {
         profiles().put(slot, snapshotAll());
     }
 
     /** Puts a saved layout back. */
     public static boolean load(int slot) {
-        Map<String, HudProfiles.Placement> layout = profiles().get(slot);
+        Map<String, HudProfiles.Placement> layout = layoutOf(slot);
         if (layout == null) {
             return false;
         }
@@ -127,7 +173,14 @@ public final class HudProfileActions {
 
     /** The profile key: the next filled slot, announced above the hotbar. */
     public static void loadNext(Minecraft minecraft) {
-        int slot = profiles().next();
+        int slot = -1;
+        for (int step = 1; step <= HudProfiles.SLOTS; step++) {
+            int candidate = Math.floorMod(profiles().active() + step, HudProfiles.SLOTS);
+            if (usable(candidate)) {
+                slot = candidate;
+                break;
+            }
+        }
         if (slot < 0) {
             minecraft.gui.setOverlayMessage(Tr.c("hud.profile.none"), false);
         } else if (load(slot)) {
