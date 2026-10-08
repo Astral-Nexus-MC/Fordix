@@ -133,6 +133,10 @@ HudPlacement.end(guiGraphics, sized);
 
     /** After the crosshair: give the vanilla attack indicator setting back and draw ours under the crosshair. */
     public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
+        if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type() && FordixConfig.VOIDFRAME_HUD.get()) {
+            drawSelectedGlow(event);
+            return;
+        }
         if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type() || !FordixConfig.VOIDFRAME_HUD.get()) {
             return;
         }
@@ -147,6 +151,22 @@ HudPlacement.end(guiGraphics, sized);
             int x = event.getWindow().getGuiScaledWidth() / 2 - 10;
             int y = event.getWindow().getGuiScaledHeight() / 2 + 10;
             Chevron.draw(event.getGuiGraphics(), x, y, 20, 3, true, 1, strength, 0xFFFFFFFF, ATTACK_BOTTOM, false);
+        }
+    }
+
+    /** A soft accent halo around the selected hotbar slot (drawn inside the hotbar's own transform, so it follows a moved one). */
+    private static void drawSelectedGlow(RenderGuiOverlayEvent.Post event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (!(minecraft.getCameraEntity() instanceof Player player) || minecraft.options.hideGui) {
+            return;
+        }
+        GuiGraphics g = event.getGuiGraphics();
+        int x = event.getWindow().getGuiScaledWidth() / 2 - 91 + player.getInventory().selected * 20 - 1;
+        int y = event.getWindow().getGuiScaledHeight() - 22 - 1;
+        int accent = FordixPalette.ACCENT & 0x00FFFFFF;
+        for (int i = 1; i <= 3; i++) {
+            int a = 0x30 >> (i - 1);
+            g.renderOutline(x - i, y - i, 24 + 2 * i, 24 + 2 * i, (a << 24) | accent);
         }
     }
 

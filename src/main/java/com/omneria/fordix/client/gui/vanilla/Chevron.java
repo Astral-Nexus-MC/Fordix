@@ -36,6 +36,10 @@ public final class Chevron {
             if (right > left) {
                 float t = height <= 3 ? 0.0F : (row - 1) / (float) (height - 3);
                 guiGraphics.fill(left, y + row, right, y + row + 1, mix(topColor, bottomColor, t));
+                if (row == 1 && height >= 5) {
+                    // Specular line on the first row, like the glossy bars of the Voidframe 2 mockup.
+                    guiGraphics.fill(left, y + row, right, y + row + 1, 0x38FFFFFF);
+                }
             }
         }
     }
