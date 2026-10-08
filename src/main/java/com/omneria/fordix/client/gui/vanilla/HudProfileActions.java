@@ -68,6 +68,14 @@ public final class HudProfileActions {
         if (saved != null) {
             return saved;
         }
+        // The server's suggestion takes the last slot while the player has not filled it.
+        if (slot == HudProfiles.SLOTS - 1) {
+            Map<String, HudProfiles.Placement> proposed = com.omneria.fordix.client.gui.layout.HudProfileCodec.decode(
+                    com.omneria.fordix.client.hud.HudRules.proposed());
+            if (proposed != null) {
+                return proposed;
+            }
+        }
         java.util.List<String> hidden = PRESET_HIDDEN.get(slot);
         if (hidden == null) {
             return null;
@@ -99,6 +107,15 @@ public final class HudProfileActions {
         restoreAll(layout);
         profiles().put(slot, layout);
         return true;
+    }
+
+    /** The placement of every element as it is now, to give back later with {@link #applyLayout}. */
+    public static Map<String, HudProfiles.Placement> capture() {
+        return snapshotAll();
+    }
+
+    public static void applyLayout(Map<String, HudProfiles.Placement> layout) {
+        restoreAll(layout);
     }
 
     public static void save(int slot) {
@@ -133,6 +150,9 @@ public final class HudProfileActions {
     public static void autoTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null || ++ticks % CHECK_EVERY_TICKS != 0) {
             return;
+        }
+        if (com.omneria.fordix.client.hud.HudContextTicker.enabled()) {
+            return; // the situations have their own profiles (HudContextsScreen)
         }
         if (!FordixConfig.AUTO_COMBAT_PROFILE.get()) {
             if (beforeCombat != null) {

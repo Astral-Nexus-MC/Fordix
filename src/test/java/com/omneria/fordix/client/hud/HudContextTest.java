@@ -54,4 +54,16 @@ class HudContextTest {
         table.reset();
         assertEquals(0.30F, table.factor(Kind.COMBAT, "coordinates"), 0);
     }
+
+    @Test
+    void profilesCycleThroughTheSlotsAndNone() {
+        HudContextMatrix table = new HudContextMatrix(null);
+        assertEquals(-1, table.profile(Kind.COMBAT));
+        table.cycleProfile(Kind.COMBAT, 2);
+        assertEquals(0, table.profile(Kind.COMBAT));
+        table.cycleProfile(Kind.COMBAT, 2);
+        assertEquals(1, table.profile(Kind.COMBAT));
+        table.cycleProfile(Kind.COMBAT, 2);
+        assertEquals(-1, table.profile(Kind.COMBAT));
+    }
 }

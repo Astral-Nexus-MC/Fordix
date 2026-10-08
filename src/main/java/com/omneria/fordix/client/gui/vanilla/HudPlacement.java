@@ -36,7 +36,7 @@ public final class HudPlacement {
     }
 
     public static boolean hidden(String element) {
-        return FordixConfig.hudHidden(element);
+        return com.omneria.fordix.client.hud.HudRules.hidden(element, FordixConfig.hudHidden(element));
     }
 
     /**

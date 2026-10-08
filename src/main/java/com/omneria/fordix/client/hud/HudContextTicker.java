@@ -54,8 +54,46 @@ public final class HudContextTicker {
                 || player.tickCount - player.getLastHurtByMobTimestamp() < 40;
         boolean mining = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null
                 && minecraft.hitResult.getType() == HitResult.Type.BLOCK;
-        CONTEXT.update(System.currentTimeMillis(),
+        HudContext.Kind kind = CONTEXT.update(System.currentTimeMillis(),
                 new HudContext.Signals(VoidframeGauges.bossActive(minecraft), player.getVehicle() != null, fighting, mining));
+        if (locked == null) {
+            followWithProfile(minecraft, kind);
+        }
+    }
+
+    private static final ContextProfileSwitch PROFILES = new ContextProfileSwitch();
+    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudProfiles.Placement> beforeProfile;
+
+    /** Loads the profile the player chose for the situation, and gives the previous layout back when it ends. */
+    private static void followWithProfile(Minecraft minecraft, HudContext.Kind kind) {
+        var action = PROFILES.update(kind, ordinal -> matrix().profile(HudContext.Kind.values()[ordinal]),
+                com.omneria.fordix.client.gui.vanilla.HudProfileActions::usable);
+        switch (action.type()) {
+            case LOAD -> {
+                if (beforeProfile == null) {
+                    beforeProfile = com.omneria.fordix.client.gui.vanilla.HudProfileActions.capture();
+                }
+                com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(
+                        com.omneria.fordix.client.gui.vanilla.HudProfileActions.layoutOf(action.slot()));
+                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot())), false);
+            }
+            case RESTORE -> {
+                if (beforeProfile != null) {
+                    com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(beforeProfile);
+                    beforeProfile = null;
+                    minecraft.gui.setOverlayMessage(Tr.c("hud.profile.back"), false);
+                }
+            }
+            default -> {
+            }
+        }
+    }
+
+    /** Logging out: forget the situation and the layout to give back. */
+    public static void reset() {
+        PROFILES.reset();
+        beforeProfile = null;
+        locked = null;
     }
 
     /** The lock key: freezes the situation as it is, or lets it follow the player again. */

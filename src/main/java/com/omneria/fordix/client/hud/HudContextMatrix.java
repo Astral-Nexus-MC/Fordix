@@ -21,16 +21,25 @@ public final class HudContextMatrix {
 
     private final Path file;
     private Map<String, float[]> overrides = new LinkedHashMap<>();
+    /** The saved profile slot loaded in each situation (by ordinal), -1 for none. */
+    private int[] profiles = {-1, -1, -1, -1, -1};
+
+    private static final class Data {
+        Map<String, float[]> overrides = new LinkedHashMap<>();
+        int[] profiles;
+    }
 
     public HudContextMatrix(Path file) {
         this.file = file;
         if (file != null && Files.isRegularFile(file)) {
             try {
-                Map<String, float[]> read = GSON.fromJson(Files.readString(file, StandardCharsets.UTF_8),
-                        new TypeToken<LinkedHashMap<String, float[]>>() { }.getType());
-                if (read != null) {
-                    read.values().removeIf(row -> row == null || row.length != HudContext.Kind.values().length);
-                    overrides = read;
+                Data read = GSON.fromJson(Files.readString(file, StandardCharsets.UTF_8), Data.class);
+                if (read != null && read.overrides != null) {
+                    read.overrides.values().removeIf(row -> row == null || row.length != HudContext.Kind.values().length);
+                    overrides = read.overrides;
+                    if (read.profiles != null && read.profiles.length == profiles.length) {
+                        profiles = read.profiles;
+                    }
                 }
             } catch (IOException | RuntimeException ignored) {
                 // an unreadable file means the defaults
@@ -67,6 +76,18 @@ public final class HudContextMatrix {
 
     public void reset() {
         overrides.clear();
+        profiles = new int[]{-1, -1, -1, -1, -1};
+        save();
+    }
+
+    public int profile(HudContext.Kind kind) {
+        return profiles[kind.ordinal()];
+    }
+
+    /** The next slot for a situation: none, then each of the {@code slots} profiles, then none again. */
+    public void cycleProfile(HudContext.Kind kind, int slots) {
+        int next = profiles[kind.ordinal()] + 1;
+        profiles[kind.ordinal()] = next >= slots ? -1 : next;
         save();
     }
 
@@ -75,7 +96,10 @@ public final class HudContextMatrix {
             return;
         }
         try {
-            Files.writeString(file, GSON.toJson(overrides), StandardCharsets.UTF_8);
+            Data data = new Data();
+            data.overrides = overrides;
+            data.profiles = profiles;
+            Files.writeString(file, GSON.toJson(data), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
             // the table still works for this session
         }

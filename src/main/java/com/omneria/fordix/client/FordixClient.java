@@ -306,6 +306,8 @@ public final class FordixClient {
             InventoryTools.reset();
             ContainerMemory.clear();
             HudProfileActions.onLoggingOut();
+            com.omneria.fordix.client.hud.ClientHudRules.clear();
+            com.omneria.fordix.client.hud.HudContextTicker.reset();
         }
 
         @SubscribeEvent

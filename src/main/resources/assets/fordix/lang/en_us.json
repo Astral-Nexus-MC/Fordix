@@ -368,6 +368,8 @@
     "fordix.contexts.panel.clock": "Clock",
     "fordix.contexts.panel.compass": "Compass",
     "fordix.contexts.panel.effects": "Effects",
+    "fordix.contexts.profile": "Profile",
+    "fordix.hud.rules.proposed": "The server suggests a HUD layout: press F8 to try it",
     "fordix.options.auto_combat": "Automatic Combat profile",
     "fordix.options.blocks": "blocks",
     "fordix.options.borderless_fullscreen": "Borderless full screen (F11)",

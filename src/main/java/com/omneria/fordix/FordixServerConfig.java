@@ -31,6 +31,9 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ANNOUNCEMENTS;
 
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_REQUIRED;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_FORBIDDEN;
+    public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
 
     public static final ForgeConfigSpec.ConfigValue<String> WIKI_API_KEY;
     public static final ForgeConfigSpec.ConfigValue<String> WIKI_TRANSLATION_MODEL;
@@ -80,6 +83,18 @@ public final class FordixServerConfig {
                         "url:<https link>, command:<command>). A tab only shows for players who have its mod.",
                         "Leave empty to let each player use the guides of their own config.")
                 .defineList("tabs", List.of(), value -> value instanceof String text && GuideEntry.parse(text) != null);
+        builder.pop();
+
+        builder.comment("Rules for the HUD on this server (players keep everything else).")
+                .push("hud");
+        HUD_REQUIRED = builder.comment("Elements players can never hide: \"health\", \"hunger\", \"armor\", \"air\", \"experience\", \"boss\",",
+                        "\"minecraft:hotbar\", \"minecraft:chat_panel\", \"fordix:coordinates\"... (the ids the HUD layout screen uses).")
+                .defineList("required", List.of("health", "minecraft:hotbar"), value -> value instanceof String text && !text.isBlank() && text.length() <= 96);
+        HUD_FORBIDDEN = builder.comment("Elements that are always hidden here (streamer or competition servers): same ids as above.")
+                .defineList("forbidden", List.of(), value -> value instanceof String text && !text.isBlank() && text.length() <= 96);
+        HUD_PROPOSED = builder.comment("A HUD layout to suggest: paste the share code (FXH1-...) copied from the HUD layout screen.",
+                        "Players find it in the last profile slot (F8) unless they filled that slot themselves. Empty: no suggestion.")
+                .define("proposed", "");
         builder.pop();
 
         builder.comment("Item rarity, the same for every player.")

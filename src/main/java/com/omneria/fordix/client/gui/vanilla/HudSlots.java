@@ -118,10 +118,9 @@ public final class HudSlots {
     }
 
     public static boolean hidden(String id) {
-        if (isBuiltin(id)) {
-            return FordixConfig.hudHidden(id);
-        }
-        return isJourneyMap(id) ? JourneyMapHud.hidden() : ExtraHud.slot(id).hidden;
+        boolean own = isBuiltin(id) ? FordixConfig.hudHidden(id)
+                : isJourneyMap(id) ? JourneyMapHud.hidden() : ExtraHud.slot(id).hidden;
+        return com.omneria.fordix.client.hud.HudRules.hidden(id, own);
     }
 
     public static void setHidden(String id, boolean hidden) {

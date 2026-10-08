@@ -34,7 +34,7 @@ public class HudContextsScreen extends FordixScreen {
         HudContext.Kind[] kinds = HudContext.Kind.values();
         int rows = HudContext.PANELS.size();
         int panelWidth = PADDING * 2 + LABEL_WIDTH + CELL_WIDTH * kinds.length;
-        int panelHeight = 24 + ROW * (rows + 1) + 6 + 16 + PADDING;
+        int panelHeight = 24 + ROW * (rows + 2) + 6 + 16 + PADDING;
         int panelX = centerX(panelWidth);
         int panelY = centerY(panelHeight);
         panel = new Panel(panelX, panelY, panelWidth, panelHeight);
@@ -52,12 +52,27 @@ public class HudContextsScreen extends FordixScreen {
                 addRenderableWidget(self[0]);
             }
         }
-        int bottom = tableTop + rows * ROW + 6;
+        // One more row: the saved profile loaded in each situation.
+        for (HudContext.Kind kind : kinds) {
+            FordixButton[] self = new FordixButton[1];
+            self[0] = new FordixButton(tableLeft + kind.ordinal() * CELL_WIDTH + 1, tableTop + rows * ROW, CELL_WIDTH - 2, ROW - 2,
+                    profileCell(kind), () -> {
+                HudContextTicker.matrix().cycleProfile(kind, com.omneria.fordix.client.gui.layout.HudProfiles.SLOTS);
+                self[0].setMessage(profileCell(kind));
+            });
+            addRenderableWidget(self[0]);
+        }
+        int bottom = tableTop + (rows + 1) * ROW + 6;
         addRenderableWidget(new FordixButton(panelX + PADDING, bottom, 120, 16, Tr.c("contexts.reset"), () -> {
             HudContextTicker.matrix().reset();
             rebuildWidgets();
         }));
         addRenderableWidget(new FordixButton(panelX + panelWidth - PADDING - 120, bottom, 120, 16, Tr.c("common.close"), this::onClose));
+    }
+
+    private static Component profileCell(HudContext.Kind kind) {
+        int slot = HudContextTicker.matrix().profile(kind);
+        return Component.literal(slot < 0 ? "\u2014" : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(slot));
     }
 
     private static Component cell(HudContext.Kind kind, String element) {
@@ -74,6 +89,8 @@ public class HudContextsScreen extends FordixScreen {
             guiGraphics.drawCenteredString(this.font, Tr.s("hud.context." + kind.name().toLowerCase(java.util.Locale.ROOT)),
                     tableLeft + kind.ordinal() * CELL_WIDTH + CELL_WIDTH / 2, tableTop - ROW + 4, FordixPalette.TEXT);
         }
+        guiGraphics.drawString(this.font, Tr.s("contexts.profile"), panel.getX() + PADDING,
+                tableTop + HudContext.PANELS.size() * ROW + 4, FordixPalette.ACCENT, false);
         for (int row = 0; row < HudContext.PANELS.size(); row++) {
             guiGraphics.drawString(this.font, Tr.s("contexts.panel." + HudContext.PANELS.get(row)),
                     panel.getX() + PADDING, tableTop + row * ROW + 4, FordixPalette.TEXT_BRIGHT, false);

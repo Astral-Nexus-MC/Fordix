@@ -153,11 +153,12 @@ public final class ExtraHud {
     public static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
         ResourceLocation id = event.getOverlay().id();
         HudSlot slot = slots().get(id.toString());
-        if (slot == null || !slot.customized()) {
+        // The server's rules first: a required element is drawn even when the player hid it, a forbidden one never is.
+        if (com.omneria.fordix.client.hud.HudRules.hidden(id.toString(), slot != null && slot.hidden)) {
+            event.setCanceled(true);
             return;
         }
-        if (slot.hidden) {
-            event.setCanceled(true);
+        if (slot == null || !slot.customized()) {
             return;
         }
         int width = event.getWindow().getGuiScaledWidth();

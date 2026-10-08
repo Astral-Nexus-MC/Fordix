@@ -52,6 +52,10 @@ public final class GuideBroadcaster {
 
     private static void send(ServerPlayer player) {
         sendPages(player);
+        PanelNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new com.omneria.fordix.hud.ClientboundHudRulesPayload(
+                List.copyOf(FordixServerConfig.HUD_REQUIRED.get()), List.copyOf(FordixServerConfig.HUD_FORBIDDEN.get()),
+                FordixServerConfig.HUD_PROPOSED.get().length() <= com.omneria.fordix.hud.ClientboundHudRulesPayload.MAX_CODE
+                        ? FordixServerConfig.HUD_PROPOSED.get() : ""));
         com.omneria.fordix.wiki.WikiService.sendList(player);
         List<String> lines = List.copyOf(FordixServerConfig.GUIDES.get());
         List<String> rules = List.copyOf(FordixServerConfig.RARITY_RULES.get());

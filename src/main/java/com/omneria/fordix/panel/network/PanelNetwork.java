@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "9";
+    private static final String PROTOCOL_VERSION = "10";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -97,10 +97,21 @@ public final class PanelNetwork {
                 ClientboundWikiPayload::encode,
                 ClientboundWikiPayload::decode,
                 PanelNetwork::handleWiki);
+        CHANNEL.registerMessage(id++, com.omneria.fordix.hud.ClientboundHudRulesPayload.class,
+                com.omneria.fordix.hud.ClientboundHudRulesPayload::encode,
+                com.omneria.fordix.hud.ClientboundHudRulesPayload::decode,
+                PanelNetwork::handleHudRules);
         CHANNEL.registerMessage(id++, ServerboundPetActionPayload.class,
                 ServerboundPetActionPayload::encode,
                 ServerboundPetActionPayload::decode,
                 PetService::handle);
+    }
+
+    private static void handleHudRules(com.omneria.fordix.hud.ClientboundHudRulesPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.omneria.fordix.client.hud.ClientHudRules.receive(payload))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleWiki(ClientboundWikiPayload payload, Supplier<NetworkEvent.Context> ctx) {
