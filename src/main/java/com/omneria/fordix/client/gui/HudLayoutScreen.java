@@ -347,6 +347,10 @@ public class HudLayoutScreen extends FordixScreen {
         if (selected >= 0) {
             drawTag(guiGraphics, selected);
         }
+        // The panels and their buttons go in front of every outline and label drawn above, whatever the depth buffer says.
+        guiGraphics.flush();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0F, 0.0F, 300.0F);
         drawPanels(guiGraphics, mouseX, mouseY);
         boolean locked = selected >= 0 && HudRules.locked(elements.get(selected));
         hideButton.setMessage(Tr.c(selected >= 0 && HudSlots.hidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
@@ -356,6 +360,7 @@ public class HudLayoutScreen extends FordixScreen {
         undoButton.active = !undo.isEmpty();
         redoButton.active = !redo.isEmpty();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.pose().popPose();
     }
 
     private boolean overPanel(double mouseX, double mouseY) {
