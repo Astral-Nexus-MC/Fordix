@@ -1,60 +1,35 @@
 package com.omneria.fordix.client.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.vanilla.VoidframeGauges;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 /**
- * Feeds {@link HudContext} with what the player is doing and fades the information panels accordingly (the option
- * {@code autoHudContext}, off by default). A locked context stays until unlocked.
+ * Feeds {@link HudContext} with what the player is doing, announces each change, loads the server's layout of the situation
+ * and fades the information panels as the server's table says. Always on: the server decides, not the player.
  */
 public final class HudContextTicker {
     private static final HudContext CONTEXT = new HudContext();
     private static final Map<String, Float> SHOWN = new HashMap<>();
-    private static HudContext.Kind locked;
     private static long lastFrame;
-
-    private static HudContextMatrix matrix;
 
     private HudContextTicker() {
     }
 
-    /** The player's table of situations, loaded once. */
-    public static HudContextMatrix matrix() {
-        if (matrix == null) {
-            matrix = new HudContextMatrix(net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("fordix-hud-contexts.json"));
-            HudContext.useMatrix(matrix);
-        }
-        return matrix;
-    }
-
-    public static boolean enabled() {
-        if (HudRules.situationsForced()) {
-            return true;
-        }
-        return switch (HudRules.autoMode()) {
-            case "on" -> true;
-            case "off" -> false;
-            default -> FordixConfig.AUTO_HUD_CONTEXT.get();
-        };
-    }
-
     public static HudContext.Kind kind() {
-        return locked != null && !HudRules.situationsForced() ? locked : CONTEXT.current();
+        return CONTEXT.current();
     }
 
     /** Every client tick. */
     public static void tick(Minecraft minecraft) {
         LocalPlayer player = minecraft.player;
-        if (player == null || minecraft.level == null || !enabled()) {
+        if (player == null || minecraft.level == null) {
             return;
         }
         boolean fighting = player.tickCount - player.getLastHurtMobTimestamp() < 40
@@ -63,10 +38,8 @@ public final class HudContextTicker {
                 && minecraft.hitResult.getType() == HitResult.Type.BLOCK;
         HudContext.Kind kind = CONTEXT.update(System.currentTimeMillis(),
                 new HudContext.Signals(VoidframeGauges.bossActive(minecraft), player.getVehicle() != null, fighting, mining));
-        if (locked == null) {
-            announce(kind);
-            followWithProfile(minecraft, kind);
-        }
+        announce(kind);
+        followWithProfile(minecraft, kind);
     }
 
     private static HudContext.Kind announced = HudContext.Kind.EXPLORE;
@@ -89,26 +62,20 @@ public final class HudContextTicker {
     }
 
     private static final ContextProfileSwitch PROFILES = new ContextProfileSwitch();
-    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudProfiles.Placement> beforeProfile;
+    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudLayout.Placement> beforeProfile;
 
-    /** Loads the profile the player chose for the situation, and gives the previous layout back when it ends. */
+    /** Loads the layout the server set for the situation, and gives the previous layout back when it ends. */
     private static void followWithProfile(Minecraft minecraft, HudContext.Kind kind) {
-        boolean imposed = HudRules.situationsForced();
-        // Imposed by the server: the "slot" of a situation is its own number and the layout is the server's code.
-        var action = imposed
-                ? PROFILES.update(kind, ordinal -> ordinal, ordinal -> serverLayout(ordinal) != null)
-                : PROFILES.update(kind, ordinal -> matrix().profile(HudContext.Kind.values()[ordinal]),
-                        com.omneria.fordix.client.gui.vanilla.HudProfileActions::usable);
+        // The "slot" of a situation is its own number; the layout is the server's share code for it.
+        var action = PROFILES.update(kind, ordinal -> ordinal, ordinal -> serverLayout(ordinal) != null);
         switch (action.type()) {
             case LOAD -> {
                 if (beforeProfile == null) {
                     beforeProfile = com.omneria.fordix.client.gui.vanilla.HudProfileActions.capture();
                 }
-                com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(imposed ? serverLayout(action.slot())
-                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.layoutOf(action.slot()));
-                HudToast.show(Tr.s("hud.toast.profile"), imposed
-                        ? Tr.s("hud.context." + HudContext.Kind.values()[action.slot()].name().toLowerCase(java.util.Locale.ROOT))
-                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot()), 0x3FD1C7);
+                com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(serverLayout(action.slot()));
+                HudToast.show(Tr.s("hud.toast.profile"),
+                        Tr.s("hud.context." + HudContext.Kind.values()[action.slot()].name().toLowerCase(java.util.Locale.ROOT)), 0x3FD1C7);
             }
             case RESTORE -> {
                 if (beforeProfile != null) {
@@ -122,7 +89,7 @@ public final class HudContextTicker {
         }
     }
 
-    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudProfiles.Placement> serverLayout(int situation) {
+    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudLayout.Placement> serverLayout(int situation) {
         String code = HudRules.situationProfile(situation);
         return code.isEmpty() ? null : com.omneria.fordix.client.gui.layout.HudProfileCodec.decode(code);
     }
@@ -132,28 +99,11 @@ public final class HudContextTicker {
         PROFILES.reset();
         announced = HudContext.Kind.EXPLORE;
         beforeProfile = null;
-        locked = null;
-    }
-
-    /** The lock key: freezes the situation as it is, or lets it follow the player again. */
-    public static void toggleLock(Minecraft minecraft) {
-        if (HudRules.situationsForced()) {
-            HudToast.show(Tr.s("hud.toast.situation"), Tr.s("hud.context.imposed"), 0xE8A64A);
-            return;
-        }
-        locked = locked == null ? CONTEXT.current() : null;
-        String situation = Tr.s("hud.context." + kind().name().toLowerCase(java.util.Locale.ROOT));
-        if (locked == null) {
-            HudToast.show(Tr.s("hud.toast.situation"), Tr.s("hud.toast.unlocked"), 0x5ED68A);
-        } else {
-            HudToast.show(Tr.s("hud.toast.locked"), situation, 0xE8A64A);
-        }
     }
 
     /** Opacity multiplier for a panel, eased over 200 ms so a change of situation is a fade and never a jump. */
     public static float factor(String element) {
-        matrix();
-        float target = enabled() ? HudContext.factor(kind(), element) : 1.0F;
+        float target = HudContext.factor(kind(), element);
         long now = System.currentTimeMillis();
         float dt = Math.min(0.1F, (now - lastFrame) / 1000.0F);
         float shown = SHOWN.getOrDefault(element, target);

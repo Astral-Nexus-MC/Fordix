@@ -139,15 +139,6 @@ public final class FordixClient {
             "key.categories.fordix"
     );
 
-    /** Freezes the HUD's automatic situation (exploring, fighting...) or lets it follow the player again. */
-    public static final KeyMapping LOCK_CONTEXT = new FordixKeyMapping(
-            "key.fordix.lock_hud_context",
-            net.minecraftforge.client.settings.KeyConflictContext.IN_GAME,
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_F9,
-            "key.categories.fordix"
-    );
-
     static {
         // Dev-only screenshot harness (see DevTest): only with FORDIX_DEVTEST set in the environment.
         if (DevTest.enabled()) {
@@ -188,7 +179,6 @@ public final class FordixClient {
             event.register(OPEN_GUIDE);
             event.register(PET_WHEEL);
             event.register(SEARCH_FIELD);
-            event.register(LOCK_CONTEXT);
         }
 
         /** Recolors the recipe book and advancement textures once resources are loaded, and again after each reload. */
@@ -246,18 +236,7 @@ public final class FordixClient {
             TextureRecolor.onClientTick(minecraft);
             HudAlerts.tick(minecraft);
             DamageNumbers.tick(minecraft);
-            HudProfileActions.autoTick(minecraft);
             com.omneria.fordix.client.hud.HudContextTicker.tick(minecraft);
-            while (LOCK_CONTEXT.consumeClick()) {
-                if (minecraft.screen == null) {
-                    com.omneria.fordix.client.hud.HudContextTicker.toggleLock(minecraft);
-                }
-            }
-            while (TOGGLE_DEMO.consumeClick()) {
-                if (minecraft.screen == null) {
-                    minecraft.setScreen(new FordixDemoScreen());
-                }
-            }
             while (OPEN_GUIDE.consumeClick()) {
                 net.minecraft.world.phys.EntityHitResult hit = minecraft.screen == null ? com.omneria.fordix.client.hud.FarTarget.entity(minecraft) : null;
                 if (hit != null && !(hit.getEntity() instanceof net.minecraft.world.entity.player.Player)) {
@@ -290,7 +269,6 @@ public final class FordixClient {
             DamageNumbers.reset();
             InventoryTools.reset();
             ContainerMemory.clear();
-            HudProfileActions.onLoggingOut();
             com.omneria.fordix.client.hud.ClientHudRules.clear();
             com.omneria.fordix.client.hud.HudContextTicker.reset();
         }

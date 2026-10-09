@@ -4,7 +4,7 @@ import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
-import com.omneria.fordix.client.gui.layout.HudProfiles;
+import com.omneria.fordix.client.gui.layout.HudLayout;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
@@ -34,7 +34,7 @@ public class HudLayoutScreen extends FordixScreen {
     private static final int GRID = 20;
     private static final long DOUBLE_CLICK_MS = 300L;
     private static final int TOOLBAR_WIDTH = 120;
-    private static final int TOOLBAR_HEIGHT = 180;
+    private static final int TOOLBAR_HEIGHT = 132;
     private static final int HANDLE = 7;
     private static final float WHEEL_STEP = 0.05F;
     private static final float FINE_STEP = 0.01F;
@@ -65,8 +65,6 @@ public class HudLayoutScreen extends FordixScreen {
     private FordixButton presetButton;
     private FordixButton hideButton;
     private int presetIndex;
-    private int profileSlot;
-    private FordixButton profileButton;
 
     public HudLayoutScreen(Screen parent) {
         super(Tr.c("hud.title"));
@@ -103,37 +101,15 @@ public class HudLayoutScreen extends FordixScreen {
         }));
         addRenderableWidget(new FordixButton(x, y + 80, TOOLBAR_WIDTH, 14, Tr.c("common.close"), this::onClose));
 
-        // Saved layouts: pick a slot, then fill it with the layout on screen or put its layout back.
-        profileSlot = Math.max(0, HudProfileActions.profiles().active());
-        profileButton = addRenderableWidget(new FordixButton(x, y + 102, TOOLBAR_WIDTH, 14, profileLabel(), () -> {
-            profileSlot = (profileSlot + 1) % HudProfiles.SLOTS;
-            profileButton.setMessage(profileLabel());
-        }));
-        addRenderableWidget(new FordixButton(x, y + 118, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.save"), () -> {
-            HudProfileActions.save(profileSlot);
-            profileButton.setMessage(profileLabel());
-        }));
-        addRenderableWidget(new FordixButton(x, y + 134, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.load"), () -> {
-            if (HudProfileActions.load(profileSlot)) {
-                presetIndex = 0;
-                presetButton.setMessage(presetLabel());
-            }
-        }));
         // Share: the layout on screen as one line of text, and the reverse.
-        addRenderableWidget(new FordixButton(x, y + 150, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.copy"), () -> {
+        addRenderableWidget(new FordixButton(x, y + 102, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.copy"), () -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(HudProfileActions.exportCode());
             com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.share"), Tr.s("hud.profile.copied"), 0x5ED68A);
         }));
-        addRenderableWidget(new FordixButton(x, y + 166, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.paste"), () -> {
-            boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard(), profileSlot);
+        addRenderableWidget(new FordixButton(x, y + 118, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.paste"), () -> {
+            boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
             com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.share"), Tr.s(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), ok ? 0x5ED68A : 0xE5534B);
-            profileButton.setMessage(profileLabel());
         }));
-    }
-
-    private Component profileLabel() {
-        return Tr.c("hud.profile.slot", HudProfileActions.name(profileSlot),
-                HudProfileActions.profiles().has(profileSlot) ? "\u25CF" : HudProfileActions.usable(profileSlot) ? "\u25D0" : "\u25CB");
     }
 
     /** The settings column sits at the middle of the screen's left edge. */

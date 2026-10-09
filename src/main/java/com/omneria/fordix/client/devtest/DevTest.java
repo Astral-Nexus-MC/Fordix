@@ -293,7 +293,6 @@ public final class DevTest {
             }
             mc.setScreen(new com.omneria.fordix.client.gui.HudLinesScreen(null));
         }, 15, false));
-        steps.add(new Step("12i6-hud-contexts-screen", () -> mc.setScreen(new com.omneria.fordix.client.gui.HudContextsScreen(null)), 15, false));
         steps.add(new Step("12j-chat-private", () -> {
             mc.setScreen(null);
             cmd(mc, "tellraw @a {\"translate\":\"commands.message.display.incoming\",\"with\":[\"Ana\",\"Salut Dev, tu viens au spawn ?\"]}");
@@ -311,14 +310,8 @@ public final class DevTest {
             com.omneria.fordix.client.chat.ChatPanel.setSearch("");
             mc.setScreen(null);
             com.omneria.fordix.client.gui.vanilla.HudSlots.setScale("fordix:coordinates", 1.4F);
-            com.omneria.fordix.client.gui.vanilla.HudProfileActions.save(0);
             com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
-            com.omneria.fordix.client.gui.vanilla.HudProfileActions.save(1);
             mc.setScreen(new HudLayoutScreen(null));
-        }, 25, false));
-        steps.add(new Step("12k2-hud-profile-loaded", () -> {
-            mc.setScreen(null);
-            com.omneria.fordix.client.gui.vanilla.HudProfileActions.load(1);
         }, 25, false));
         steps.add(new Step("12k3-hud-profile-reset", () -> {
             com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");

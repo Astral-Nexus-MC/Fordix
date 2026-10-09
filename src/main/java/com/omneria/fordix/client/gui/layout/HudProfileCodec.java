@@ -24,7 +24,7 @@ public final class HudProfileCodec {
     private HudProfileCodec() {
     }
 
-    public static String encode(Map<String, HudProfiles.Placement> layout) {
+    public static String encode(Map<String, HudLayout.Placement> layout) {
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try (GZIPOutputStream gzip = new GZIPOutputStream(bytes)) {
@@ -37,7 +37,7 @@ public final class HudProfileCodec {
     }
 
     /** The layout in a code, or {@code null} when the text is not a valid one (wrong prefix, damaged, absurd). */
-    public static Map<String, HudProfiles.Placement> decode(String text) {
+    public static Map<String, HudLayout.Placement> decode(String text) {
         if (text == null) {
             return null;
         }
@@ -48,12 +48,12 @@ public final class HudProfileCodec {
         try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(
                 Base64.getUrlDecoder().decode(code.substring(PREFIX.length()))))) {
             String json = new String(gzip.readNBytes(1_000_000), StandardCharsets.UTF_8);
-            Map<String, HudProfiles.Placement> layout = GSON.fromJson(json,
-                    new TypeToken<LinkedHashMap<String, HudProfiles.Placement>>() { }.getType());
+            Map<String, HudLayout.Placement> layout = GSON.fromJson(json,
+                    new TypeToken<LinkedHashMap<String, HudLayout.Placement>>() { }.getType());
             if (layout == null || layout.size() > MAX_ELEMENTS) {
                 return null;
             }
-            for (HudProfiles.Placement placement : layout.values()) {
+            for (HudLayout.Placement placement : layout.values()) {
                 if (placement == null || placement.anchor == null || !(placement.scale >= 0.2F && placement.scale <= 5.0F)
                         || Math.abs(placement.offsetX) > 10_000 || Math.abs(placement.offsetY) > 10_000) {
                     return null;

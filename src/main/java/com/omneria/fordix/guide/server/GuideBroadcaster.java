@@ -56,10 +56,9 @@ public final class GuideBroadcaster {
                 List.copyOf(FordixServerConfig.HUD_REQUIRED.get()), List.copyOf(FordixServerConfig.HUD_FORBIDDEN.get()),
                 FordixServerConfig.HUD_PROPOSED.get().length() <= com.omneria.fordix.hud.ClientboundHudRulesPayload.MAX_CODE
                         ? FordixServerConfig.HUD_PROPOSED.get() : "",
-                FordixServerConfig.HUD_SITUATIONS_FORCE.get(), List.copyOf(FordixServerConfig.HUD_SITUATIONS_TABLE.get()),
+                List.copyOf(FordixServerConfig.HUD_SITUATIONS_TABLE.get()),
                 FordixServerConfig.HUD_SITUATIONS_PROFILES.get().stream()
-                        .map(line -> (String) line).filter(line -> line.length() <= com.omneria.fordix.hud.ClientboundHudRulesPayload.MAX_CODE).toList(),
-                FordixServerConfig.HUD_AUTO_SITUATIONS.get()));
+                        .map(line -> (String) line).filter(line -> line.length() <= com.omneria.fordix.hud.ClientboundHudRulesPayload.MAX_CODE).toList()));
         com.omneria.fordix.wiki.WikiService.sendList(player);
         List<String> lines = List.copyOf(FordixServerConfig.GUIDES.get());
         List<String> rules = List.copyOf(FordixServerConfig.RARITY_RULES.get());

@@ -79,8 +79,7 @@ public final class HudAlerts {
     }
 
     private static void warn(Minecraft minecraft, String message) {
-        minecraft.gui.setOverlayMessage(net.minecraft.network.chat.Component.literal("⚠ " + message)
-                .withStyle(net.minecraft.ChatFormatting.RED), false);
+        HudToast.show(Tr.s("hud.toast.alert"), message, 0xE5534B);
         if (FordixConfig.hudAlert("alert_sound")) {
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.get(), 0.7F, 1.0F));
         }

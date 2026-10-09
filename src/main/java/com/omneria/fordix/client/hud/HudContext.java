@@ -65,19 +65,12 @@ public final class HudContext {
         return row == null ? 1.0F : row[kind.ordinal()];
     }
 
-    /** The value in use: the player's table when there is one, else the built-in value. */
+    /** The value in use: the server's table once received (a panel it does not list is never dimmed), else the built-in one. */
     public static float factor(Kind kind, String element) {
-        if (HudRules.situationsForced()) {
-            // The server's table: a panel it does not list is never dimmed.
+        if (HudRules.situationsKnown()) {
             float imposed = HudRules.situationFactor(kind.ordinal(), element);
             return imposed < 0.0F ? 1.0F : imposed;
         }
-        return matrix != null ? matrix.factor(kind, element) : defaultFactor(kind, element);
-    }
-
-    private static HudContextMatrix matrix;
-
-    public static void useMatrix(HudContextMatrix table) {
-        matrix = table;
+        return defaultFactor(kind, element);
     }
 }

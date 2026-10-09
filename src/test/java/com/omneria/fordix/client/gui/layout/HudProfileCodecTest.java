@@ -11,13 +11,13 @@ import org.junit.jupiter.api.Test;
 class HudProfileCodecTest {
     @Test
     void roundTrip() {
-        Map<String, HudProfiles.Placement> layout = new LinkedHashMap<>();
-        layout.put("health", new HudProfiles.Placement("top_left", 3, -4, true, 1.5F));
-        layout.put("fordix:coordinates", new HudProfiles.Placement());
+        Map<String, HudLayout.Placement> layout = new LinkedHashMap<>();
+        layout.put("health", new HudLayout.Placement("top_left", 3, -4, true, 1.5F));
+        layout.put("fordix:coordinates", new HudLayout.Placement());
         String code = HudProfileCodec.encode(layout);
         assertTrue(code.startsWith("FXH1-"));
         assertTrue(code.length() < 400);
-        Map<String, HudProfiles.Placement> back = HudProfileCodec.decode("  " + code + "\n");
+        Map<String, HudLayout.Placement> back = HudProfileCodec.decode("  " + code + "\n");
         assertEquals(2, back.size());
         assertEquals("top_left", back.get("health").anchor);
         assertEquals(-4, back.get("health").offsetY);
@@ -35,8 +35,8 @@ class HudProfileCodecTest {
 
     @Test
     void refusesAbsurdPlacements() {
-        Map<String, HudProfiles.Placement> layout = new LinkedHashMap<>();
-        layout.put("health", new HudProfiles.Placement("default", 99999, 0, false, 1.0F));
+        Map<String, HudLayout.Placement> layout = new LinkedHashMap<>();
+        layout.put("health", new HudLayout.Placement("default", 99999, 0, false, 1.0F));
         assertNull(HudProfileCodec.decode(HudProfileCodec.encode(layout)));
     }
 }

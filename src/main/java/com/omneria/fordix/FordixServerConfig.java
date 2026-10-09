@@ -35,8 +35,6 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_REQUIRED;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_FORBIDDEN;
     public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
-    public static final ForgeConfigSpec.ConfigValue<String> HUD_AUTO_SITUATIONS;
-    public static final ForgeConfigSpec.BooleanValue HUD_SITUATIONS_FORCE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_TABLE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_PROFILES;
 
@@ -100,15 +98,9 @@ public final class FordixServerConfig {
         HUD_PROPOSED = builder.comment("A HUD layout applied to each player once, the first time they see this code: paste the share code (FXH1-...)",
                         "copied from the HUD layout screen. Players can adjust it afterwards; change the code to apply a new layout. Empty: none.")
                 .define("proposed", "");
-        HUD_AUTO_SITUATIONS = builder.comment("The automatic HUD situations (fade and layout changes while fighting, mining, riding, facing a boss):",
-                        "\"player\" each player decides (default), \"on\" always on for everyone, \"off\" always off for everyone.",
-                        "Players keep their own table and profiles; to impose those too, use situationsForced below.")
-                .define("autoSituations", "player", value -> "player".equals(value) || "on".equals(value) || "off".equals(value));
-        HUD_SITUATIONS_FORCE = builder.comment("true: every player gets the situations below (the HUD fades and changes with fights, mining, bosses, mounts)",
-                        "and cannot change them. false: the table and profiles below are not used and each player decides.")
-                .define("situationsForced", false);
-        HUD_SITUATIONS_TABLE = builder.comment("How visible each panel is in each situation, in percent: \"panel | explore | combat | mining | boss | mount\".",
-                        "Panels: coordinates, performance, clock, compass, effects. A panel with no line is never dimmed.")
+        HUD_SITUATIONS_TABLE = builder.comment("The HUD changes with the situation (fighting, mining, riding, facing a boss) for every player, as set here.",
+                        "How visible each panel is in each situation, in percent: \"panel | explore | combat | mining | boss | mount\".",
+                        "Panels: coordinates, performance, clock, compass, effects. A panel with no line is never dimmed; remove the lines to switch it off.")
                 .defineList("situationsTable", List.of(
                         "coordinates | 100 | 30 | 100 | 30 | 100",
                         "performance | 100 | 30 | 50 | 30 | 60",

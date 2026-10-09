@@ -5,12 +5,7 @@ package com.omneria.fordix.client.hud;
  * the motion durations and the thresholds of the vital bars.
  */
 public final class HudTokens {
-    /** Opacity of a quiet element, of an element the situation asks for, and of an element drawn over an open screen. */
-    public static final float CALM = 0.42F;
-    public static final float ACTIVE = 0.72F;
-    public static final float SCREEN = 0.94F;
     /** Fade lengths in milliseconds: a state change, and a whole context change. */
-    public static final long FAST_MS = 120L;
     public static final long FADE_MS = 200L;
     /** Health fractions: below LOW the bar changes color, below CRITICAL it pulses and the screen warns. */
     public static final float LOW = 0.30F;

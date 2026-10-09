@@ -17,18 +17,4 @@ class AlertLatchTest {
         assertTrue(latch.rise("a", true));
         assertTrue(latch.rise("b", true));
     }
-
-    @Test
-    void combatSwitchEntersAtOnceAndLeavesAfterACalmSpell() {
-        CombatSwitch combat = new CombatSwitch(3);
-        assertEquals(CombatSwitch.Change.NONE, combat.update(false));
-        assertEquals(CombatSwitch.Change.ENTER, combat.update(true));
-        assertEquals(CombatSwitch.Change.NONE, combat.update(true));
-        assertEquals(CombatSwitch.Change.NONE, combat.update(false));
-        assertEquals(CombatSwitch.Change.NONE, combat.update(true));
-        assertEquals(CombatSwitch.Change.NONE, combat.update(false));
-        assertEquals(CombatSwitch.Change.NONE, combat.update(false));
-        assertEquals(CombatSwitch.Change.LEAVE, combat.update(false));
-        assertFalse(combat.fighting());
-    }
 }

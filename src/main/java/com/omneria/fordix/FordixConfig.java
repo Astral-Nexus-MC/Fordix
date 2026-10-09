@@ -51,8 +51,6 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.ConfigValue<String> HUD_TARGET_RANGE;
     public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
-    public static final ForgeConfigSpec.BooleanValue AUTO_COMBAT_PROFILE;
-    public static final ForgeConfigSpec.BooleanValue AUTO_HUD_CONTEXT;
     public static final ForgeConfigSpec.BooleanValue DAMAGE_NUMBERS;
     public static final ForgeConfigSpec.BooleanValue BORDERLESS_FULLSCREEN;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_PLAYER_LIST;
@@ -138,10 +136,6 @@ public final class FordixConfig {
                 .define("voidframePlayerList", true);
         INVENTORY_TOOLS = builder.comment("Add a search field and a sort button to the inventory and to chests, barrels and shulker boxes.")
                 .define("inventoryTools", true);
-        AUTO_COMBAT_PROFILE = builder.comment("Load the second saved HUD profile (Combat) while a hostile creature is near, then go back.")
-                .define("autoCombatProfile", false);
-        AUTO_HUD_CONTEXT = builder.comment("Fade the information panels according to the situation (fight, mining, boss, mount).")
-                .define("autoHudContext", false);
         HUD_REQUIRE_ITEMS = builder
                 .comment("The compass panel needs a compass (or recovery compass) in your inventory and the clock panel needs a clock:",
                         "craft them to unlock these two panels.")
