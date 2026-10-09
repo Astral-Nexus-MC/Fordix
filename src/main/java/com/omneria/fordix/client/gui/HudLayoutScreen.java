@@ -74,6 +74,11 @@ public class HudLayoutScreen extends FordixScreen {
     private FordixButton undoButton;
     private FordixButton redoButton;
     private final List<FordixButton> propertyButtons = new ArrayList<>();
+    private final List<FordixButton> leftWidgets = new ArrayList<>();
+    private static final int HEADER = 16;
+    /** Kept for the session: the panels fold to their title so the whole screen stays free to drag the elements. */
+    private static boolean leftOpen = true;
+    private static boolean rightOpen = true;
     private int presetIndex;
     private int listScroll;
     private int listTop;
@@ -91,30 +96,31 @@ public class HudLayoutScreen extends FordixScreen {
     @Override
     protected void init() {
         propertyButtons.clear();
+        leftWidgets.clear();
         int x = PANEL_MARGIN + 6;
         int half = (PANEL_WIDTH - 16) / 2;
         int y = PANEL_MARGIN + 16;
-        gridButton = addRenderableWidget(new FordixButton(x, y, half, 13, gridLabel(), () -> {
+        gridButton = left(new FordixButton(x, y, half, 13, gridLabel(), () -> {
             showGrid = !showGrid;
             gridButton.setMessage(gridLabel());
         }));
-        magnetButton = addRenderableWidget(new FordixButton(x + half + 4, y, half, 13, magnetLabel(), () -> {
+        magnetButton = left(new FordixButton(x + half + 4, y, half, 13, magnetLabel(), () -> {
             magnet = !magnet;
             magnetButton.setMessage(magnetLabel());
         }));
         y += 15;
-        presetButton = addRenderableWidget(new FordixButton(x, y, PANEL_WIDTH - 12, 13, presetLabel(), () -> {
+        presetButton = left(new FordixButton(x, y, PANEL_WIDTH - 12, 13, presetLabel(), () -> {
             record();
             applyPreset(HudAnchors.PRESETS.get(presetIndex));
             presetIndex = (presetIndex + 1) % HudAnchors.PRESETS.size();
             presetButton.setMessage(presetLabel());
         }));
         y += 15;
-        undoButton = addRenderableWidget(new FordixButton(x, y, half, 13, Tr.c("hud.undo"), this::undo));
-        redoButton = addRenderableWidget(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.redo"), this::redo));
+        undoButton = left(new FordixButton(x, y, half, 13, Tr.c("hud.undo"), this::undo));
+        redoButton = left(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.redo"), this::redo));
         y += 15;
-        addRenderableWidget(new FordixButton(x, y, half, 13, Tr.c("hud.check"), this::verify));
-        addRenderableWidget(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.reset"), () -> {
+        left(new FordixButton(x, y, half, 13, Tr.c("hud.check"), this::verify));
+        left(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.reset"), () -> {
             record();
             applyPreset(HudAnchors.PRESETS.get(0));
             presetIndex = 1;
@@ -122,11 +128,11 @@ public class HudLayoutScreen extends FordixScreen {
         }));
         y += 15;
         // Share: the layout on screen as one line of text, and the reverse (how a server's layouts are prepared).
-        addRenderableWidget(new FordixButton(x, y, half, 13, Tr.c("hud.profile.copy"), () -> {
+        left(new FordixButton(x, y, half, 13, Tr.c("hud.profile.copy"), () -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(HudProfileActions.exportCode());
             HudToast.show(Tr.s("hud.toast.share"), Tr.s("hud.profile.copied"), 0x5ED68A);
         }));
-        addRenderableWidget(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.profile.paste"), () -> {
+        left(new FordixButton(x + half + 4, y, half, 13, Tr.c("hud.profile.paste"), () -> {
             record();
             boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
             HudToast.show(Tr.s("hud.toast.share"), Tr.s(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), ok ? 0x5ED68A : 0xE5534B);
@@ -134,7 +140,7 @@ public class HudLayoutScreen extends FordixScreen {
         y += 17;
         listTop = y + 12;
         listBottom = this.height - PANEL_MARGIN - 18;
-        addRenderableWidget(new FordixButton(PANEL_MARGIN + 6, this.height - PANEL_MARGIN - 17, PANEL_WIDTH - 12, 13,
+        left(new FordixButton(PANEL_MARGIN + 6, this.height - PANEL_MARGIN - 17, PANEL_WIDTH - 12, 13,
                 Tr.c("common.close"), this::onClose));
 
         // Right panel: the selected element's properties.
@@ -164,6 +170,19 @@ public class HudLayoutScreen extends FordixScreen {
                 save();
             }
         })));
+    }
+
+    private FordixButton left(FordixButton button) {
+        leftWidgets.add(button);
+        return addRenderableWidget(button);
+    }
+
+    private int leftHeight() {
+        return leftOpen ? this.height - 2 * PANEL_MARGIN : HEADER;
+    }
+
+    private int rightHeight() {
+        return rightOpen ? propsTop + 4 * 15 + 36 - PANEL_MARGIN : HEADER;
     }
 
     /** Rows of the properties panel: 0 X, 1 Y, 2 width, 3 height; one step, ten pixels or 5 % with Shift/normal. */
@@ -351,7 +370,16 @@ public class HudLayoutScreen extends FordixScreen {
         guiGraphics.flush();
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 300.0F);
-        drawPanels(guiGraphics, mouseX, mouseY);
+        boolean busy = dragging || resizing;
+        if (!busy) {
+            drawPanels(guiGraphics, mouseX, mouseY);
+        }
+        for (FordixButton button : leftWidgets) {
+            button.visible = leftOpen && !busy;
+        }
+        for (FordixButton button : propertyButtons) {
+            button.visible = rightOpen && !busy;
+        }
         boolean locked = selected >= 0 && HudRules.locked(elements.get(selected));
         hideButton.setMessage(Tr.c(selected >= 0 && HudSlots.hidden(elements.get(selected)) ? "hud.show" : "hud.hide"));
         for (FordixButton button : propertyButtons) {
@@ -363,18 +391,26 @@ public class HudLayoutScreen extends FordixScreen {
         guiGraphics.pose().popPose();
     }
 
+    /** Whether the point is on a panel (only what a panel really covers, and nothing while an element is being dragged). */
     private boolean overPanel(double mouseX, double mouseY) {
-        int right = this.width - PANEL_MARGIN - PANEL_WIDTH;
-        return mouseX < PANEL_MARGIN + PANEL_WIDTH + 2 && mouseY >= PANEL_MARGIN || mouseX >= right && mouseY >= PANEL_MARGIN;
+        if (dragging || resizing) {
+            return false;
+        }
+        int rx = this.width - PANEL_MARGIN - PANEL_WIDTH;
+        return mouseX >= PANEL_MARGIN && mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= PANEL_MARGIN && mouseY < PANEL_MARGIN + leftHeight()
+                || mouseX >= rx && mouseX < rx + PANEL_WIDTH && mouseY >= PANEL_MARGIN && mouseY < PANEL_MARGIN + rightHeight();
     }
 
     /** The two glass panels: the element list (with the tools above it) on the left, the properties on the right. */
     private void drawPanels(GuiGraphics g, int mouseX, int mouseY) {
         int accent = FordixPalette.ACCENT & 0xFFFFFF;
-        int bottom = this.height - PANEL_MARGIN;
-        g.fill(PANEL_MARGIN, PANEL_MARGIN, PANEL_MARGIN + PANEL_WIDTH, bottom, 0xF00B1118);
-        HudStyle.panel(g, PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, bottom - PANEL_MARGIN, accent, 0xE6);
+        int leftH = leftHeight();
+        g.fill(PANEL_MARGIN, PANEL_MARGIN, PANEL_MARGIN + PANEL_WIDTH, PANEL_MARGIN + leftH, 0xF00B1118);
+        HudStyle.panel(g, PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, leftH, accent, 0xE6);
         g.drawString(this.font, Tr.s("hud.editor.elements"), PANEL_MARGIN + 8, PANEL_MARGIN + 5, FordixPalette.ACCENT, false);
+        g.drawString(this.font, leftOpen ? "[-]" : "[+]", PANEL_MARGIN + PANEL_WIDTH - 40, PANEL_MARGIN + 5, 0xFF8AA0AD, false);
+        g.drawString(this.font, "x", PANEL_MARGIN + PANEL_WIDTH - 12, PANEL_MARGIN + 5, 0xFFE5534B, false);
+        if (leftOpen) {
         g.drawString(this.font, Tr.s("hud.editor.list"), PANEL_MARGIN + 8, listTop - 11, 0xFF8AA0AD, false);
         g.enableScissor(PANEL_MARGIN, listTop, PANEL_MARGIN + PANEL_WIDTH, listBottom);
         int y = listTop - listScroll;
@@ -402,12 +438,17 @@ public class HudLayoutScreen extends FordixScreen {
             y += ROW_HEIGHT;
         }
         g.disableScissor();
+        }
 
         int rx = this.width - PANEL_MARGIN - PANEL_WIDTH;
-        int rightHeight = propsTop + 4 * 15 + 36 - PANEL_MARGIN;
+        int rightHeight = rightHeight();
         g.fill(rx, PANEL_MARGIN, rx + PANEL_WIDTH, PANEL_MARGIN + rightHeight, 0xF00B1118);
         HudStyle.panel(g, rx, PANEL_MARGIN, PANEL_WIDTH, rightHeight, accent, 0xE6);
         g.drawString(this.font, Tr.s("hud.editor.properties"), rx + 8, PANEL_MARGIN + 5, FordixPalette.ACCENT, false);
+        g.drawString(this.font, rightOpen ? "[-]" : "[+]", rx + PANEL_WIDTH - 24, PANEL_MARGIN + 5, 0xFF8AA0AD, false);
+        if (!rightOpen) {
+            return;
+        }
         if (selected < 0) {
             g.drawString(this.font, Tr.s("hud.editor.none"), rx + 8, anchorTop + 2, FordixPalette.TEXT_BRIGHT, false);
             int hy = anchorTop + 16;
@@ -643,7 +684,22 @@ public class HudLayoutScreen extends FordixScreen {
 
     /** A click in a panel: a row of the element list (select, or the dot hides it) or one of the nine anchors. */
     private boolean clickPanels(double mouseX, double mouseY) {
-        if (mouseX >= PANEL_MARGIN && mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= listTop && mouseY < listBottom) {
+        int rx0 = this.width - PANEL_MARGIN - PANEL_WIDTH;
+        if (mouseY >= PANEL_MARGIN && mouseY < PANEL_MARGIN + HEADER) {
+            if (mouseX >= PANEL_MARGIN && mouseX < PANEL_MARGIN + PANEL_WIDTH) {
+                if (mouseX >= PANEL_MARGIN + PANEL_WIDTH - 16) {
+                    onClose();
+                } else {
+                    leftOpen = !leftOpen;
+                }
+                return true;
+            }
+            if (mouseX >= rx0 && mouseX < rx0 + PANEL_WIDTH) {
+                rightOpen = !rightOpen;
+                return true;
+            }
+        }
+        if (leftOpen && mouseX >= PANEL_MARGIN && mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= listTop && mouseY < listBottom) {
             int row = (int) ((mouseY - listTop + listScroll) / ROW_HEIGHT);
             if (row >= 0 && row < elements.size()) {
                 selected = row;
@@ -657,7 +713,7 @@ public class HudLayoutScreen extends FordixScreen {
             return true;
         }
         int rx = this.width - PANEL_MARGIN - PANEL_WIDTH;
-        if (selected >= 0 && mouseX >= rx + 8 && mouseX < rx + 8 + 39 && mouseY >= anchorTop && mouseY < anchorTop + 39) {
+        if (rightOpen && selected >= 0 && mouseX >= rx + 8 && mouseX < rx + 8 + 39 && mouseY >= anchorTop && mouseY < anchorTop + 39) {
             int col = (int) ((mouseX - rx - 8) / 13);
             int row = (int) ((mouseY - anchorTop) / 13);
             if (col < 3 && row < 3) {
@@ -729,7 +785,7 @@ public class HudLayoutScreen extends FordixScreen {
     /** The wheel resizes the element under the pointer (Shift: bigger steps). */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= listTop && mouseY < listBottom) {
+        if (leftOpen && mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= listTop && mouseY < listBottom) {
             int max = Math.max(0, elements.size() * ROW_HEIGHT - (listBottom - listTop));
             listScroll = Math.max(0, Math.min(max, listScroll - (int) Math.signum(delta) * ROW_HEIGHT * 2));
             return true;
@@ -750,6 +806,12 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_H && !hasControlDown()) {
+            boolean open = !(leftOpen || rightOpen);
+            leftOpen = open;
+            rightOpen = open;
+            return true;
+        }
         if (hasControlDown() && keyCode == GLFW.GLFW_KEY_Z) {
             if (hasShiftDown()) {
                 redo();
