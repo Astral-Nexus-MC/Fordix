@@ -13,6 +13,7 @@ public final class ClientHudRules {
 
     public static void receive(ClientboundHudRulesPayload payload) {
         HudRules.set(payload.required(), payload.forbidden(), payload.proposed());
+        HudRules.setSituations(payload.situationsForced(), payload.situationsTable(), payload.situationsProfiles());
         Minecraft minecraft = Minecraft.getInstance();
         String code = HudRules.proposed();
         if (!code.isEmpty() && !code.equals(announced) && minecraft.gui != null) {

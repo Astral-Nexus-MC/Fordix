@@ -67,6 +67,11 @@ public final class HudContext {
 
     /** The value in use: the player's table when there is one, else the built-in value. */
     public static float factor(Kind kind, String element) {
+        if (HudRules.situationsForced()) {
+            // The server's table: a panel it does not list is never dimmed.
+            float imposed = HudRules.situationFactor(kind.ordinal(), element);
+            return imposed < 0.0F ? 1.0F : imposed;
+        }
         return matrix != null ? matrix.factor(kind, element) : defaultFactor(kind, element);
     }
 

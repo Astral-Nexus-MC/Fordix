@@ -49,6 +49,7 @@ public class HudContextsScreen extends FordixScreen {
                     HudContextTicker.matrix().cycle(kind, element);
                     self[0].setMessage(cell(kind, element));
                 });
+                self[0].active = !com.omneria.fordix.client.hud.HudRules.situationsForced();
                 addRenderableWidget(self[0]);
             }
         }
@@ -60,6 +61,7 @@ public class HudContextsScreen extends FordixScreen {
                 HudContextTicker.matrix().cycleProfile(kind, com.omneria.fordix.client.gui.layout.HudProfiles.SLOTS);
                 self[0].setMessage(profileCell(kind));
             });
+            self[0].active = !com.omneria.fordix.client.hud.HudRules.situationsForced();
             addRenderableWidget(self[0]);
         }
         int bottom = tableTop + (rows + 1) * ROW + 6;
@@ -71,12 +73,15 @@ public class HudContextsScreen extends FordixScreen {
     }
 
     private static Component profileCell(HudContext.Kind kind) {
+        if (com.omneria.fordix.client.hud.HudRules.situationsForced()) {
+            return Component.literal(com.omneria.fordix.client.hud.HudRules.situationProfile(kind.ordinal()).isEmpty() ? "\u2014" : "\u2713");
+        }
         int slot = HudContextTicker.matrix().profile(kind);
         return Component.literal(slot < 0 ? "\u2014" : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(slot));
     }
 
     private static Component cell(HudContext.Kind kind, String element) {
-        int percent = Math.round(HudContextTicker.matrix().factor(kind, element) * 100.0F);
+        int percent = Math.round(HudContext.factor(kind, element) * 100.0F);
         return Component.literal(percent == 0 ? "—" : percent + " %");
     }
 
@@ -85,6 +90,9 @@ public class HudContextsScreen extends FordixScreen {
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, panel.getY() + 8, FordixPalette.ACCENT);
+        if (com.omneria.fordix.client.hud.HudRules.situationsForced()) {
+            guiGraphics.drawString(this.font, Tr.s("contexts.imposed"), panel.getX() + PADDING, panel.getY() + 8 + 0, FordixPalette.TEXT, false);
+        }
         for (HudContext.Kind kind : HudContext.Kind.values()) {
             guiGraphics.drawCenteredString(this.font, Tr.s("hud.context." + kind.name().toLowerCase(java.util.Locale.ROOT)),
                     tableLeft + kind.ordinal() * CELL_WIDTH + CELL_WIDTH / 2, tableTop - ROW + 4, FordixPalette.TEXT);

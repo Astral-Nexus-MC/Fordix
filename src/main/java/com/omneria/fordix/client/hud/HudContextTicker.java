@@ -37,11 +37,11 @@ public final class HudContextTicker {
     }
 
     public static boolean enabled() {
-        return FordixConfig.AUTO_HUD_CONTEXT.get();
+        return HudRules.situationsForced() || FordixConfig.AUTO_HUD_CONTEXT.get();
     }
 
     public static HudContext.Kind kind() {
-        return locked != null ? locked : CONTEXT.current();
+        return locked != null && !HudRules.situationsForced() ? locked : CONTEXT.current();
     }
 
     /** Every client tick. */
@@ -66,16 +66,22 @@ public final class HudContextTicker {
 
     /** Loads the profile the player chose for the situation, and gives the previous layout back when it ends. */
     private static void followWithProfile(Minecraft minecraft, HudContext.Kind kind) {
-        var action = PROFILES.update(kind, ordinal -> matrix().profile(HudContext.Kind.values()[ordinal]),
-                com.omneria.fordix.client.gui.vanilla.HudProfileActions::usable);
+        boolean imposed = HudRules.situationsForced();
+        // Imposed by the server: the "slot" of a situation is its own number and the layout is the server's code.
+        var action = imposed
+                ? PROFILES.update(kind, ordinal -> ordinal, ordinal -> serverLayout(ordinal) != null)
+                : PROFILES.update(kind, ordinal -> matrix().profile(HudContext.Kind.values()[ordinal]),
+                        com.omneria.fordix.client.gui.vanilla.HudProfileActions::usable);
         switch (action.type()) {
             case LOAD -> {
                 if (beforeProfile == null) {
                     beforeProfile = com.omneria.fordix.client.gui.vanilla.HudProfileActions.capture();
                 }
-                com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(
-                        com.omneria.fordix.client.gui.vanilla.HudProfileActions.layoutOf(action.slot()));
-                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot())), false);
+                com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(imposed ? serverLayout(action.slot())
+                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.layoutOf(action.slot()));
+                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", imposed
+                        ? Tr.s("hud.context." + HudContext.Kind.values()[action.slot()].name().toLowerCase(java.util.Locale.ROOT))
+                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot())), false);
             }
             case RESTORE -> {
                 if (beforeProfile != null) {
@@ -89,6 +95,11 @@ public final class HudContextTicker {
         }
     }
 
+    private static java.util.Map<String, com.omneria.fordix.client.gui.layout.HudProfiles.Placement> serverLayout(int situation) {
+        String code = HudRules.situationProfile(situation);
+        return code.isEmpty() ? null : com.omneria.fordix.client.gui.layout.HudProfileCodec.decode(code);
+    }
+
     /** Logging out: forget the situation and the layout to give back. */
     public static void reset() {
         PROFILES.reset();
@@ -98,6 +109,10 @@ public final class HudContextTicker {
 
     /** The lock key: freezes the situation as it is, or lets it follow the player again. */
     public static void toggleLock(Minecraft minecraft) {
+        if (HudRules.situationsForced()) {
+            minecraft.gui.setOverlayMessage(Component.literal(Tr.s("hud.context.imposed")), false);
+            return;
+        }
         locked = locked == null ? CONTEXT.current() : null;
         minecraft.gui.setOverlayMessage(Component.literal(Tr.s(locked == null ? "hud.context.unlocked" : "hud.context.locked",
                 Tr.s("hud.context." + kind().name().toLowerCase(java.util.Locale.ROOT)))), false);

@@ -6,6 +6,7 @@ import com.omneria.fordix.rarity.RarityRules;
 import com.omneria.fordix.welcome.WelcomeStep;
 import net.minecraftforge.common.ForgeConfigSpec;
 
+import com.omneria.fordix.hud.SituationTable;
 import java.util.List;
 
 /**
@@ -34,6 +35,9 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_REQUIRED;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_FORBIDDEN;
     public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
+    public static final ForgeConfigSpec.BooleanValue HUD_SITUATIONS_FORCE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_TABLE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_PROFILES;
 
     public static final ForgeConfigSpec.ConfigValue<String> WIKI_API_KEY;
     public static final ForgeConfigSpec.ConfigValue<String> WIKI_TRANSLATION_MODEL;
@@ -95,6 +99,20 @@ public final class FordixServerConfig {
         HUD_PROPOSED = builder.comment("A HUD layout to suggest: paste the share code (FXH1-...) copied from the HUD layout screen.",
                         "Players find it in the last profile slot (F8) unless they filled that slot themselves. Empty: no suggestion.")
                 .define("proposed", "");
+        HUD_SITUATIONS_FORCE = builder.comment("true: every player gets the situations below (the HUD fades and changes with fights, mining, bosses, mounts)",
+                        "and cannot change them. false: the table and profiles below are not used and each player decides.")
+                .define("situationsForced", false);
+        HUD_SITUATIONS_TABLE = builder.comment("How visible each panel is in each situation, in percent: \"panel | explore | combat | mining | boss | mount\".",
+                        "Panels: coordinates, performance, clock, compass, effects. A panel with no line is never dimmed.")
+                .defineList("situationsTable", List.of(
+                        "coordinates | 100 | 30 | 100 | 30 | 100",
+                        "performance | 100 | 30 | 50 | 30 | 60",
+                        "clock | 100 | 0 | 60 | 0 | 100",
+                        "compass | 100 | 30 | 60 | 30 | 100",
+                        "effects | 80 | 100 | 80 | 100 | 80"), value -> SituationTable.parseRow(value) != null);
+        HUD_SITUATIONS_PROFILES = builder.comment("A layout loaded in a situation: \"situation | FXH1-code\" (situation: explore, combat, mining, boss, mount;",
+                        "the code is copied from the HUD layout screen). The player's own layout comes back when the situation ends.")
+                .defineList("situationsProfiles", List.of(), value -> SituationTable.parseProfile(value) != null);
         builder.pop();
 
         builder.comment("Item rarity, the same for every player.")

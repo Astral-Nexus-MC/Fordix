@@ -1,6 +1,9 @@
 package com.omneria.fordix.client.hud;
 
+import com.omneria.fordix.hud.SituationTable;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -11,6 +14,9 @@ public final class HudRules {
     private static volatile Set<String> required = Set.of();
     private static volatile Set<String> forbidden = Set.of();
     private static volatile String proposed = "";
+    private static volatile boolean situationsForced;
+    private static volatile Map<String, float[]> situationTable = Map.of();
+    private static volatile String[] situationProfiles = new String[SituationTable.SITUATIONS.size()];
 
     private HudRules() {
     }
@@ -21,8 +27,38 @@ public final class HudRules {
         proposed = proposedCode == null ? "" : proposedCode.strip();
     }
 
+    /** The server's imposed situations: the table and the profile code of each situation (empty text for none). */
+    public static void setSituations(boolean forced, List<String> tableLines, List<String> profileLines) {
+        situationsForced = forced;
+        situationTable = forced ? SituationTable.rows(tableLines) : Map.of();
+        situationProfiles = forced ? SituationTable.profiles(profileLines) : emptyCodes();
+    }
+
+    private static String[] emptyCodes() {
+        String[] codes = new String[SituationTable.SITUATIONS.size()];
+        java.util.Arrays.fill(codes, "");
+        return codes;
+    }
+
+    public static boolean situationsForced() {
+        return situationsForced;
+    }
+
+    /** The server's value for a panel in a situation (by {@link SituationTable#SITUATIONS} order), or -1 when it has none. */
+    public static float situationFactor(int situation, String panel) {
+        float[] row = situationTable.get(panel);
+        return row == null ? -1.0F : row[situation];
+    }
+
+    /** The share code of the layout the server loads in a situation, empty for none. */
+    public static String situationProfile(int situation) {
+        String[] codes = situationProfiles;
+        return codes.length > situation && codes[situation] != null ? codes[situation] : "";
+    }
+
     public static void clear() {
         set(Set.of(), Set.of(), "");
+        setSituations(false, List.of(), List.of());
     }
 
     /** The player's own choice, unless the server decides: required wins over forbidden when both list an element. */

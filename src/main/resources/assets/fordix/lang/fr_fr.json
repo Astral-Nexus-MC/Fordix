@@ -370,6 +370,8 @@
     "fordix.contexts.panel.effects": "Effets",
     "fordix.contexts.profile": "Profil",
     "fordix.hud.rules.proposed": "Le serveur propose une disposition du HUD : F8 pour l'essayer",
+    "fordix.hud.context.imposed": "Le serveur impose les situations du HUD",
+    "fordix.contexts.imposed": "Imposé par le serveur",
     "fordix.options.auto_combat": "Profil Combat automatique",
     "fordix.options.blocks": "blocs",
     "fordix.options.borderless_fullscreen": "Plein écran fenêtré (F11)",
