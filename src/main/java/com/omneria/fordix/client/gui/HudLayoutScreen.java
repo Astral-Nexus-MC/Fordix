@@ -356,7 +356,6 @@ public class HudLayoutScreen extends FordixScreen {
         undoButton.active = !undo.isEmpty();
         redoButton.active = !redo.isEmpty();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        drawHelp(guiGraphics);
     }
 
     private boolean overPanel(double mouseX, double mouseY) {
@@ -368,7 +367,8 @@ public class HudLayoutScreen extends FordixScreen {
     private void drawPanels(GuiGraphics g, int mouseX, int mouseY) {
         int accent = FordixPalette.ACCENT & 0xFFFFFF;
         int bottom = this.height - PANEL_MARGIN;
-        HudStyle.panel(g, PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, bottom - PANEL_MARGIN, accent, 0xDC);
+        g.fill(PANEL_MARGIN, PANEL_MARGIN, PANEL_MARGIN + PANEL_WIDTH, bottom, 0xF00B1118);
+        HudStyle.panel(g, PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, bottom - PANEL_MARGIN, accent, 0xE6);
         g.drawString(this.font, Tr.s("hud.editor.elements"), PANEL_MARGIN + 8, PANEL_MARGIN + 5, FordixPalette.ACCENT, false);
         g.drawString(this.font, Tr.s("hud.editor.list"), PANEL_MARGIN + 8, listTop - 11, 0xFF8AA0AD, false);
         g.enableScissor(PANEL_MARGIN, listTop, PANEL_MARGIN + PANEL_WIDTH, listBottom);
@@ -399,10 +399,17 @@ public class HudLayoutScreen extends FordixScreen {
         g.disableScissor();
 
         int rx = this.width - PANEL_MARGIN - PANEL_WIDTH;
-        HudStyle.panel(g, rx, PANEL_MARGIN, PANEL_WIDTH, propsTop + 4 * 15 + 36 - PANEL_MARGIN, accent, 0xDC);
+        int rightHeight = propsTop + 4 * 15 + 36 - PANEL_MARGIN;
+        g.fill(rx, PANEL_MARGIN, rx + PANEL_WIDTH, PANEL_MARGIN + rightHeight, 0xF00B1118);
+        HudStyle.panel(g, rx, PANEL_MARGIN, PANEL_WIDTH, rightHeight, accent, 0xE6);
         g.drawString(this.font, Tr.s("hud.editor.properties"), rx + 8, PANEL_MARGIN + 5, FordixPalette.ACCENT, false);
         if (selected < 0) {
-            g.drawString(this.font, Tr.s("hud.editor.none"), rx + 8, anchorTop + 2, 0xFF8AA0AD, false);
+            g.drawString(this.font, Tr.s("hud.editor.none"), rx + 8, anchorTop + 2, FordixPalette.TEXT_BRIGHT, false);
+            int hy = anchorTop + 16;
+            for (FormattedCharSequence line : this.font.split(Tr.c("hud.help.short"), PANEL_WIDTH - 16)) {
+                g.drawString(this.font, line, rx + 8, hy, 0xFF8AA0AD, false);
+                hy += 10;
+            }
             return;
         }
         String id = elements.get(selected);
@@ -564,18 +571,6 @@ public class HudLayoutScreen extends FordixScreen {
         int y = rect.y() >= 22 ? rect.y() - 20 : rect.bottom() + 3;
         guiGraphics.fill(x, y, x + width, y + 11, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
         guiGraphics.drawString(this.font, text, x + 3, y + 2, 0xFF05070A, false);
-    }
-
-    private void drawHelp(GuiGraphics guiGraphics) {
-        List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.help"), 230);
-        int width = 238;
-        int height = lines.size() * 10 + 8;
-        int x = (this.width - width) / 2;
-        int y = this.height - height - PANEL_MARGIN;
-        HudStyle.panel(guiGraphics, x, y, width, height, FordixPalette.ACCENT & 0xFFFFFF, 0xB8);
-        for (int i = 0; i < lines.size(); i++) {
-            guiGraphics.drawString(this.font, lines.get(i), x + 8, y + 5 + i * 10, FordixPalette.TEXT_BRIGHT, false);
-        }
     }
 
     /** For the in-game test: moves a listed element by a few pixels as a drag would. */
