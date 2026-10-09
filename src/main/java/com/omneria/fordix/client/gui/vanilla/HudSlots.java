@@ -167,6 +167,16 @@ public final class HudSlots {
         setPlacement(id, anchor(id), offset[0], offset[1]);
     }
 
+    /** Changes the element's anchor to a chosen screen point without moving it from where it is now. */
+    public static void setAnchorKeepingPlace(String id, HudAnchors.Anchor anchor, int width, int height) {
+        if (isJourneyMap(id)) {
+            return;
+        }
+        HudSnap.Rect rect = placed(id, width, height);
+        int[] offset = HudAnchors.offsetFor(anchor, rect, defaults(id, width, height), width, height);
+        setPlacement(id, anchor, offset[0], offset[1]);
+    }
+
     /** Pins the element to the screen point nearest its spot, so it keeps its place on any window size. */
     public static void pinToNearestAnchor(String id, int width, int height) {
         if (isJourneyMap(id)) {
