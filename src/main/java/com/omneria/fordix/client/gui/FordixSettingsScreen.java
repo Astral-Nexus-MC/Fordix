@@ -6,11 +6,9 @@ import com.omneria.fordix.client.FordixClient;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
 import com.omneria.fordix.client.notification.NotificationOverlay;
-import com.omneria.fordix.client.tooltip.TooltipStyles;
 import com.omneria.fordix.notification.NotificationStyle;
 import com.omneria.fordix.notification.network.ClientboundNotificationPayload;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -26,7 +24,7 @@ import java.util.List;
  * Keyboard shortcuts are the game's own: Options > Controls.
  */
 public class FordixSettingsScreen extends FordixScreen {
-    private enum Tab { APPEARANCE, HUD, CHAT, GAME, ADMIN }
+    private enum Tab { HUD, GAME, ADMIN }
 
     private static final int COLUMN_WIDTH = 200;
     private static final int PADDING = 10;
@@ -38,7 +36,7 @@ public class FordixSettingsScreen extends FordixScreen {
     private static final int ROWS = 6;
 
     /** The tab left open last time, so the screen comes back where the player was. */
-    private static Tab lastTab = Tab.APPEARANCE;
+    private static Tab lastTab = Tab.HUD;
 
     private final Screen parent;
     private Panel panel;
@@ -47,7 +45,6 @@ public class FordixSettingsScreen extends FordixScreen {
     private int slot;
     private int gridLeft;
     private int gridTop;
-    private int accentLabelY = -1;
     private int[] tabBar = new int[0];
 
     public FordixSettingsScreen(Screen parent) {
@@ -55,7 +52,7 @@ public class FordixSettingsScreen extends FordixScreen {
         this.parent = parent;
     }
 
-    /** For the in-game test: opens on a given tab (0 = appearance, 1 = HUD, 2 = chat, 3 = game, 4 = administration). */
+    /** For the in-game test: opens on a given tab (0 = HUD, 1 = game, 2 = administration). */
     public FordixSettingsScreen(Screen parent, int tabIndex) {
         this(parent);
         this.tab = Tab.values()[Math.max(0, Math.min(Tab.values().length - 1, tabIndex))];
@@ -66,7 +63,7 @@ public class FordixSettingsScreen extends FordixScreen {
     }
 
     private List<Tab> tabs() {
-        List<Tab> tabs = new ArrayList<>(List.of(Tab.APPEARANCE, Tab.HUD, Tab.CHAT, Tab.GAME));
+        List<Tab> tabs = new ArrayList<>(List.of(Tab.HUD, Tab.GAME));
         if (operator()) {
             tabs.add(Tab.ADMIN);
         }
@@ -76,7 +73,7 @@ public class FordixSettingsScreen extends FordixScreen {
     @Override
     protected void init() {
         if (!tabs().contains(tab)) {
-            tab = Tab.APPEARANCE;
+            tab = Tab.HUD;
         }
         int panelHeight = 26 + TAB_HEIGHT + 10 + ROW * ROWS + 6 + BUTTON_HEIGHT + PADDING;
         int panelX = centerX(PANEL_WIDTH);
@@ -86,7 +83,6 @@ public class FordixSettingsScreen extends FordixScreen {
         gridTop = panelY + 26 + TAB_HEIGHT + 10;
         tabOptions.clear();
         slot = 0;
-        accentLabelY = -1;
 
         // The tab bar.
         List<Tab> tabs = tabs();
@@ -105,9 +101,7 @@ public class FordixSettingsScreen extends FordixScreen {
         }
 
         switch (tab) {
-            case APPEARANCE -> buildAppearance();
             case HUD -> buildHud();
-            case CHAT -> buildChat();
             case GAME -> buildGame();
             case ADMIN -> buildAdmin();
         }
@@ -120,29 +114,6 @@ public class FordixSettingsScreen extends FordixScreen {
 
     // ---- the tabs
 
-    private void buildAppearance() {
-        add(toggle(Tr.s("settings.vanilla_screens"), FordixConfig.VOIDFRAME_VANILLA_SCREENS));
-        add(toggle(Tr.s("settings.tooltips"), FordixConfig.VOIDFRAME_TOOLTIPS));
-        add(choice(Tr.s("settings.tooltip_style"), TooltipStyles.NAMES, FordixConfig.TOOLTIP_STYLE));
-        add(choice(Tr.s("settings.theme"), Theme.NAMES, FordixConfig.THEME));
-        // Accent: a label line, then the hex box (empty keeps the theme's own accent).
-        accentLabelY = gridTop + ROW * 2;
-        EditBox accent = new EditBox(this.font, gridLeft + COLUMN_WIDTH + GAP, gridTop + ROW * 2 + 12, COLUMN_WIDTH, BUTTON_HEIGHT,
-                Tr.c("settings.accent"));
-        accent.setMaxLength(7);
-        accent.setHint(Tr.c("settings.accent_hint"));
-        accent.setValue(FordixConfig.ACCENT_COLOR.get());
-        accent.setResponder(text -> {
-            boolean valid = text.isEmpty() || Theme.parseHex(text) != null;
-            accent.setTextColor(valid ? 0xE0E0E0 : 0xFF6060);
-            if (valid) {
-                save(FordixConfig.ACCENT_COLOR, text);
-            }
-        });
-        tabOptions.add(FordixConfig.ACCENT_COLOR);
-        addRenderableWidget(accent);
-    }
-
     private void buildHud() {
         add(toggle(Tr.s("settings.hud"), FordixConfig.VOIDFRAME_HUD));
         add(toggle(Tr.s("options.effects"), FordixConfig.HUD_EFFECTS_LIST));
@@ -154,11 +125,6 @@ public class FordixSettingsScreen extends FordixScreen {
         add(choice(Tr.s("options.opacity"), FordixConfig.HUD_OPACITIES, FordixConfig.HUD_OPACITY, " %"));
         add(button(Tr.c("settings.hud_layout"), () -> this.minecraft.setScreen(new HudLayoutScreen(this))));
         add(button(Tr.c("settings.hud_lines"), () -> this.minecraft.setScreen(new HudLinesScreen(this))));
-    }
-
-    private void buildChat() {
-        add(toggle(Tr.s("settings.chat"), FordixConfig.VOIDFRAME_CHAT));
-        add(toggle(Tr.s("settings.chat_sound"), FordixConfig.CHAT_MENTION_SOUND));
     }
 
     private void buildGame() {
@@ -252,10 +218,6 @@ public class FordixSettingsScreen extends FordixScreen {
         if (index >= 0 && index < tabBar.length) {
             int y = panel.getY() + 26 + TAB_HEIGHT;
             guiGraphics.fill(tabBar[index], y - 2, tabBar[index] + tabWidth, y, 0xFF000000 | FordixPalette.ACCENT);
-        }
-        if (accentLabelY >= 0) {
-            guiGraphics.drawString(this.font, Tr.s("settings.accent_label"), gridLeft + COLUMN_WIDTH + GAP, accentLabelY,
-                    FordixPalette.TEXT, false);
         }
     }
 
