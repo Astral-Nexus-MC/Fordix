@@ -122,11 +122,11 @@ public class HudLayoutScreen extends FordixScreen {
         // Share: the layout on screen as one line of text, and the reverse.
         addRenderableWidget(new FordixButton(x, y + 150, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.copy"), () -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(HudProfileActions.exportCode());
-            Minecraft.getInstance().gui.setOverlayMessage(Tr.c("hud.profile.copied"), false);
+            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.share"), Tr.s("hud.profile.copied"), 0x5ED68A);
         }));
         addRenderableWidget(new FordixButton(x, y + 166, TOOLBAR_WIDTH, 14, Tr.c("hud.profile.paste"), () -> {
             boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard(), profileSlot);
-            Minecraft.getInstance().gui.setOverlayMessage(Tr.c(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), false);
+            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.share"), Tr.s(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), ok ? 0x5ED68A : 0xE5534B);
             profileButton.setMessage(profileLabel());
         }));
     }

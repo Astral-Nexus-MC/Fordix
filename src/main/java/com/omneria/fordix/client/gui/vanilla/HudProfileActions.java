@@ -168,13 +168,13 @@ public final class HudProfileActions {
             case ENTER -> {
                 beforeCombat = snapshotAll();
                 restoreAll(profiles().get(COMBAT_SLOT));
-                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", name(COMBAT_SLOT)), false);
+                com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), name(COMBAT_SLOT), 0x3FD1C7);
             }
             case LEAVE -> {
                 if (beforeCombat != null) {
                     restoreAll(beforeCombat);
                     beforeCombat = null;
-                    minecraft.gui.setOverlayMessage(Tr.c("hud.profile.back"), false);
+                    com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), Tr.s("hud.toast.back"), 0x3FD1C7);
                 }
             }
             default -> {
@@ -202,9 +202,9 @@ public final class HudProfileActions {
             }
         }
         if (slot < 0) {
-            minecraft.gui.setOverlayMessage(Tr.c("hud.profile.none"), false);
+            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), Tr.s("hud.profile.none"), 0xE8A64A);
         } else if (load(slot)) {
-            minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", name(slot)), false);
+            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), name(slot), 0x3FD1C7);
         }
     }
 }

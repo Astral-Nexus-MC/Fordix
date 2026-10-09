@@ -15,6 +15,7 @@ public final class HudRules {
     private static volatile Set<String> forbidden = Set.of();
     private static volatile String proposed = "";
     private static volatile boolean situationsForced;
+    private static volatile String autoMode = "player";
     private static volatile Map<String, float[]> situationTable = Map.of();
     private static volatile String[] situationProfiles = new String[SituationTable.SITUATIONS.size()];
 
@@ -40,6 +41,15 @@ public final class HudRules {
         return codes;
     }
 
+    /** What the server says about the automatic situations: "on" (always), "off" (never) or "player" (the player decides). */
+    public static void setAutoMode(String mode) {
+        autoMode = "on".equals(mode) || "off".equals(mode) ? mode : "player";
+    }
+
+    public static String autoMode() {
+        return autoMode;
+    }
+
     public static boolean situationsForced() {
         return situationsForced;
     }
@@ -59,6 +69,7 @@ public final class HudRules {
     public static void clear() {
         set(Set.of(), Set.of(), "");
         setSituations(false, List.of(), List.of());
+        autoMode = "player";
     }
 
     /** The player's own choice, unless the server decides: required wins over forbidden when both list an element. */

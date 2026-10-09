@@ -9,7 +9,8 @@ import java.util.List;
  * always hidden, and {@code proposed} is a share code of a layout the server suggests (empty: none).
  */
 public record ClientboundHudRulesPayload(List<String> required, List<String> forbidden, String proposed,
-                                         boolean situationsForced, List<String> situationsTable, List<String> situationsProfiles) {
+                                         boolean situationsForced, List<String> situationsTable, List<String> situationsProfiles,
+                                         String autoMode) {
     public static final int MAX_IDS = 64;
     public static final int MAX_CODE = 30_000;
 
@@ -20,6 +21,7 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         buf.writeBoolean(payload.situationsForced());
         buf.writeCollection(payload.situationsTable(), (b, line) -> b.writeUtf(line, 256));
         buf.writeCollection(payload.situationsProfiles(), (b, line) -> b.writeUtf(line, MAX_CODE + 64));
+        buf.writeUtf(payload.autoMode(), 16);
     }
 
     public static ClientboundHudRulesPayload decode(FriendlyByteBuf buf) {
@@ -29,7 +31,8 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         boolean forced = buf.readBoolean();
         List<String> table = buf.readList(b -> b.readUtf(256));
         List<String> profiles = buf.readList(b -> b.readUtf(MAX_CODE + 64));
-        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, forced, cap(table), cap(profiles));
+        String autoMode = buf.readUtf(16);
+        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, forced, cap(table), cap(profiles), autoMode);
     }
 
     private static List<String> cap(List<String> ids) {

@@ -42,6 +42,22 @@ public final class HudTokens {
         return max > 0.0F && health / max <= CRITICAL;
     }
 
+    public static final long TOAST_IN_MS = 200L;
+    public static final long TOAST_HOLD_MS = 2200L;
+    public static final long TOAST_OUT_MS = 300L;
+
+    /** Opacity 0..1 of a notification {@code elapsedMs} after it appeared: fades in, holds, fades out; 0 once over. */
+    public static float toastAlpha(long elapsedMs) {
+        if (elapsedMs < 0L || elapsedMs >= TOAST_IN_MS + TOAST_HOLD_MS + TOAST_OUT_MS) {
+            return 0.0F;
+        }
+        if (elapsedMs < TOAST_IN_MS) {
+            return elapsedMs / (float) TOAST_IN_MS;
+        }
+        long out = elapsedMs - TOAST_IN_MS - TOAST_HOLD_MS;
+        return out <= 0L ? 1.0F : 1.0F - out / (float) TOAST_OUT_MS;
+    }
+
     /** Mixes two ARGB colors, {@code t} 0..1 from {@code from} to {@code to}. */
     public static int mix(int from, int to, float t) {
         float k = Math.max(0.0F, Math.min(1.0F, t));

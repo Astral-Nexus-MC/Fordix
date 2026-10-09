@@ -13,12 +13,13 @@ public final class ClientHudRules {
 
     public static void receive(ClientboundHudRulesPayload payload) {
         HudRules.set(payload.required(), payload.forbidden(), payload.proposed());
+        HudRules.setAutoMode(payload.autoMode());
         HudRules.setSituations(payload.situationsForced(), payload.situationsTable(), payload.situationsProfiles());
         Minecraft minecraft = Minecraft.getInstance();
         String code = HudRules.proposed();
         if (!code.isEmpty() && !code.equals(announced) && minecraft.gui != null) {
             announced = code;
-            minecraft.gui.setOverlayMessage(Tr.c("hud.rules.proposed"), false);
+            HudToast.show(Tr.s("hud.toast.server"), Tr.s("hud.rules.proposed"), 0x3FD1C7);
         }
     }
 

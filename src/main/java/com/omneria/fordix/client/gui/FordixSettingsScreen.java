@@ -158,7 +158,14 @@ public class FordixSettingsScreen extends FordixScreen {
         add(choice(Tr.s("options.target_range"), FordixConfig.HUD_TARGET_RANGES, FordixConfig.HUD_TARGET_RANGE, " " + Tr.s("options.blocks")));
         add(choice(Tr.s("options.opacity"), FordixConfig.HUD_OPACITIES, FordixConfig.HUD_OPACITY, " %"));
         add(toggle(Tr.s("options.auto_combat"), FordixConfig.AUTO_COMBAT_PROFILE));
-        add(toggle(Tr.s("options.auto_context"), FordixConfig.AUTO_HUD_CONTEXT));
+        FordixButton autoContext = toggle(Tr.s("options.auto_context"), FordixConfig.AUTO_HUD_CONTEXT);
+        if (com.omneria.fordix.client.hud.HudRules.situationsForced() || !"player".equals(com.omneria.fordix.client.hud.HudRules.autoMode())) {
+            // The server decides: show what it chose and leave the button inert.
+            boolean on = com.omneria.fordix.client.hud.HudContextTicker.enabled();
+            autoContext.setMessage(valueText(Tr.s("options.auto_context"), (on ? "ON" : "OFF") + " " + Tr.s("options.set_by_server")));
+            autoContext.active = false;
+        }
+        add(autoContext);
         add(button(Tr.c("settings.hud_layout"), () -> this.minecraft.setScreen(new HudLayoutScreen(this))));
         add(button(Tr.c("settings.hud_lines"), () -> this.minecraft.setScreen(new HudLinesScreen(this))));
         add(button(Tr.c("settings.hud_contexts"), () -> this.minecraft.setScreen(new HudContextsScreen(this))));

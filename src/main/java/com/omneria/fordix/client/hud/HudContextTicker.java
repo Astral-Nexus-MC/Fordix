@@ -37,7 +37,14 @@ public final class HudContextTicker {
     }
 
     public static boolean enabled() {
-        return HudRules.situationsForced() || FordixConfig.AUTO_HUD_CONTEXT.get();
+        if (HudRules.situationsForced()) {
+            return true;
+        }
+        return switch (HudRules.autoMode()) {
+            case "on" -> true;
+            case "off" -> false;
+            default -> FordixConfig.AUTO_HUD_CONTEXT.get();
+        };
     }
 
     public static HudContext.Kind kind() {
@@ -79,15 +86,15 @@ public final class HudContextTicker {
                 }
                 com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(imposed ? serverLayout(action.slot())
                         : com.omneria.fordix.client.gui.vanilla.HudProfileActions.layoutOf(action.slot()));
-                minecraft.gui.setOverlayMessage(Tr.c("hud.profile.loaded", imposed
+                HudToast.show(Tr.s("hud.toast.profile"), imposed
                         ? Tr.s("hud.context." + HudContext.Kind.values()[action.slot()].name().toLowerCase(java.util.Locale.ROOT))
-                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot())), false);
+                        : com.omneria.fordix.client.gui.vanilla.HudProfileActions.name(action.slot()), 0x3FD1C7);
             }
             case RESTORE -> {
                 if (beforeProfile != null) {
                     com.omneria.fordix.client.gui.vanilla.HudProfileActions.applyLayout(beforeProfile);
                     beforeProfile = null;
-                    minecraft.gui.setOverlayMessage(Tr.c("hud.profile.back"), false);
+                    HudToast.show(Tr.s("hud.toast.profile"), Tr.s("hud.toast.back"), 0x3FD1C7);
                 }
             }
             default -> {
@@ -110,12 +117,16 @@ public final class HudContextTicker {
     /** The lock key: freezes the situation as it is, or lets it follow the player again. */
     public static void toggleLock(Minecraft minecraft) {
         if (HudRules.situationsForced()) {
-            minecraft.gui.setOverlayMessage(Component.literal(Tr.s("hud.context.imposed")), false);
+            HudToast.show(Tr.s("hud.toast.situation"), Tr.s("hud.context.imposed"), 0xE8A64A);
             return;
         }
         locked = locked == null ? CONTEXT.current() : null;
-        minecraft.gui.setOverlayMessage(Component.literal(Tr.s(locked == null ? "hud.context.unlocked" : "hud.context.locked",
-                Tr.s("hud.context." + kind().name().toLowerCase(java.util.Locale.ROOT)))), false);
+        String situation = Tr.s("hud.context." + kind().name().toLowerCase(java.util.Locale.ROOT));
+        if (locked == null) {
+            HudToast.show(Tr.s("hud.toast.situation"), Tr.s("hud.toast.unlocked"), 0x5ED68A);
+        } else {
+            HudToast.show(Tr.s("hud.toast.locked"), situation, 0xE8A64A);
+        }
     }
 
     /** Opacity multiplier for a panel, eased over 200 ms so a change of situation is a fade and never a jump. */

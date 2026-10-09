@@ -36,4 +36,14 @@ class HudTokensTest {
         assertEquals(0x80123456, HudTokens.withAlpha(0xFF123456, 0x80));
         assertEquals(0xFF0000FF, HudTokens.mix(0xFF0000FF, 0xFFFF0000, 0.0F));
     }
+
+    @Test
+    void toastFadesInHoldsAndFadesOut() {
+        assertEquals(0.0F, HudTokens.toastAlpha(0), 1e-4);
+        assertEquals(0.5F, HudTokens.toastAlpha(100), 1e-4);
+        assertEquals(1.0F, HudTokens.toastAlpha(1000), 1e-4);
+        assertEquals(0.5F, HudTokens.toastAlpha(200 + 2200 + 150), 1e-4);
+        assertEquals(0.0F, HudTokens.toastAlpha(2700), 1e-4);
+        assertEquals(0.0F, HudTokens.toastAlpha(-5), 1e-4);
+    }
 }

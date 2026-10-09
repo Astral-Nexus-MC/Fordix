@@ -35,6 +35,7 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_REQUIRED;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_FORBIDDEN;
     public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
+    public static final ForgeConfigSpec.ConfigValue<String> HUD_AUTO_SITUATIONS;
     public static final ForgeConfigSpec.BooleanValue HUD_SITUATIONS_FORCE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_TABLE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_PROFILES;
@@ -99,6 +100,10 @@ public final class FordixServerConfig {
         HUD_PROPOSED = builder.comment("A HUD layout to suggest: paste the share code (FXH1-...) copied from the HUD layout screen.",
                         "Players find it in the last profile slot (F8) unless they filled that slot themselves. Empty: no suggestion.")
                 .define("proposed", "");
+        HUD_AUTO_SITUATIONS = builder.comment("The automatic HUD situations (fade and layout changes while fighting, mining, riding, facing a boss):",
+                        "\"player\" each player decides (default), \"on\" always on for everyone, \"off\" always off for everyone.",
+                        "Players keep their own table and profiles; to impose those too, use situationsForced below.")
+                .define("autoSituations", "player", value -> "player".equals(value) || "on".equals(value) || "off".equals(value));
         HUD_SITUATIONS_FORCE = builder.comment("true: every player gets the situations below (the HUD fades and changes with fights, mining, bosses, mounts)",
                         "and cannot change them. false: the table and profiles below are not used and each player decides.")
                 .define("situationsForced", false);
