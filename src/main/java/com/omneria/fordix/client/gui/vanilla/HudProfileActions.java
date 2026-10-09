@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * Saved HUD layouts: {@link #save} files the current placement of every element (Voidframe's own and the overlays) in a
- * slot, {@link #load} puts one back, {@link #loadNext} is what the profile key does. JourneyMap's minimap keeps its own settings.
+ * slot, {@link #load} puts one back. JourneyMap's minimap keeps its own settings.
  */
 public final class HudProfileActions {
     private static HudProfiles profiles;
@@ -67,14 +67,6 @@ public final class HudProfileActions {
         Map<String, HudProfiles.Placement> saved = profiles().get(slot);
         if (saved != null) {
             return saved;
-        }
-        // The server's suggestion takes the last slot while the player has not filled it.
-        if (slot == HudProfiles.SLOTS - 1) {
-            Map<String, HudProfiles.Placement> proposed = com.omneria.fordix.client.gui.layout.HudProfileCodec.decode(
-                    com.omneria.fordix.client.hud.HudRules.proposed());
-            if (proposed != null) {
-                return proposed;
-            }
         }
         java.util.List<String> hidden = PRESET_HIDDEN.get(slot);
         if (hidden == null) {
@@ -188,23 +180,6 @@ public final class HudProfileActions {
             HudSlots.restore(id, placement);
         } else {
             HudSlots.reset(id);
-        }
-    }
-
-    /** The profile key: the next filled slot, announced above the hotbar. */
-    public static void loadNext(Minecraft minecraft) {
-        int slot = -1;
-        for (int step = 1; step <= HudProfiles.SLOTS; step++) {
-            int candidate = Math.floorMod(profiles().active() + step, HudProfiles.SLOTS);
-            if (usable(candidate)) {
-                slot = candidate;
-                break;
-            }
-        }
-        if (slot < 0) {
-            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), Tr.s("hud.profile.none"), 0xE8A64A);
-        } else if (load(slot)) {
-            com.omneria.fordix.client.hud.HudToast.show(Tr.s("hud.toast.profile"), name(slot), 0x3FD1C7);
         }
     }
 }

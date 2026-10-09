@@ -97,8 +97,8 @@ public final class FordixServerConfig {
                 .defineList("required", List.of("health", "minecraft:hotbar"), value -> value instanceof String text && !text.isBlank() && text.length() <= 96);
         HUD_FORBIDDEN = builder.comment("Elements that are always hidden here (streamer or competition servers): same ids as above.")
                 .defineList("forbidden", List.of(), value -> value instanceof String text && !text.isBlank() && text.length() <= 96);
-        HUD_PROPOSED = builder.comment("A HUD layout to suggest: paste the share code (FXH1-...) copied from the HUD layout screen.",
-                        "Players find it in the last profile slot (F8) unless they filled that slot themselves. Empty: no suggestion.")
+        HUD_PROPOSED = builder.comment("A HUD layout applied to each player once, the first time they see this code: paste the share code (FXH1-...)",
+                        "copied from the HUD layout screen. Players can adjust it afterwards; change the code to apply a new layout. Empty: none.")
                 .define("proposed", "");
         HUD_AUTO_SITUATIONS = builder.comment("The automatic HUD situations (fade and layout changes while fighting, mining, riding, facing a boss):",
                         "\"player\" each player decides (default), \"on\" always on for everyone, \"off\" always off for everyone.",

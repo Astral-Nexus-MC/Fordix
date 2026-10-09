@@ -64,8 +64,28 @@ public final class HudContextTicker {
         HudContext.Kind kind = CONTEXT.update(System.currentTimeMillis(),
                 new HudContext.Signals(VoidframeGauges.bossActive(minecraft), player.getVehicle() != null, fighting, mining));
         if (locked == null) {
+            announce(kind);
             followWithProfile(minecraft, kind);
         }
+    }
+
+    private static HudContext.Kind announced = HudContext.Kind.EXPLORE;
+
+    /** Tells the player when the situation changes: fighting, mining, a boss, a mount, and back to normal. */
+    private static void announce(HudContext.Kind kind) {
+        if (kind == announced) {
+            return;
+        }
+        announced = kind;
+        int accent = switch (kind) {
+            case COMBAT -> 0xE5534B;
+            case MINING -> 0xE8A64A;
+            case BOSS -> 0xB45FE0;
+            case MOUNT -> 0x5ED68A;
+            case EXPLORE -> 0x3FD1C7;
+        };
+        String name = Tr.s("hud.context." + kind.name().toLowerCase(java.util.Locale.ROOT));
+        HudToast.show(Tr.s("hud.toast.situation"), kind == HudContext.Kind.EXPLORE ? Tr.s("hud.toast.normal") : name, accent);
     }
 
     private static final ContextProfileSwitch PROFILES = new ContextProfileSwitch();
@@ -110,6 +130,7 @@ public final class HudContextTicker {
     /** Logging out: forget the situation and the layout to give back. */
     public static void reset() {
         PROFILES.reset();
+        announced = HudContext.Kind.EXPLORE;
         beforeProfile = null;
         locked = null;
     }

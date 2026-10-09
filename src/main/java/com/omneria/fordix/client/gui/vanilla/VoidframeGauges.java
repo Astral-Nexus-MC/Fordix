@@ -141,8 +141,6 @@ HudPlacement.end(guiGraphics, sized);
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        com.omneria.fordix.client.hud.HudToast.render(event.getGuiGraphics(), event.getWindow().getGuiScaledWidth(),
-                event.getWindow().getGuiScaledHeight());
         boolean wanted = restoreAttackIndicator(minecraft);
         if (!wanted || minecraft.player == null || !minecraft.options.getCameraType().isFirstPerson()
                 || minecraft.gameMode == null || minecraft.gameMode.getPlayerMode() == GameType.SPECTATOR) {

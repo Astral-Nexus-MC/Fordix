@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
  * replaces the one on screen.
  */
 public final class HudToast {
+    private static final int MARGIN = 8;
     private static String title = "";
     private static String detail = "";
     private static int accent = 0x3FD1C7;
@@ -26,6 +27,10 @@ public final class HudToast {
         shownAt = System.currentTimeMillis();
     }
 
+    public static boolean active() {
+        return HudTokens.toastAlpha(System.currentTimeMillis() - shownAt) > 0.01F;
+    }
+
     /** Draws the notice, if there is one; call once a frame from a HUD event. */
     public static void render(GuiGraphics graphics, int screenWidth, int screenHeight) {
         long elapsed = System.currentTimeMillis() - shownAt;
@@ -36,10 +41,10 @@ public final class HudToast {
         Font font = Minecraft.getInstance().font;
         int width = Math.max(font.width(title), font.width(detail)) + 28;
         int height = detail.isEmpty() ? 20 : 31;
-        int x = (screenWidth - width) / 2;
-        // Rises a few pixels while it fades in.
+        // Top right, whatever else the HUD shows; slides down a few pixels while it fades in.
+        int x = screenWidth - width - MARGIN;
         int lift = Math.round((1.0F - Math.min(1.0F, elapsed / (float) HudTokens.TOAST_IN_MS)) * 6.0F);
-        int y = screenHeight - 82 + lift;
+        int y = MARGIN - lift;
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
         try {

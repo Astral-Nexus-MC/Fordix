@@ -97,11 +97,28 @@ public final class NotificationOverlay {
     public static void onRenderGui(RenderGuiEvent.Post event) {
         if (Minecraft.getInstance().screen == null) {
             draw(event.getGuiGraphics());
+            drawHudToast(event.getGuiGraphics());
         }
     }
 
     public static void onScreenRenderPost(ScreenEvent.Render.Post event) {
         draw(event.getGuiGraphics());
+        drawHudToast(event.getGuiGraphics());
+    }
+
+    /** The HUD's own notices (profile, situation, lock): top right, over every other element like the notifications above. */
+    private static void drawHudToast(GuiGraphics guiGraphics) {
+        if (!com.omneria.fordix.client.hud.HudToast.active()) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        guiGraphics.flush();
+        RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0F, 0.0F, 450.0F);
+        com.omneria.fordix.client.hud.HudToast.render(guiGraphics, minecraft.getWindow().getGuiScaledWidth(),
+                minecraft.getWindow().getGuiScaledHeight());
+        guiGraphics.pose().popPose();
     }
 
     private static void draw(GuiGraphics guiGraphics) {

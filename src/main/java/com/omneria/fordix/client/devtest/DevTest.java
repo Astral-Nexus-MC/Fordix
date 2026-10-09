@@ -318,7 +318,7 @@ public final class DevTest {
         }, 25, false));
         steps.add(new Step("12k2-hud-profile-loaded", () -> {
             mc.setScreen(null);
-            com.omneria.fordix.client.gui.vanilla.HudProfileActions.loadNext(mc);
+            com.omneria.fordix.client.gui.vanilla.HudProfileActions.load(1);
         }, 25, false));
         steps.add(new Step("12k3-hud-profile-reset", () -> {
             com.omneria.fordix.client.gui.vanilla.HudSlots.reset("fordix:coordinates");
