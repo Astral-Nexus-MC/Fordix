@@ -3,7 +3,6 @@ package com.omneria.fordix;
 import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.tooltip.TooltipStyles;
-import com.omneria.fordix.client.notification.NotificationCorner;
 import com.omneria.fordix.client.guide.GuideEntry;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -14,7 +13,7 @@ import java.util.Map;
 /**
  * Client-side options, saved per player in config/fordix-client.toml. Nothing here
  * touches Minecraft client classes ({@link Theme}, {@link GuideEntry} and
- * {@link NotificationCorner} are plain Java), so it's safe to
+ * ), so it's safe to
  * register from the common mod constructor.
  */
 public final class FordixConfig {
@@ -61,7 +60,6 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
-    public static final ForgeConfigSpec.ConfigValue<String> NOTIFICATION_POSITION;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -164,10 +162,6 @@ public final class FordixConfig {
                         "mowziesmobs | Mowzie's Mobs : Wiki | mowziesmobs:foliaath_seed | url:https://mowziesmobs.fandom.com/",
                         "twilightforest | Twilight Forest : Wiki | twilightforest:naga_scale | url:https://twilightforestwiki.com/"
                 ), value -> value instanceof String text && GuideEntry.parse(text) != null);
-        NOTIFICATION_POSITION = builder
-                .comment("Screen corner for server notifications: " + String.join(", ", NotificationCorner.OPTIONS) + ".",
-                        "\"auto\" is top_right. Notifications are drawn over every HUD overlay, JourneyMap's minimap included.")
-                .defineInList("notificationPosition", NotificationCorner.AUTO, NotificationCorner.OPTIONS);
         CLIENT_SPEC = builder.build();
     }
 

@@ -5,7 +5,6 @@ import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.FordixClient;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
-import com.omneria.fordix.client.notification.NotificationCorner;
 import com.omneria.fordix.client.notification.NotificationOverlay;
 import com.omneria.fordix.client.tooltip.TooltipStyles;
 import com.omneria.fordix.notification.NotificationStyle;
@@ -126,7 +125,6 @@ public class FordixSettingsScreen extends FordixScreen {
         add(toggle(Tr.s("settings.tooltips"), FordixConfig.VOIDFRAME_TOOLTIPS));
         add(choice(Tr.s("settings.tooltip_style"), TooltipStyles.NAMES, FordixConfig.TOOLTIP_STYLE));
         add(choice(Tr.s("settings.theme"), Theme.NAMES, FordixConfig.THEME));
-        add(choice(Tr.s("settings.notifications"), NotificationCorner.OPTIONS, FordixConfig.NOTIFICATION_POSITION));
         add(button(Tr.c("settings.test"), () -> NotificationOverlay.receive(
                 new ClientboundNotificationPayload(NotificationStyle.INFO, Component.literal("Fordix"),
                         Tr.c("settings.test_message"), 100))));

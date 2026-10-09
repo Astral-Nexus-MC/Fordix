@@ -1,6 +1,5 @@
 package com.omneria.fordix.client.notification;
 
-import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.anim.Easing;
 import com.omneria.fordix.client.gui.vanilla.Reflect;
@@ -26,7 +25,7 @@ import java.util.BitSet;
 import java.util.List;
 
 /**
- * Draws server notifications in the configured {@link NotificationCorner}, on the HUD
+ * Draws server notifications in the top-right corner, on the HUD
  * and on top of any open screen. In the top-right corner they sit below vanilla toasts
  * and, on the HUD, the status effect icons; in a bottom corner, above the hotbar when
  * it's in the way. Layout and timing live in {@link NotificationStack}; this class
@@ -107,6 +106,9 @@ public final class NotificationOverlay {
     }
 
     /** The HUD's own notices (profile, situation, lock): top right, over every other element like the notifications above. */
+    /** Bottom edge of the server notifications on screen (0 when there are none): the HUD notice hangs under them. */
+    private static int occupiedBottom;
+
     private static void drawHudToast(GuiGraphics guiGraphics) {
         if (!com.omneria.fordix.client.hud.HudToast.active()) {
             return;
@@ -117,46 +119,39 @@ public final class NotificationOverlay {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 450.0F);
         com.omneria.fordix.client.hud.HudToast.render(guiGraphics, minecraft.getWindow().getGuiScaledWidth(),
-                minecraft.getWindow().getGuiScaledHeight());
+                minecraft.getWindow().getGuiScaledHeight(), occupiedBottom);
         guiGraphics.pose().popPose();
     }
 
     private static void draw(GuiGraphics guiGraphics) {
         if (STACK.isEmpty()) {
+            occupiedBottom = 0;
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        NotificationCorner corner = NotificationCorner.resolve(FordixConfig.NOTIFICATION_POSITION.get());
         boolean hud = minecraft.screen == null;
-        int edge;
-        if (corner.isTop()) {
-            // Vanilla toasts are drawn over screens too; status effect icons only on the HUD.
-            int effects = hud ? effectRowsHeight(minecraft) : 0;
-            edge = MARGIN + (corner.isRight() ? Math.max(effects, toastsHeight(minecraft)) : 0);
-        } else {
-            int left = corner.isRight() ? screenWidth - MARGIN - MAX_WIDTH : MARGIN;
-            boolean hotbarInTheWay = left < screenWidth / 2 + HOTBAR_HALF_WIDTH
-                    && left + MAX_WIDTH > screenWidth / 2 - HOTBAR_HALF_WIDTH;
-            edge = screenHeight - MARGIN - (hud && hotbarInTheWay ? HOTBAR_CLEARANCE : 0);
-        }
-        NotificationStack.Anchor anchor = corner.isTop() ? NotificationStack.Anchor.TOP : NotificationStack.Anchor.BOTTOM;
+        // Always the top-right corner, like the HUD's own notices; status effect icons and vanilla toasts are cleared.
+        int effects = hud ? effectRowsHeight(minecraft) : 0;
+        int edge = MARGIN + Math.max(effects, toastsHeight(minecraft));
+        NotificationStack.Anchor anchor = NotificationStack.Anchor.TOP;
         // Whatever the HUD drew before (minimaps included) may have written depth at any z: wipe the
         // depth buffer, as vanilla does before rendering a screen, so this always ends up on top.
         guiGraphics.flush();
         RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
+        int bottom = 0;
         for (NotificationStack.Placed<Shown> placed : STACK.layout(System.currentTimeMillis(), edge, anchor)) {
             // Slides in from the nearest side edge.
             int width = placed.payload().width();
             float hidden = (1.0F - placed.shown()) * (width + MARGIN);
-            int x = corner.isRight()
-                    ? Math.round(screenWidth - MARGIN - width + hidden)
-                    : Math.round(MARGIN - hidden);
+            int x = Math.round(screenWidth - MARGIN - width + hidden);
             drawOne(guiGraphics, minecraft.font, placed, x, Math.round(placed.y()));
+            bottom = Math.max(bottom, Math.round(placed.y()) + placed.height());
         }
+        occupiedBottom = bottom;
         guiGraphics.pose().popPose();
     }
 

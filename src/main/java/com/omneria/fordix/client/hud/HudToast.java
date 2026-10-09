@@ -31,8 +31,8 @@ public final class HudToast {
         return HudTokens.toastAlpha(System.currentTimeMillis() - shownAt) > 0.01F;
     }
 
-    /** Draws the notice, if there is one; call once a frame from a HUD event. */
-    public static void render(GuiGraphics graphics, int screenWidth, int screenHeight) {
+    /** Draws the notice, if there is one, {@code below} pixels from the top at least (the server notifications' bottom edge). */
+    public static void render(GuiGraphics graphics, int screenWidth, int screenHeight, int below) {
         long elapsed = System.currentTimeMillis() - shownAt;
         float alpha = HudTokens.toastAlpha(elapsed);
         if (alpha <= 0.01F) {
@@ -44,7 +44,7 @@ public final class HudToast {
         // Top right, whatever else the HUD shows; slides down a few pixels while it fades in.
         int x = screenWidth - width - MARGIN;
         int lift = Math.round((1.0F - Math.min(1.0F, elapsed / (float) HudTokens.TOAST_IN_MS)) * 6.0F);
-        int y = MARGIN - lift;
+        int y = Math.max(MARGIN, below > 0 ? below + 4 : 0) - lift;
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
         try {

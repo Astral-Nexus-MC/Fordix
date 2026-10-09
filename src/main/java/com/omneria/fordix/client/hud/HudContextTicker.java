@@ -32,8 +32,7 @@ public final class HudContextTicker {
         if (player == null || minecraft.level == null) {
             return;
         }
-        boolean fighting = player.tickCount - player.getLastHurtMobTimestamp() < 40
-                || player.tickCount - player.getLastHurtByMobTimestamp() < 40;
+        boolean fighting = fightSignal(minecraft, player);
         boolean mining = minecraft.options.keyAttack.isDown() && minecraft.hitResult != null
                 && minecraft.hitResult.getType() == HitResult.Type.BLOCK;
         HudContext.Kind kind = CONTEXT.update(System.currentTimeMillis(),
@@ -41,6 +40,31 @@ public final class HudContextTicker {
         announce(kind);
         followWithProfile(minecraft, kind);
     }
+
+    private static int hostileCheck;
+    private static boolean hostileNear;
+
+    /**
+     * What a fight looks like from the client: the player was just hurt (the hurt animation is synced), or is attacking a
+     * creature, or a hostile creature is close. (The game's own "last hurt" times are only kept on the server.)
+     */
+    private static boolean fightSignal(Minecraft minecraft, LocalPlayer player) {
+        if (player.hurtTime > 0) {
+            return true;
+        }
+        if (minecraft.options.keyAttack.isDown() && minecraft.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+                && hit.getEntity() instanceof net.minecraft.world.entity.LivingEntity target && target.isAlive()
+                && !(target instanceof net.minecraft.world.entity.OwnableEntity owned && player.getUUID().equals(owned.getOwnerUUID()))) {
+            return true;
+        }
+        if (++hostileCheck % 5 == 0) {
+            hostileNear = !minecraft.level.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class,
+                    player.getBoundingBox().inflate(HOSTILE_RANGE), monster -> monster.isAlive()).isEmpty();
+        }
+        return hostileNear;
+    }
+
+    private static final double HOSTILE_RANGE = 10.0D;
 
     private static HudContext.Kind announced = HudContext.Kind.EXPLORE;
 
@@ -98,6 +122,7 @@ public final class HudContextTicker {
     public static void reset() {
         PROFILES.reset();
         announced = HudContext.Kind.EXPLORE;
+        hostileNear = false;
         beforeProfile = null;
     }
 
