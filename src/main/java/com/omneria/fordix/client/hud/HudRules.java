@@ -15,6 +15,7 @@ public final class HudRules {
     private static volatile Set<String> forbidden = Set.of();
     private static volatile String proposed = "";
     private static volatile boolean situationsKnown;
+    private static volatile int targetRange = 20;
     private static volatile Map<String, float[]> situationTable = Map.of();
     private static volatile String[] situationProfiles = new String[SituationTable.SITUATIONS.size()];
 
@@ -40,6 +41,15 @@ public final class HudRules {
         return codes;
     }
 
+    /** How far a creature is targeted, as the server says (20 before it said anything). */
+    public static int targetRange() {
+        return targetRange;
+    }
+
+    public static void setTargetRange(int blocks) {
+        targetRange = Math.max(4, Math.min(64, blocks));
+    }
+
     /** Whether the server's situations have been received (before that, the built-in table applies). */
     public static boolean situationsKnown() {
         return situationsKnown;
@@ -60,6 +70,7 @@ public final class HudRules {
     public static void clear() {
         set(Set.of(), Set.of(), "");
         situationsKnown = false;
+        targetRange = 20;
         situationTable = Map.of();
         situationProfiles = emptyCodes();
     }

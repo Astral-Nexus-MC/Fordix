@@ -26,7 +26,7 @@ public final class FarTarget {
             return hit;
         }
         Entity viewer = minecraft.getCameraEntity();
-        int range = FordixConfig.hudTargetRange();
+        int range = com.omneria.fordix.client.hud.HudRules.targetRange();
         if (viewer == null || minecraft.level == null || range <= 4) {
             return null;
         }

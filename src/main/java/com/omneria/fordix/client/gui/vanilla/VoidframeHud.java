@@ -53,7 +53,7 @@ public final class VoidframeHud {
         VoidframeGauges.onOverlayPre(event);
         boolean health = event.getOverlay() == VanillaGuiOverlay.PLAYER_HEALTH.type();
         boolean food = event.getOverlay() == VanillaGuiOverlay.FOOD_LEVEL.type();
-        if ((!health && !food) || !FordixConfig.VOIDFRAME_HUD.get()) {
+        if ((!health && !food) || !FordixConfig.voidframeHud()) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();

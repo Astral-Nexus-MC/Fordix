@@ -47,7 +47,7 @@ public final class VoidframeGauges {
     }
 
     public static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
-        if (!FordixConfig.VOIDFRAME_HUD.get()) {
+        if (!FordixConfig.voidframeHud()) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
@@ -133,11 +133,11 @@ HudPlacement.end(guiGraphics, sized);
 
     /** After the crosshair: give the vanilla attack indicator setting back and draw ours under the crosshair. */
     public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type() && FordixConfig.VOIDFRAME_HUD.get()) {
+        if (event.getOverlay() == VanillaGuiOverlay.HOTBAR.type() && FordixConfig.voidframeHud()) {
             drawSelectedGlow(event);
             return;
         }
-        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type() || !FordixConfig.VOIDFRAME_HUD.get()) {
+        if (event.getOverlay() != VanillaGuiOverlay.CROSSHAIR.type() || !FordixConfig.voidframeHud()) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
@@ -177,7 +177,7 @@ HudPlacement.end(guiGraphics, sized);
 
     /** Vanilla draws the indicator inside the crosshair overlay: switch it off for that overlay only. */
     private static void suppressVanillaAttackIndicator(Minecraft minecraft) {
-        if (!FordixConfig.VOIDFRAME_HUD.get() || attackIndicatorSuppressed) {
+        if (!FordixConfig.voidframeHud() || attackIndicatorSuppressed) {
             return;
         }
         AttackIndicatorStatus status = minecraft.options.attackIndicator().get();

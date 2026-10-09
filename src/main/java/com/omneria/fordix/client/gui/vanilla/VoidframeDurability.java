@@ -30,7 +30,7 @@ public final class VoidframeDurability implements IItemDecorator {
 
     @Override
     public boolean render(GuiGraphics guiGraphics, Font font, ItemStack stack, int xOffset, int yOffset) {
-        if (!FordixConfig.VOIDFRAME_HUD.get() || !stack.isBarVisible()) {
+        if (!FordixConfig.voidframeHud() || !stack.isBarVisible()) {
             return false;
         }
         int color = 0xFF000000 | stack.getBarColor();

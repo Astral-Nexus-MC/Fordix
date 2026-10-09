@@ -32,7 +32,7 @@ public final class HudAlerts {
     /** Every client tick. */
     public static void tick(Minecraft minecraft) {
         LocalPlayer player = minecraft.player;
-        if (player == null || minecraft.level == null || !FordixConfig.VOIDFRAME_HUD.get()) {
+        if (player == null || minecraft.level == null || !FordixConfig.voidframeHud()) {
             return;
         }
         float threshold = FordixConfig.ALERT_DURABILITY_PERCENT.get() / 100.0F;

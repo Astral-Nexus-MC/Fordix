@@ -45,7 +45,7 @@ public final class DamageNumbers {
 
     private static boolean enabled() {
         try {
-            return FordixConfig.DAMAGE_NUMBERS.get() && FordixConfig.VOIDFRAME_HUD.get();
+            return FordixConfig.damageNumbers() && FordixConfig.voidframeHud();
         } catch (IllegalStateException notLoadedYet) {
             return false;
         }

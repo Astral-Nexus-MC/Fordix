@@ -115,24 +115,16 @@ public class FordixSettingsScreen extends FordixScreen {
     // ---- the tabs
 
     private void buildHud() {
-        add(toggle(Tr.s("settings.hud"), FordixConfig.VOIDFRAME_HUD));
-        add(toggle(Tr.s("options.effects"), FordixConfig.HUD_EFFECTS_LIST));
-        for (String alert : FordixConfig.HUD_ALERTS) {
-            add(toggle(Tr.s("hud.alert." + alert), FordixConfig.hudAlertValue(alert)));
-        }
         add(toggle(Tr.s("options.compact"), FordixConfig.HUD_COMPACT));
-        add(choice(Tr.s("options.target_range"), FordixConfig.HUD_TARGET_RANGES, FordixConfig.HUD_TARGET_RANGE, " " + Tr.s("options.blocks")));
         add(choice(Tr.s("options.opacity"), FordixConfig.HUD_OPACITIES, FordixConfig.HUD_OPACITY, " %"));
         add(button(Tr.c("settings.hud_layout"), () -> this.minecraft.setScreen(new HudLayoutScreen(this))));
+        add(button(Tr.c("settings.hud_alerts"), () -> this.minecraft.setScreen(new HudAlertsScreen(this))));
         add(button(Tr.c("settings.hud_lines"), () -> this.minecraft.setScreen(new HudLinesScreen(this))));
     }
 
     private void buildGame() {
-        add(toggle(Tr.s("options.damage_numbers"), FordixConfig.DAMAGE_NUMBERS));
         add(toggle(Tr.s("options.borderless_fullscreen"), FordixConfig.BORDERLESS_FULLSCREEN));
         add(toggle(Tr.s("options.inventory_tools"), FordixConfig.INVENTORY_TOOLS));
-        add(toggle(Tr.s("options.player_list"), FordixConfig.VOIDFRAME_PLAYER_LIST));
-        add(toggle(Tr.s("settings.hud_items"), FordixConfig.HUD_REQUIRE_ITEMS));
         add(toggle(Tr.s("settings.guide_hints"), FordixConfig.GUIDE_HINTS));
     }
 

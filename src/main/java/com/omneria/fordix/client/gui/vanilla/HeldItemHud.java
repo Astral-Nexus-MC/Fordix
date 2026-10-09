@@ -55,7 +55,7 @@ public final class HeldItemHud {
 
     /** After the vanilla name line: the model beside it. */
     public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() != VanillaGuiOverlay.ITEM_NAME.type() || !FordixConfig.VOIDFRAME_HUD.get() || ticksLeft <= 0) {
+        if (event.getOverlay() != VanillaGuiOverlay.ITEM_NAME.type() || !FordixConfig.voidframeHud() || ticksLeft <= 0) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();

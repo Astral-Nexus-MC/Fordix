@@ -205,7 +205,7 @@ public final class InfoHud {
     }
 
     private static boolean hidden(Minecraft minecraft) {
-        return !FordixConfig.VOIDFRAME_HUD.get() || minecraft.options.hideGui || minecraft.options.renderDebug
+        return !FordixConfig.voidframeHud() || minecraft.options.hideGui || minecraft.options.renderDebug
                 || minecraft.player == null || minecraft.level == null;
     }
 
@@ -253,7 +253,7 @@ public final class InfoHud {
 
     /** Whether the player has one of these items anywhere on them (bag, armor slots, off hand), or the option is off. */
     private static boolean unlocked(Player player, net.minecraft.world.item.Item... items) {
-        if (!FordixConfig.HUD_REQUIRE_ITEMS.get()) {
+        if (!FordixConfig.hudRequireItems()) {
             return true;
         }
         for (List<ItemStack> stacks : List.of(player.getInventory().items, player.getInventory().offhand, player.getInventory().armor)) {
@@ -446,7 +446,7 @@ public final class InfoHud {
     /** Whether the effects list stands in for vanilla's icons. */
     public static boolean replacesVanillaEffects() {
         try {
-            return FordixConfig.VOIDFRAME_HUD.get() && FordixConfig.HUD_EFFECTS_LIST.get();
+            return FordixConfig.voidframeHud() && FordixConfig.HUD_EFFECTS_LIST.get();
         } catch (IllegalStateException notLoadedYet) {
             return false;
         }

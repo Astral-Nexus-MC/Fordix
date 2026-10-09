@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "10";
+    private static final String PROTOCOL_VERSION = "11";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),

@@ -293,6 +293,7 @@ public final class DevTest {
             }
             mc.setScreen(new com.omneria.fordix.client.gui.HudLinesScreen(null));
         }, 15, false));
+        steps.add(new Step("12i7-hud-alerts-screen", () -> mc.setScreen(new com.omneria.fordix.client.gui.HudAlertsScreen(null)), 15, false));
         steps.add(new Step("12j-chat-private", () -> {
             mc.setScreen(null);
             cmd(mc, "tellraw @a {\"translate\":\"commands.message.display.incoming\",\"with\":[\"Ana\",\"Salut Dev, tu viens au spawn ?\"]}");

@@ -35,6 +35,7 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_REQUIRED;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_FORBIDDEN;
     public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
+    public static final ForgeConfigSpec.IntValue HUD_TARGET_RANGE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_TABLE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_PROFILES;
 
@@ -98,6 +99,8 @@ public final class FordixServerConfig {
         HUD_PROPOSED = builder.comment("A HUD layout applied to each player once, the first time they see this code: paste the share code (FXH1-...)",
                         "copied from the HUD layout screen. Players can adjust it afterwards; change the code to apply a new layout. Empty: none.")
                 .define("proposed", "");
+        HUD_TARGET_RANGE = builder.comment("How far in blocks a creature is targeted by the HUD panel and the sheet key (4 to 64).")
+                .defineInRange("targetRange", 20, 4, 64);
         HUD_SITUATIONS_TABLE = builder.comment("The HUD changes with the situation (fighting, mining, riding, facing a boss) for every player, as set here.",
                         "How visible each panel is in each situation, in percent: \"panel | explore | combat | mining | boss | mount\".",
                         "Panels: coordinates, performance, clock, compass, effects. A panel with no line is never dimmed; remove the lines to switch it off.")

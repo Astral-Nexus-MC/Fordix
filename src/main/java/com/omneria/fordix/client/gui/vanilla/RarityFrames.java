@@ -37,7 +37,7 @@ public final class RarityFrames {
 
     /** Hotbar: the nine slots sit at fixed offsets from the screen's bottom center. */
     public static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
-        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type() || !FordixConfig.VOIDFRAME_HUD.get()) {
+        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type() || !FordixConfig.voidframeHud()) {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();

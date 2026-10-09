@@ -9,7 +9,7 @@ import java.util.List;
  * always hidden, and {@code proposed} is a share code of a layout the server suggests (empty: none).
  */
 public record ClientboundHudRulesPayload(List<String> required, List<String> forbidden, String proposed,
-                                         List<String> situationsTable, List<String> situationsProfiles) {
+                                         List<String> situationsTable, List<String> situationsProfiles, int targetRange) {
     public static final int MAX_IDS = 64;
     public static final int MAX_CODE = 30_000;
 
@@ -19,6 +19,7 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         buf.writeUtf(payload.proposed(), MAX_CODE);
         buf.writeCollection(payload.situationsTable(), (b, line) -> b.writeUtf(line, 256));
         buf.writeCollection(payload.situationsProfiles(), (b, line) -> b.writeUtf(line, MAX_CODE + 64));
+        buf.writeVarInt(payload.targetRange());
     }
 
     public static ClientboundHudRulesPayload decode(FriendlyByteBuf buf) {
@@ -27,7 +28,8 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         String proposed = buf.readUtf(MAX_CODE);
         List<String> table = buf.readList(b -> b.readUtf(256));
         List<String> profiles = buf.readList(b -> b.readUtf(MAX_CODE + 64));
-        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, cap(table), cap(profiles));
+        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, cap(table), cap(profiles),
+                Math.max(4, Math.min(64, buf.readVarInt())));
     }
 
     private static List<String> cap(List<String> ids) {

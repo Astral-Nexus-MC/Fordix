@@ -19,7 +19,6 @@ import java.util.Map;
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
-    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_HUD;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_CHAT;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
@@ -46,17 +45,12 @@ public final class FordixConfig {
     public static final List<String> HUD_OPACITIES = List.of("100", "85", "70", "55", "40");
     public static final ForgeConfigSpec.ConfigValue<String> HUD_OPACITY;
     /** How far (blocks) the targeted creature panel and the creature sheet key reach; 4 or less keeps the game's own reach. */
-    public static final List<String> HUD_TARGET_RANGES = List.of("4", "10", "20", "32");
-    public static final ForgeConfigSpec.ConfigValue<String> HUD_TARGET_RANGE;
     public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
-    public static final ForgeConfigSpec.BooleanValue DAMAGE_NUMBERS;
     public static final ForgeConfigSpec.BooleanValue BORDERLESS_FULLSCREEN;
-    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_PLAYER_LIST;
     public static final ForgeConfigSpec.BooleanValue INVENTORY_TOOLS;
     public static final ForgeConfigSpec.IntValue ALERT_DURABILITY_PERCENT;
     public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
-    public static final ForgeConfigSpec.BooleanValue HUD_REQUIRE_ITEMS;
     public static final ForgeConfigSpec.ConfigValue<String> THEME;
     public static final ForgeConfigSpec.ConfigValue<String> ACCENT_COLOR;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> GUIDES;
@@ -66,9 +60,6 @@ public final class FordixConfig {
         VOIDFRAME_VANILLA_SCREENS = builder
                 .comment("Draw vanilla container screens (inventory, chests, furnaces...) in the Fordix Voidframe style.")
                 .define("voidframeVanillaScreens", true);
-        VOIDFRAME_HUD = builder
-                .comment("Replace the health hearts with a Voidframe bar showing the exact value.")
-                .define("voidframeHud", true);
         VOIDFRAME_CHAT = builder
                 .comment("Replace the chat with the Voidframe one: tabs, player heads, times and a styled text field.")
                 .define("voidframeChat", true);
@@ -120,24 +111,14 @@ public final class FordixConfig {
         builder.pop();
         HUD_OPACITY = builder.comment("Opacity of the information panels in percent: " + String.join(", ", HUD_OPACITIES) + ".")
                 .define("hudOpacity", "70", value -> value instanceof String text && HUD_OPACITIES.contains(text));
-        HUD_TARGET_RANGE = builder.comment("How far in blocks a creature is targeted by its panel and the sheet key: " + String.join(", ", HUD_TARGET_RANGES) + ".")
-                .define("hudTargetRange", "20", value -> value instanceof String text && HUD_TARGET_RANGES.contains(text));
         HUD_COMPACT = builder.comment("Tighter information panels (less padding and line spacing), for small screens.")
                 .define("hudCompact", false);
         HUD_EFFECTS_LIST = builder.comment("Replace the potion effect icons with a list showing name and time left.")
                 .define("hudEffectsList", true);
-        DAMAGE_NUMBERS = builder.comment("Floating numbers above creatures (and in front of you) when health goes down or up.")
-                .define("damageNumbers", true);
         BORDERLESS_FULLSCREEN = builder.comment("F11 (the game's Toggle Fullscreen key) gives a borderless window over the whole monitor instead of a video mode change: Alt-Tab is instant.")
                 .define("borderlessFullscreen", false);
-        VOIDFRAME_PLAYER_LIST = builder.comment("Replace the Tab player list with the Voidframe panel (heads, ping, server header and footer).")
-                .define("voidframePlayerList", true);
         INVENTORY_TOOLS = builder.comment("Add a search field and a sort button to the inventory and to chests, barrels and shulker boxes.")
                 .define("inventoryTools", true);
-        HUD_REQUIRE_ITEMS = builder
-                .comment("The compass panel needs a compass (or recovery compass) in your inventory and the clock panel needs a clock:",
-                        "craft them to unlock these two panels.")
-                .define("hudRequireItems", true);
         CHAT_MENTION_SOUND = builder
                 .comment("Play a short sound when a chat message mentions your name or whispers to you.")
                 .define("chatMentionSound", true);
@@ -237,12 +218,26 @@ public final class FordixConfig {
         }
     }
 
-    public static int hudTargetRange() {
-        try {
-            return Integer.parseInt(HUD_TARGET_RANGE.get());
-        } catch (IllegalStateException | NumberFormatException notReady) {
-            return 4;
-        }
+    // ---- imposed on every player: no option, the HUD works this way
+
+    /** The Voidframe HUD is always on. */
+    public static boolean voidframeHud() {
+        return true;
+    }
+
+    /** Floating damage numbers are always on. */
+    public static boolean damageNumbers() {
+        return true;
+    }
+
+    /** The Voidframe Tab list is always on. */
+    public static boolean voidframePlayerList() {
+        return true;
+    }
+
+    /** The compass and clock panels always need a compass and a clock in the inventory. */
+    public static boolean hudRequireItems() {
+        return true;
     }
 
     public static ForgeConfigSpec.BooleanValue hudAlertValue(String alert) {

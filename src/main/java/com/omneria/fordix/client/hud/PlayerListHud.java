@@ -66,7 +66,7 @@ public final class PlayerListHud {
 
     public static boolean replacesVanilla() {
         try {
-            return FordixConfig.VOIDFRAME_HUD.get() && FordixConfig.VOIDFRAME_PLAYER_LIST.get();
+            return FordixConfig.voidframeHud() && FordixConfig.voidframePlayerList();
         } catch (IllegalStateException notLoadedYet) {
             return false;
         }
