@@ -125,12 +125,9 @@ public class FordixSettingsScreen extends FordixScreen {
         add(toggle(Tr.s("settings.tooltips"), FordixConfig.VOIDFRAME_TOOLTIPS));
         add(choice(Tr.s("settings.tooltip_style"), TooltipStyles.NAMES, FordixConfig.TOOLTIP_STYLE));
         add(choice(Tr.s("settings.theme"), Theme.NAMES, FordixConfig.THEME));
-        add(button(Tr.c("settings.test"), () -> NotificationOverlay.receive(
-                new ClientboundNotificationPayload(NotificationStyle.INFO, Component.literal("Fordix"),
-                        Tr.c("settings.test_message"), 100))));
         // Accent: a label line, then the hex box (empty keeps the theme's own accent).
-        accentLabelY = gridTop + ROW * 3;
-        EditBox accent = new EditBox(this.font, gridLeft + COLUMN_WIDTH + GAP, gridTop + ROW * 3 + 12, COLUMN_WIDTH, BUTTON_HEIGHT,
+        accentLabelY = gridTop + ROW * 2;
+        EditBox accent = new EditBox(this.font, gridLeft + COLUMN_WIDTH + GAP, gridTop + ROW * 2 + 12, COLUMN_WIDTH, BUTTON_HEIGHT,
                 Tr.c("settings.accent"));
         accent.setMaxLength(7);
         accent.setHint(Tr.c("settings.accent_hint"));
@@ -175,6 +172,9 @@ public class FordixSettingsScreen extends FordixScreen {
 
     private void buildAdmin() {
         add(button(Tr.c("settings.admin"), () -> this.minecraft.setScreen(new FordixAdminScreen(this))));
+        add(button(Tr.c("settings.test"), () -> NotificationOverlay.receive(
+                new ClientboundNotificationPayload(NotificationStyle.INFO, Component.literal("Fordix"),
+                        Tr.c("settings.test_message"), 100))));
     }
 
     // ---- widgets
