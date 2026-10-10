@@ -32,18 +32,20 @@ public final class PauseSkin {
     private static final int COLUMN_X = 32;
     private static final int COLUMN_WIDTH = 214;
     private static final int PAD = 12;
-    private static final int TOP = 84;
-    private static final int ROW_HEIGHT = 24;
-    private static final int ROW_GAP = 6;
+    private static final int ROOMY_TOP = 84;
+    private static final int TIGHT_TOP = 54;
     private static final int CARD_WIDTH = 190;
     private static final int CARD_HEIGHT = 96;
 
-    private static final Field TITLE = Reflect.uniqueField(net.minecraft.client.gui.screens.Screen.class, Component.class);
-
     private static int panelHeight;
+    private static int panelTop = ROOMY_TOP;
     private static PauseScreen laidOut;
 
     private PauseSkin() {
+    }
+
+    private static int needed(int rows, int first, int other, int gap, int separation) {
+        return first + (rows - 1) * other + (rows - 1) * gap + (rows > 2 ? separation : 0);
     }
 
     public static void onScreenInit(ScreenEvent.Init.Post event) {
@@ -73,15 +75,30 @@ public final class PauseSkin {
             }
         }
         int inner = COLUMN_WIDTH - PAD * 2;
-        int y = TOP + PAD;
+        int screenHeight = event.getScreen().height;
+        // Roomy on a tall screen, tight (smaller buttons, closer heading) on a small one, so the whole menu always fits.
+        int top = screenHeight >= 300 ? ROOMY_TOP : TIGHT_TOP;
+        int available = screenHeight - top - 8 - PAD * 2;
+        int first = 28;
+        int other = 24;
+        int gap = 6;
+        int separation = 8;
+        while (needed(rows.size(), first, other, gap, separation) > available && other > 14) {
+            first = Math.max(18, first - 2);
+            other -= 2;
+            gap = Math.max(2, gap - 1);
+            separation = Math.max(2, separation - 1);
+        }
+        panelTop = top;
+        int y = top + PAD;
         for (int i = 0; i < rows.size(); i++) {
             List<AbstractWidget> row = rows.get(i);
-            boolean first = i == 0;
-            boolean last = i == rows.size() - 1;
-            if (last && rows.size() > 2) {
-                y += 8;
+            boolean isFirst = i == 0;
+            boolean isLast = i == rows.size() - 1;
+            if (isLast && rows.size() > 2) {
+                y += separation;
             }
-            int height = first ? 28 : ROW_HEIGHT;
+            int height = isFirst ? first : other;
             int each = (inner - (row.size() - 1) * 4) / row.size();
             for (int k = 0; k < row.size(); k++) {
                 AbstractWidget widget = row.get(k);
@@ -90,17 +107,16 @@ public final class PauseSkin {
                 widget.setWidth(each);
                 widget.setHeight(height);
             }
-            y += height + (first ? ROW_GAP + 4 : ROW_GAP);
+            y += height + gap;
         }
-        panelHeight = y - TOP + PAD - ROW_GAP;
-        laidOut = (PauseScreen) event.getScreen();
-        if (TITLE != null) {
-            try {
-                TITLE.set(event.getScreen(), Component.empty());
-            } catch (IllegalAccessException | RuntimeException ignored) {
-                // The vanilla title stays: harmless.
+        panelHeight = y - top + PAD - gap;
+        // The game's "Game Menu" caption is a text widget of its own: the column carries a larger heading.
+        for (GuiEventListener listener : event.getListenersList()) {
+            if (listener instanceof net.minecraft.client.gui.components.StringWidget caption) {
+                caption.visible = false;
             }
         }
+        laidOut = (PauseScreen) event.getScreen();
     }
 
     /** Drawn right after the dimmed world and before the buttons: the shade, the column, the heading and the session card. */
@@ -118,15 +134,21 @@ public final class PauseSkin {
         for (int i = 0; i < shadeWidth; i += 6) {
             g.fill(i, 0, Math.min(shadeWidth, i + 6), height, HudTokens.withAlpha(0x03060A, Math.round(150 * (1.0F - i / (float) shadeWidth))));
         }
-        Glass.panel(g, COLUMN_X, TOP, COLUMN_WIDTH, panelHeight);
-        Glass.label(g, font, Tr.s("pause.heading"), COLUMN_X + 2, 30);
+        Glass.panel(g, COLUMN_X, panelTop, COLUMN_WIDTH, panelHeight);
+        boolean tight = panelTop < ROOMY_TOP;
+        int headingY = tight ? 8 : 30;
+        Glass.label(g, font, Tr.s("pause.heading"), COLUMN_X + 2, headingY);
+        float scale = tight ? 1.4F : 1.8F;
         g.pose().pushPose();
-        g.pose().translate(COLUMN_X + 2, 42, 0);
-        g.pose().scale(1.8F, 1.8F, 1.0F);
-        g.drawString(font, worldName(minecraft), 0, 0, FordixPalette.TEXT_BRIGHT, true);
+        g.pose().translate(COLUMN_X + 2, headingY + 11, 0);
+        g.pose().scale(scale, scale, 1.0F);
+        g.drawString(font, font.plainSubstrByWidth(worldName(minecraft), (int) ((COLUMN_WIDTH - 4) / scale)), 0, 0, FordixPalette.TEXT_BRIGHT, true);
         g.pose().popPose();
-        Glass.rule(g, COLUMN_X + 2, 66, COLUMN_WIDTH - 4);
-        sessionCard(g, font, minecraft, width - CARD_WIDTH - 24, TOP);
+        Glass.rule(g, COLUMN_X + 2, panelTop - 6, COLUMN_WIDTH - 4);
+        int cardX = width - CARD_WIDTH - 24;
+        if (cardX >= COLUMN_X + COLUMN_WIDTH + 16) {
+            sessionCard(g, font, minecraft, cardX, panelTop);
+        }
     }
 
     private static String worldName(Minecraft minecraft) {

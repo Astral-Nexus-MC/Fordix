@@ -24,8 +24,23 @@ import java.lang.reflect.Field;
  * button positions change.
  */
 public final class VoidframeDeathScreen extends DeathScreen implements VoidframeScreen {
-    private static final Field CAUSE = Reflect.uniqueField(DeathScreen.class, Component.class);
+    /** The game's screen has two components (the cause, then the score line) : the cause is the first declared. */
+    private static final Field CAUSE = firstField(Component.class);
     private static final Field HARDCORE = Reflect.uniqueField(DeathScreen.class, boolean.class);
+
+    private static Field firstField(Class<?> type) {
+        for (Field field : DeathScreen.class.getDeclaredFields()) {
+            if (!java.lang.reflect.Modifier.isStatic(field.getModifiers()) && field.getType() == type) {
+                try {
+                    field.setAccessible(true);
+                    return field;
+                } catch (RuntimeException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
 
     private final Component cause;
     private final boolean hardcoreMode;
