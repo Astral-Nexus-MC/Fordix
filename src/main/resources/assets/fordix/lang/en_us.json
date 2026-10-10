@@ -564,5 +564,14 @@
     "fordix.pause.mode.adventure": "Adventure",
     "fordix.pause.mode.spectator": "Spectator",
     "fordix.admin.preview.sample_title": "Server restart in 10 minutes",
-    "fordix.admin.preview.sample_message": "Save your work and stay in a safe place."
+    "fordix.admin.preview.sample_message": "Save your work and stay in a safe place.",
+    "fordix.inv.attr.health": "Max health",
+    "fordix.inv.attr.damage": "Attack damage",
+    "fordix.inv.attr.attack_speed": "Attack speed",
+    "fordix.inv.attr.movement": "Movement",
+    "fordix.inv.slot.head": "Head",
+    "fordix.inv.slot.chest": "Chest",
+    "fordix.inv.slot.legs": "Legs",
+    "fordix.inv.slot.feet": "Feet",
+    "fordix.inv.slot.offhand": "Off hand"
 }

@@ -246,15 +246,21 @@ public final class PetWheelScreen extends Screen {
             boolean usable = unavailable(SLOTS[i]) == null;
             boolean on = i == hovered;
             int tone = ACTION_COLORS[Math.min(i, ACTION_COLORS.length - 1)];
-            int fill = on ? (usable ? withAlpha(tone, 0x55) : 0xCC2A3138) : (usable ? 0xDD101C24 : 0xCC0C1318);
             double grow = on && usable ? 6 : 0;
-            sector(g, 0, 0, hub + 3, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, fill);
+            double from = middle - width / 2 + 0.02;
+            double to = middle + width / 2 - 0.02;
+            int top = on ? (usable ? withAlpha(tone, 0x88) : 0xEE34404A) : (usable ? 0xEE26343F : 0xEE141C23);
+            int bottom = on ? (usable ? withAlpha(tone, 0x38) : 0xEE222B33) : (usable ? 0xEE0B131A : 0xEE0A1015);
+            sector(g, 0, 0, hub + 3, outer + grow, from, to, top, bottom);
+            // The light on the upper face of the glass, and a fine rim on the inside.
+            sector(g, 0, 0, hub + 3, outer + grow, from, to, 0x1CFFFFFF, 0x00FFFFFF);
+            sector(g, 0, 0, hub + 3, hub + 4, from, to, 0x22FFFFFF);
             if (on && usable) {
                 // Halo and bright rim in the color of the action, like a lit glass edge.
-                sector(g, 0, 0, outer + grow, outer + grow + 5, middle - width / 2 + 0.02, middle + width / 2 - 0.02, withAlpha(tone, 0x28));
-                sector(g, 0, 0, outer + grow - 2, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, 0xFF000000 | tone);
+                sector(g, 0, 0, outer + grow, outer + grow + 6, from, to, withAlpha(tone, 0x30), withAlpha(tone, 0x08));
+                sector(g, 0, 0, outer + grow - 2, outer + grow, from, to, 0xFF000000 | tone);
             } else if (usable) {
-                sector(g, 0, 0, outer - 1, outer, middle - width / 2 + 0.02, middle + width / 2 - 0.02, withAlpha(tone, 0x50));
+                sector(g, 0, 0, outer - 1, outer, from, to, withAlpha(tone, 0x60), withAlpha(tone, 0x20));
             }
             double labelRadius = (hub + outer) / 2 + grow / 2;
             int lx = (int) Math.round(labelRadius * Math.sin(middle));
@@ -282,9 +288,9 @@ public final class PetWheelScreen extends Screen {
     }
 
     private void drawHub(GuiGraphics g, double hub) {
-        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0xEE0C161D);
-        sector(g, 0, 0, 0, hub * 0.55, -0.9, 0.9, 0x14FFFFFF);
-        sector(g, 0, 0, hub, hub + 5, 0, 2 * Math.PI, withAlpha(FordixPalette.ACCENT, 0x2C));
+        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0xF01C2832, 0xF00A1118);
+        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0x18FFFFFF, 0x00FFFFFF);
+        sector(g, 0, 0, hub, hub + 5, 0, 2 * Math.PI, withAlpha(FordixPalette.ACCENT, 0x34), withAlpha(FordixPalette.ACCENT, 0x08));
         sector(g, 0, 0, hub - 2, hub, 0, 2 * Math.PI, 0xFF000000 | FordixPalette.ACCENT);
         int x = 0;
         int y = -34;
@@ -296,11 +302,12 @@ public final class PetWheelScreen extends Screen {
         String life = "♥ " + format(pet.getHealth()) + " / " + format(pet.getMaxHealth());
         g.drawCenteredString(this.font, life, x, y + 26, 0xFFFF7A7A);
         float left = Math.max(0, Math.min(1, pet.getHealth() / Math.max(1, pet.getMaxHealth())));
-        int barLeft = x - 36;
-        g.fill(barLeft, y + 38, barLeft + 72, y + 41, 0x99000000);
-        g.fillGradient(barLeft, y + 38, barLeft + Math.round(72 * left), y + 41, 0xFFFFA89E, 0xFFE5534B);
+        com.omneria.fordix.client.hud.HudStyle.bar(g, x - 36, y + 38, 72, 3, left, 0xFFE5534B);
         if (pet instanceof TamableAnimal animal) {
-            g.drawCenteredString(this.font, Tr.s(sitting() ? "pet.state.sitting" : "pet.state.standing"), x, y + 46, FordixPalette.ACCENT);
+            // The state as a pill, like the other panels of Voidframe 2.
+            String state = Tr.s(sitting() ? "pet.state.sitting" : "pet.state.standing");
+            int pillWidth = this.font.width(state) + 14;
+            com.omneria.fordix.client.gui.Glass.pill(g, this.font, state, x - pillWidth / 2, y + 47, FordixPalette.ACCENT);
         }
     }
 
@@ -318,6 +325,20 @@ public final class PetWheelScreen extends Screen {
     /** The color of each sector's action: follow, stay, feed, inventory, call back, rename, release. */
     private static final int[] ACTION_COLORS = {0xFF3FD1C7, 0xFF9FB3C0, 0xFF5ED68A, 0xFFE8A64A, 0xFF4DA3FF, 0xFFB45FE0, 0xFFE5534B};
 
+    /** Half the wheel's height, in its own units: the span over which a sector's top-to-bottom shading runs. */
+    private static final double WHEEL_HALF = 96;
+
+    private static int shade(int top, int bottom, double t) {
+        double f = Math.max(0.0D, Math.min(1.0D, t));
+        int out = 0;
+        for (int shift = 24; shift >= 0; shift -= 8) {
+            int a = top >>> shift & 255;
+            int b = bottom >>> shift & 255;
+            out |= (int) Math.round(a + (b - a) * f) << shift;
+        }
+        return out;
+    }
+
     private static String format(float value) {
         return value == Math.floor(value) ? Integer.toString((int) value) : String.format(Locale.ROOT, "%.1f", value);
     }
@@ -328,11 +349,12 @@ public final class PetWheelScreen extends Screen {
 
     /** A ring sector (angles in radians, clockwise from the top; inner radius 0 gives a disc) filled with one color. */
     private static void sector(GuiGraphics g, double cx, double cy, double inner, double outer, double from, double to, int argb) {
+        sector(g, cx, cy, inner, outer, from, to, argb, argb);
+    }
+
+    /** The same, shaded from {@code top} (lit) to {@code bottom} over the wheel's height: the glass of Voidframe 2. */
+    private static void sector(GuiGraphics g, double cx, double cy, double inner, double outer, double from, double to, int top, int bottom) {
         Matrix4f matrix = g.pose().last().pose();
-        float a = (argb >>> 24 & 255) / 255.0F;
-        float r = (argb >> 16 & 255) / 255.0F;
-        float gr = (argb >> 8 & 255) / 255.0F;
-        float b = (argb & 255) / 255.0F;
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -342,8 +364,14 @@ public final class PetWheelScreen extends Screen {
             double angle = from + (to - from) * i / STEPS;
             double sin = Math.sin(angle);
             double cos = Math.cos(angle);
-            buffer.vertex(matrix, (float) (cx + outer * sin), (float) (cy - outer * cos), 0).color(r, gr, b, a).endVertex();
-            buffer.vertex(matrix, (float) (cx + inner * sin), (float) (cy - inner * cos), 0).color(r, gr, b, a).endVertex();
+            double yOuter = cy - outer * cos;
+            double yInner = cy - inner * cos;
+            int cOuter = shade(top, bottom, (yOuter - (cy - WHEEL_HALF)) / (2 * WHEEL_HALF));
+            int cInner = shade(top, bottom, (yInner - (cy - WHEEL_HALF)) / (2 * WHEEL_HALF));
+            buffer.vertex(matrix, (float) (cx + outer * sin), (float) yOuter, 0)
+                    .color(cOuter >> 16 & 255, cOuter >> 8 & 255, cOuter & 255, cOuter >>> 24 & 255).endVertex();
+            buffer.vertex(matrix, (float) (cx + inner * sin), (float) yInner, 0)
+                    .color(cInner >> 16 & 255, cInner >> 8 & 255, cInner & 255, cInner >>> 24 & 255).endVertex();
         }
         Tesselator.getInstance().end();
         RenderSystem.disableBlend();

@@ -564,5 +564,14 @@
     "fordix.pause.mode.adventure": "Aventure",
     "fordix.pause.mode.spectator": "Spectateur",
     "fordix.admin.preview.sample_title": "Redémarrage du serveur dans 10 minutes",
-    "fordix.admin.preview.sample_message": "Mettez-vous en sécurité et sauvegardez votre travail."
+    "fordix.admin.preview.sample_message": "Mettez-vous en sécurité et sauvegardez votre travail.",
+    "fordix.inv.attr.health": "Vie maximale",
+    "fordix.inv.attr.damage": "Dégâts d'attaque",
+    "fordix.inv.attr.attack_speed": "Vitesse d'attaque",
+    "fordix.inv.attr.movement": "Déplacement",
+    "fordix.inv.slot.head": "Tête",
+    "fordix.inv.slot.chest": "Torse",
+    "fordix.inv.slot.legs": "Jambes",
+    "fordix.inv.slot.feet": "Pieds",
+    "fordix.inv.slot.offhand": "Main gauche"
 }

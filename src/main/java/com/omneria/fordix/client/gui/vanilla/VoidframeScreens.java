@@ -395,8 +395,8 @@ public final class VoidframeScreens {
 
     // ---------- the survival inventory ----------
 
-    private static final int INV_W = 500;
-    private static final int INV_H = 348;
+    private static final int INV_W = 600;
+    private static final int INV_H = 388;
 
     /** The survival inventory (E key). Creative mode uses its own screen, which stays vanilla. */
     public static class PlayerInventory extends InventoryScreen implements VoidframeScreen, WideLayout {
@@ -425,17 +425,18 @@ public final class VoidframeScreens {
             if (!wide) {
                 return new int[]{1, 18};
             }
-            return slot instanceof net.minecraft.world.inventory.ResultSlot ? new int[]{5, 26} : new int[]{2, 20};
+            boolean armorOrHand = slot.container instanceof Inventory && slot.getContainerSlot() >= 36 && slot.getContainerSlot() <= 40;
+            return slot instanceof net.minecraft.world.inventory.ResultSlot || armorOrHand ? new int[]{5, 26} : new int[]{2, 20};
         }
 
         @Override
         public int[] searchRect() {
-            return wide ? new int[]{376, 48, 100, 22} : null;
+            return wide ? new int[]{432, 262, 140, 22} : null;
         }
 
         @Override
         public int[] sortRect() {
-            return wide ? new int[]{376, 76, 48, 22} : null;
+            return wide ? new int[]{432, 290, 66, 22} : null;
         }
 
         @Override
@@ -472,25 +473,26 @@ public final class VoidframeScreens {
             int p = ContainerLayout.PITCH;
             for (net.minecraft.world.inventory.Slot slot : menu.slots) {
                 if (slot instanceof net.minecraft.world.inventory.ResultSlot) {
-                    ContainerLayout.put(slot, 330, 62, ContainerLayout.BIG);
+                    ContainerLayout.put(slot, 344, 285, ContainerLayout.BIG);
                 } else if (slot.container instanceof Inventory) {
                     int index = slot.getContainerSlot();
                     if (index >= 36 && index <= 39) {
-                        ContainerLayout.put(slot, 24, 50 + (39 - index) * p, ContainerLayout.BOX);
+                        // Head, chest, legs, feet down the left column, with room for the name of each piece.
+                        ContainerLayout.put(slot, 18, 50 + (39 - index) * 32, ContainerLayout.BIG);
                     } else if (index == 40) {
-                        ContainerLayout.put(slot, 186, 140, ContainerLayout.BOX);
+                        ContainerLayout.put(slot, 18, 186, ContainerLayout.BIG);
                     }
                 }
             }
             for (int i = 1; i <= 4; i++) {
-                ContainerLayout.put(menu.getSlot(i), 246 + (i - 1) % 2 * p, 50 + (i - 1) / 2 * p, ContainerLayout.BOX);
+                ContainerLayout.put(menu.getSlot(i), 258 + (i - 1) % 2 * p, 276 + (i - 1) / 2 * p, ContainerLayout.BOX);
             }
-            ContainerLayout.playerBlock(menu, 24, 192, 284);
+            ContainerLayout.playerBlock(menu, 18, 264, 352);
             for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
                 if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
-                    button.setX(leftPos + 428);
-                    button.setY(topPos + 76);
-                    button.setWidth(48);
+                    button.setX(leftPos + 506);
+                    button.setY(topPos + 290);
+                    button.setWidth(66);
                     button.setHeight(22);
                 }
             }
@@ -512,17 +514,19 @@ public final class VoidframeScreens {
 
         private void wideBackground(GuiGraphics g, int mouseX, int mouseY) {
             VoidframeDraw.wideBackground(g, menu, this, leftPos, topPos, imageWidth, imageHeight);
-            // The player in a deep well with a soft light from below, the crafting arrow, the card of armor and experience.
-            VoidframeDraw.well(g, leftPos + 54, topPos + 46, 124, 118);
-            g.fillGradient(leftPos + 55, topPos + 110, leftPos + 177, topPos + 163, 0x00000000,
+            // The player in a deep well with a soft light from below.
+            VoidframeDraw.well(g, leftPos + 156, topPos + 46, 148, 168);
+            g.fillGradient(leftPos + 157, topPos + 140, leftPos + 303, topPos + 213, 0x00000000,
                     com.omneria.fordix.client.hud.HudTokens.withAlpha(FordixPalette.ACCENT, 0x28));
-            InventoryScreen.renderEntityInInventoryFollowsMouse(g, leftPos + 116, topPos + 156, 46,
-                    (float) (leftPos + 116 - mouseX), (float) (topPos + 156 - 70 - mouseY), minecraft.player);
-            VoidframeDraw.arrow(g, leftPos + 298, topPos + 65, 24, 12, 24);
+            InventoryScreen.renderEntityInInventoryFollowsMouse(g, leftPos + 230, topPos + 204, 56,
+                    (float) (leftPos + 230 - mouseX), (float) (topPos + 204 - 84 - mouseY), minecraft.player);
+            Glass.card(g, leftPos + 246, topPos + 248, 164, 124);
+            Glass.card(g, leftPos + 420, topPos + 248, 164, 124);
+            VoidframeDraw.arrow(g, leftPos + 312, topPos + 292, 24, 12, 24);
             if (minecraft.player != null) {
                 int selected = minecraft.player.getInventory().selected;
-                int bx = leftPos + 24 + selected * ContainerLayout.PITCH - 1;
-                int by = topPos + 284 - 1;
+                int bx = leftPos + 18 + selected * ContainerLayout.PITCH - 1;
+                int by = topPos + 352 - 1;
                 int line = 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF);
                 g.fill(bx, by, bx + 22, by + 1, line);
                 g.fill(bx, by + 21, bx + 22, by + 22, line);
@@ -532,20 +536,35 @@ public final class VoidframeScreens {
             }
         }
 
+        /** The experience under the player and the attributes of the game (the ones other mods add come as more rows). */
         private void bigStats(GuiGraphics g) {
-            int x = leftPos + 230;
-            int y = topPos + 196;
-            int w = 246;
-            Glass.card(g, x, y, w, 62);
-            int armor = minecraft.player.getArmorValue();
-            Glass.label(g, font, Tr.s("inv.armor"), x + 12, y + 8);
-            String armorText = armor + " / 20";
-            g.drawString(font, armorText, x + w - 12 - font.width(armorText), y + 8, FordixPalette.TEXT_BRIGHT, false);
-            HudStyle.bar(g, x + 12, y + 20, w - 24, 6, Math.min(1.0F, armor / 20.0F), 0xFF6FD6E0);
-            Glass.label(g, font, Tr.s("inv.xp"), x + 12, y + 34);
-            String levelText = Tr.s("inv.level", minecraft.player.experienceLevel);
-            g.drawString(font, levelText, x + w - 12 - font.width(levelText), y + 34, 0xFF9BF0B9, false);
-            HudStyle.bar(g, x + 12, y + 46, w - 24, 6, minecraft.player.experienceProgress, 0xFF5ED68A);
+            net.minecraft.world.entity.player.Player player = minecraft.player;
+            int levelX = leftPos + 156;
+            int levelY = topPos + 222;
+            g.drawString(font, Tr.s("inv.level", player.experienceLevel).toUpperCase(java.util.Locale.ROOT), levelX, levelY, 0xFF9BF0B9, false);
+            String percent = Math.round(player.experienceProgress * 100) + " %";
+            g.drawString(font, percent, levelX + 148 - font.width(percent), levelY, Glass.dim(), false);
+            HudStyle.bar(g, levelX, levelY + 12, 148, 5, player.experienceProgress, 0xFF5ED68A);
+
+            int x = leftPos + 322;
+            int y = topPos + 46;
+            Glass.card(g, x, y, 262, 190);
+            Object[][] rows = {
+                    {"inv.attr.health", net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, 40.0D, 0xFFE5534B, 0},
+                    {"inv.armor", net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, 20.0D, 0xFF6FE0E6, 0},
+                    {"inv.attr.damage", net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, 20.0D, 0xFFB45FE0, 1},
+                    {"inv.attr.attack_speed", net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, 4.0D, 0xFFE8A64A, 1},
+                    {"inv.attr.movement", net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED, 0.3D, 0xFF5ED68A, 2}};
+            for (int i = 0; i < rows.length; i++) {
+                Object[] row = rows[i];
+                double value = player.getAttributeValue((net.minecraft.world.entity.ai.attributes.Attribute) row[1]);
+                int decimals = (Integer) row[4];
+                String text = decimals == 0 ? Integer.toString((int) Math.round(value)) : String.format(java.util.Locale.ROOT, "%." + decimals + "f", value);
+                int rowY = y + 12 + i * 35;
+                g.drawString(font, Tr.s((String) row[0]), x + 12, rowY, FordixPalette.TEXT, false);
+                g.drawString(font, text, x + 250 - font.width(text), rowY, FordixPalette.TEXT_BRIGHT, false);
+                HudStyle.bar(g, x + 12, rowY + 13, 238, 6, (float) Math.min(1.0D, value / (Double) row[2]), (Integer) row[3]);
+            }
         }
 
         /** Armor and experience as two bars, in a small card on the left of the panel (hidden when the recipe book takes that place). */
@@ -580,10 +599,27 @@ public final class VoidframeScreens {
                         .toUpperCase(java.util.Locale.ROOT);
                 guiGraphics.drawString(font, right, INV_W - 14 - font.width(right), 9, Glass.dim(), false);
             }
-            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 24, 34);
-            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.craft"), 246, 34);
-            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.bag"), 24, 176);
-            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.hotbar"), 24, 268);
+            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 18, 34);
+            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.craft"), 258, 256);
+            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.bag"), 18, 250);
+            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.hotbar"), 18, 338);
+            // The name of each worn piece beside its square (what the square is for while it is empty).
+            if (minecraft.player != null) {
+                String[] keys = {"head", "chest", "legs", "feet"};
+                net.minecraft.world.entity.EquipmentSlot[] parts = {net.minecraft.world.entity.EquipmentSlot.HEAD,
+                        net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS,
+                        net.minecraft.world.entity.EquipmentSlot.FEET};
+                for (int i = 0; i < 4; i++) {
+                    drawWorn(guiGraphics, minecraft.player.getItemBySlot(parts[i]), "inv.slot." + keys[i], 50 + i * 32);
+                }
+                drawWorn(guiGraphics, minecraft.player.getOffhandItem(), "inv.slot.offhand", 186);
+            }
+        }
+
+        private void drawWorn(GuiGraphics g, net.minecraft.world.item.ItemStack stack, String emptyKey, int boxY) {
+            boolean empty = stack.isEmpty();
+            String text = font.plainSubstrByWidth(empty ? Tr.s(emptyKey) : stack.getHoverName().getString(), 92);
+            g.drawString(font, text, 52, boxY + 9, empty ? Glass.dim() : FordixPalette.TEXT, false);
         }
     }
 
