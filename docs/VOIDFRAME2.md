@@ -510,6 +510,8 @@ sont repris qu'écran par écran, avec leur capture avant et après, jamais en b
 
 ## Annexe B. État des écrans
 
+Validé en jeu par l'utilisateur sur la version 0.1.77 (tailles d'écran et d'interface comprises) : tous les écrans ci-dessous marqués « fait » sont conformes. Restent hors de la validation : les écrans seulement recolorés ou habillés, et la dette listée plus haut.
+
 | Écran | État Voidframe 2 |
 |---|---|
 | HUD (vie, faim, jauges, barre d'objets, panneaux, cibles, effets, chat, liste Tab, notifications, scoreboard, barre d'action) | fait |
