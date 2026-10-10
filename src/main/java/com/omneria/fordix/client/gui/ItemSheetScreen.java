@@ -23,8 +23,8 @@ import java.util.List;
  * used in and its figures. Clicking an ingredient or a result opens that item's sheet, Back returns.
  */
 public final class ItemSheetScreen extends FordixScreen {
-    private static final int PANEL_WIDTH = 420;
-    private static final int PANEL_HEIGHT = 290;
+    private static final int PANEL_WIDTH = 714;
+    private static final int PANEL_HEIGHT = 400;
     private static final int PADDING = 10;
     private static final int SLOT = 18;
     private static final int USES_PER_ROW = 16;
@@ -119,6 +119,7 @@ public final class ItemSheetScreen extends FordixScreen {
         Glass.rule(g, left, top + 42, right - left);
         hit(left, top + 8, 32, 32, sheet.stack(), mouseX, mouseY, false);
 
+        boolean tall = panelHeight >= 360;
         // Left column: how to make it.
         int columnWidth = (right - left) / 2 - 6;
         Glass.label(g, this.font, Tr.s("sheet.make"), left, top + 48);
@@ -135,9 +136,9 @@ public final class ItemSheetScreen extends FordixScreen {
         // Right column: figures.
         int fx = left + columnWidth + 12;
         Glass.label(g, this.font, Tr.s("sheet.facts"), fx, top + 48);
-        int fy = top + 62;
+        int fy = top + (tall ? 70 : 62);
         for (ItemFacts.Fact fact : sheet.facts()) {
-            if (fy > top + 150) {
+            if (fy > top + (tall ? panelHeight - 90 : 150)) {
                 break;
             }
             int available = right - fx;
@@ -146,18 +147,18 @@ public final class ItemSheetScreen extends FordixScreen {
             g.drawString(this.font, this.font.plainSubstrByWidth(fact.label(), available - valueWidth - 6), fx, fy, FordixPalette.TEXT, false);
             g.drawString(this.font, value, right - valueWidth, fy, fact.color() == 0 ? FordixPalette.TEXT_BRIGHT : fact.color(), false);
             if (fact.fraction() >= 0.0F) {
-                com.omneria.fordix.client.hud.HudStyle.bar(g, fx, fy + 10, available, 3, fact.fraction(), fact.barColor());
-                fy += 15;
+                com.omneria.fordix.client.hud.HudStyle.bar(g, fx, fy + 10, available, tall ? 5 : 3, fact.fraction(), fact.barColor());
+                fy += tall ? 30 : 15;
             } else {
-                fy += 11;
+                fy += tall ? 22 : 11;
             }
         }
 
         if (showWiki) {
-            drawWiki(g, left, top + 156, right, mouseX, mouseY);
+            drawWiki(g, left, top + (tall ? 206 : 156), right, mouseX, mouseY);
         } else {
             // Uses.
-            int uy = top + 156;
+            int uy = top + (tall ? 206 : 156);
             g.fill(left, uy - 4, right, uy - 3, 0x20FFFFFF);
             Glass.label(g, this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy);
             int shown = 0;

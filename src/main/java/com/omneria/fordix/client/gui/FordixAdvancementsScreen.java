@@ -131,8 +131,8 @@ public class FordixAdvancementsScreen extends FordixScreen {
 
     @Override
     protected void init() {
-        panelWidth = Math.min(this.width - 30, 420);
-        panelHeight = Math.min(this.height - 24, 250);
+        panelWidth = Math.min(this.width - 30, 774);
+        panelHeight = Math.min(this.height - 24, 412);
         left = centerX(panelWidth);
         top = centerY(panelHeight);
         tabsY = top + 22;

@@ -31,11 +31,12 @@ import java.util.Locale;
  * Opened by a guide tab whose mod has an imported wiki ({@code /fordix wiki import}), instead of a web page.
  */
 public class WikiScreen extends FordixScreen {
-    private static final int MAX_WIDTH = 470;
-    private static final int MAX_HEIGHT = 270;
-    private static final int LIST_WIDTH = 150;
+    private static final int MAX_WIDTH = 774;
+    private static final int MAX_HEIGHT = 424;
+    /** The mockup's widths on a screen wide enough for it; the compact ones below. */
+    private int listWidth = 150;
+    private int sideWidth = 104;
     private static final int PADDING = 10;
-    private static final int SIDE_WIDTH = 104;
     /** From the top of the page header (crumb, title) to where the page text starts. */
     private static final int VIEW_OFFSET = 32;
     private static final int FOOTER = 12;
@@ -112,13 +113,15 @@ public class WikiScreen extends FordixScreen {
     protected void init() {
         panelWidth = Math.min(MAX_WIDTH, this.width - 10);
         panelHeight = Math.min(MAX_HEIGHT, this.height - 10);
+        listWidth = panelWidth >= 700 ? 200 : 150;
+        sideWidth = panelWidth >= 700 ? 170 : 104;
         left = centerX(panelWidth);
         top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
         pageView = new PageView(this.font);
         pageView.setInteractive(true);
         shownPage = null;
-        search = new FieldBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("wiki.search"));
+        search = new FieldBox(this.font, left + PADDING, top + 24, listWidth - 4, 16, Tr.c("wiki.search"));
         search.setHint(Tr.c("wiki.search_hint"));
         search.setMaxLength(60);
         search.setValue(query);
@@ -130,7 +133,7 @@ public class WikiScreen extends FordixScreen {
         addRenderableWidget(search);
         addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 60, top + 4, 60, 14, Tr.c("common.close"), this::onClose));
         backButton = addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 130, top + 4, 66, 14, Tr.c("wiki.back"), this::goBack));
-        categoryButton = addRenderableWidget(new FordixButton(left + PADDING, top + 44, LIST_WIDTH - 4, 14, Component.empty(), this::nextCategory));
+        categoryButton = addRenderableWidget(new FordixButton(left + PADDING, top + 44, listWidth - 4, 14, Component.empty(), this::nextCategory));
     }
 
     @Override
@@ -264,7 +267,7 @@ public class WikiScreen extends FordixScreen {
 
     private int[] stripBounds(String key, List<String> keys) {
         int x = left + PADDING;
-        int width = LIST_WIDTH - 4;
+        int width = listWidth - 4;
         int total = 0;
         for (String each : keys) {
             total += this.font.width(categoryLabel(each)) + 12;
@@ -288,7 +291,7 @@ public class WikiScreen extends FordixScreen {
         List<String> keys = stripKeys();
         int y = top + 44;
         int x = left + PADDING;
-        g.fill(x, y, x + LIST_WIDTH - 4, y + 16, 0x66000000);
+        g.fill(x, y, x + listWidth - 4, y + 16, 0x66000000);
         for (String key : keys) {
             int[] bounds = stripBounds(key, keys);
             boolean on = key.equals(category);
@@ -348,7 +351,7 @@ public class WikiScreen extends FordixScreen {
         super.render(graphics, mouseX, mouseY, partialTick);
         drawCategoryStrip(graphics, mouseX, mouseY);
         drawList(graphics, mouseX, mouseY, info);
-        int detailX = left + PADDING + LIST_WIDTH + 8;
+        int detailX = left + PADDING + listWidth + 8;
         Glass.divider(graphics, detailX - 5, top + 24, top + panelHeight - PADDING);
         drawDetail(graphics, detailX, mouseX, mouseY, info);
         drawZoom(graphics, mouseX, mouseY);
@@ -410,15 +413,15 @@ public class WikiScreen extends FordixScreen {
             Row row = rows.get(i);
             if (row.header()) {
                 Glass.title(graphics, this.font, row.title(), x + 6, y + 5);
-                graphics.fill(x + 6 + this.font.width(row.title()) + 4, y + 9, x + LIST_WIDTH - 4, y + 10, 0x20FFFFFF);
+                graphics.fill(x + 6 + this.font.width(row.title()) + 4, y + 9, x + listWidth - 4, y + 10, 0x20FFFFFF);
                 y += ROW;
                 continue;
             }
             boolean selected = row.wiki().equals(selectedWiki) && row.slug().equals(selectedSlug);
-            boolean hover = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW;
-            Glass.row(graphics, x, y, LIST_WIDTH, ROW - 1, selected, hover);
+            boolean hover = mouseX >= x && mouseX < x + listWidth && mouseY >= y && mouseY < y + ROW;
+            Glass.row(graphics, x, y, listWidth, ROW - 1, selected, hover);
             String label = row.detail().isEmpty() ? row.title() : row.title() + " · " + row.detail();
-            graphics.drawString(this.font, this.font.plainSubstrByWidth(label, LIST_WIDTH - 10), x + 6, y + 5,
+            graphics.drawString(this.font, this.font.plainSubstrByWidth(label, listWidth - 10), x + 6, y + 5,
                     selected ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
             y += ROW;
         }
@@ -427,18 +430,18 @@ public class WikiScreen extends FordixScreen {
     /** Right edge of the page text: the table of contents takes a column of its own on a wide enough screen. */
     private int pageRight() {
         int right = left + panelWidth - PADDING;
-        int detailX = left + PADDING + LIST_WIDTH + 8;
-        int narrow = right - detailX - SIDE_WIDTH - 10;
-        return narrow >= 200 && !pageView.sideHeadings(narrow).isEmpty() ? right - SIDE_WIDTH - 10 : right;
+        int detailX = left + PADDING + listWidth + 8;
+        int narrow = right - detailX - sideWidth - 10;
+        return narrow >= 200 && !pageView.sideHeadings(narrow).isEmpty() ? right - sideWidth - 10 : right;
     }
 
     private void drawSideContents(GuiGraphics graphics, int x, int top, int bottom, int mouseX, int mouseY) {
-        int width = SIDE_WIDTH;
-        Glass.panel(graphics, x, top, width, Math.min(bottom - top, 14 + pageView.sideHeadings(pageRight() - (left + PADDING + LIST_WIDTH + 8)).size() * 12 + 8), FordixPalette.ACCENT);
+        int width = sideWidth;
+        Glass.panel(graphics, x, top, width, Math.min(bottom - top, 14 + pageView.sideHeadings(pageRight() - (left + PADDING + listWidth + 8)).size() * 12 + 8), FordixPalette.ACCENT);
         Glass.label(graphics, this.font, Tr.s("wiki.contents"), x + 8, top + 7);
-        int active = pageView.activeHeading(detailScroll, pageRight() - (left + PADDING + LIST_WIDTH + 8));
+        int active = pageView.activeHeading(detailScroll, pageRight() - (left + PADDING + listWidth + 8));
         int y = top + 20;
-        for (PageOutline.Heading heading : pageView.sideHeadings(pageRight() - (left + PADDING + LIST_WIDTH + 8))) {
+        for (PageOutline.Heading heading : pageView.sideHeadings(pageRight() - (left + PADDING + listWidth + 8))) {
             if (y + 12 > bottom) {
                 break;
             }
@@ -458,9 +461,9 @@ public class WikiScreen extends FordixScreen {
             return -1;
         }
         int y = top + 26 + VIEW_OFFSET + 20;
-        for (PageOutline.Heading heading : pageView.sideHeadings(x - (left + PADDING + LIST_WIDTH + 8))) {
+        for (PageOutline.Heading heading : pageView.sideHeadings(x - (left + PADDING + listWidth + 8))) {
             if (mouseY >= y && mouseY < y + 12) {
-                return pageView.jump(heading.block(), x - (left + PADDING + LIST_WIDTH + 8));
+                return pageView.jump(heading.block(), x - (left + PADDING + listWidth + 8));
             }
             y += 12;
         }
@@ -586,7 +589,7 @@ public class WikiScreen extends FordixScreen {
             }
         }
         int listX = left + PADDING;
-        if (button == 0 && mouseX >= listX && mouseX < listX + LIST_WIDTH && mouseY >= listTop()) {
+        if (button == 0 && mouseX >= listX && mouseX < listX + listWidth && mouseY >= listTop()) {
             List<Row> rows = rows();
             int index = listOffset + (int) ((mouseY - listTop()) / ROW);
             if (index >= 0 && index < rows.size() && index < listOffset + visibleRows()) {
@@ -597,7 +600,7 @@ public class WikiScreen extends FordixScreen {
             }
         }
         if (button == 0 && shownPage != null && !selectedSlug.isEmpty()) {
-            int detailX = left + PADDING + LIST_WIDTH + 8;
+            int detailX = left + PADDING + listWidth + 8;
             int right = left + panelWidth - PADDING;
             int viewTop = top + 26 + VIEW_OFFSET;
             int viewHeight = top + panelHeight - PADDING - FOOTER - viewTop;
@@ -645,7 +648,7 @@ public class WikiScreen extends FordixScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        int detailX = left + PADDING + LIST_WIDTH + 4;
+        int detailX = left + PADDING + listWidth + 4;
         if (mouseX < detailX) {
             int max = Math.max(0, rows().size() - visibleRows());
             listOffset = Math.max(0, Math.min(max, listOffset - (int) Math.signum(delta) * (hasShiftDown() ? 5 : 1)));
