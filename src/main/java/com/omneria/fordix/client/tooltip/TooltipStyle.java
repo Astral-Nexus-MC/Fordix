@@ -67,7 +67,11 @@ public final class TooltipStyle {
             String vanillaLine = enchantment.getFullname(level).getString();
             for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).getString().equals(vanillaLine)) {
-                    lines.remove(i);
+                    if (!FordixConfig.HUD_COMPACT.get()) {
+                        lines.remove(i);
+                    } else {
+                        lines.set(i, styled(enchantment, level));
+                    }
                     break;
                 }
             }
