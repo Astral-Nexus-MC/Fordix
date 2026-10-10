@@ -28,7 +28,7 @@ public abstract class FordixScreen extends Screen {
     /**
      * The smallest interface (in scaled pixels) the screen's layout reads well in; 0 = it adapts to anything. A smaller
      * interface (the game never goes under 320 x 240) is shrunk to fit: the screen is laid out at this size and the
-     * interface scale lowered for as long as it is open ({@link #fit}).
+     * interface scale lowered for as long as it is open ({@link #fitInterface}).
      */
     protected int minWidth() {
         return 0;
@@ -38,24 +38,12 @@ public abstract class FordixScreen extends Screen {
         return 0;
     }
 
-    /** The factor (below 1) by which the interface must shrink for a {@code width} x {@code height} interface to hold the minimum. */
-    public static float fit(int width, int height, int minWidth, int minHeight) {
-        float fit = 1.0F;
-        if (minWidth > 0 && width < minWidth) {
-            fit = Math.min(fit, width / (float) minWidth);
-        }
-        if (minHeight > 0 && height < minHeight) {
-            fit = Math.min(fit, height / (float) minHeight);
-        }
-        return fit;
-    }
-
     /**
      * Called by the screen-init event, before the widgets are built, with {@code width} x {@code height} still the game's own:
      * when the minimum does not fit, lowers the interface scale and gives the screen the larger size it implies.
      */
     public void fitInterface(net.minecraft.client.Minecraft minecraft) {
-        float fit = fit(this.width, this.height, minWidth(), minHeight());
+        float fit = com.omneria.fordix.client.gui.layout.Fit.factor(this.width, this.height, minWidth(), minHeight());
         if (fit >= 1.0F) {
             return;
         }

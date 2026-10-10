@@ -25,6 +25,9 @@ Guides de l'inventaire (`client/guide`). Installé côté client **et** serveur 
   MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLSL_VERSION_OVERRIDE=450 ./gradlew runClient` (mettre
   `onboardAccessibility:false` dans `run/options.txt`). La CI le lance (job `ingame-test`) et publie les
   captures en artefact `ingame-screenshots` ; il echoue si le jeu plante. Ajouter un `Step` pour tout nouvel ecran.
+  Tailles d'interface : `FORDIX_DEVTEST_SIZE=LxH` (fenetre, ex. `320x240`, le minimum du jeu) avec `FORDIX_DEVTEST_SCALE=1` donne une interface de L x H ;
+  `FORDIX_DEVTEST_ONLY=03-inventory,14-pause-menu` ne passe que ces etapes. Tout ecran doit rester lisible de 320x240 a 1920x1080 (D12 de la bible) :
+  un ecran Fordix declare `minWidth/minHeight` (`FordixScreen`), en dessous l'echelle de l'interface est abaissee le temps de l'ecran.
 - Avec Twilight Forest et Create dans le client de dev : `./gradlew runClient -PdevMods` (télécharge les deux mods
   via cursemaven/Modrinth, uniquement pour ce test local ; jamais utilisé par la CI ni la release).
 - Règles de rareté : les règles par défaut de `RarityRules` complètent toujours celles du serveur (`withBuiltins`) ;

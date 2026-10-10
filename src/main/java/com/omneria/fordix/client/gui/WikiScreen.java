@@ -276,10 +276,20 @@ public class WikiScreen extends FordixScreen {
     }
 
     /** Space added around each category label: 12 px when there is room, less (down to 4) when the list is narrow. */
+    /** The label of a category in the strip: cut to three letters when the list is too narrow for the full words. */
+    private String stripLabel(String key, List<String> keys) {
+        String label = categoryLabel(key);
+        int full = 0;
+        for (String each : keys) {
+            full += this.font.width(categoryLabel(each)) + 4;
+        }
+        return full > listWidth - 4 && label.length() > 3 ? label.substring(0, 3) : label;
+    }
+
     private int stripPad(List<String> keys) {
         int text = 0;
         for (String each : keys) {
-            text += this.font.width(categoryLabel(each));
+            text += this.font.width(stripLabel(each, keys));
         }
         return Math.max(4, Math.min(12, (listWidth - 4 - text) / Math.max(1, keys.size())));
     }
@@ -290,12 +300,12 @@ public class WikiScreen extends FordixScreen {
         int pad = stripPad(keys);
         int total = 0;
         for (String each : keys) {
-            total += this.font.width(categoryLabel(each)) + pad;
+            total += this.font.width(stripLabel(each, keys)) + pad;
         }
         float factor = total > width ? width / (float) total : 1.0F;
         int cursor = x;
         for (String each : keys) {
-            int w = Math.round((this.font.width(categoryLabel(each)) + pad) * factor);
+            int w = Math.round((this.font.width(stripLabel(each, keys)) + pad) * factor);
             if (each.equals(key)) {
                 return new int[]{cursor, w};
             }
@@ -322,7 +332,7 @@ public class WikiScreen extends FordixScreen {
             } else if (hover) {
                 g.fill(bounds[0], y, bounds[0] + bounds[1], y + 16, 0x14FFFFFF);
             }
-            g.drawString(this.font, this.font.plainSubstrByWidth(categoryLabel(key), bounds[1] - stripPad(keys) / 2), bounds[0] + stripPad(keys) / 2, y + 4,
+            g.drawString(this.font, this.font.plainSubstrByWidth(stripLabel(key, keys), bounds[1] - stripPad(keys) / 2), bounds[0] + stripPad(keys) / 2, y + 4,
                     on ? FordixPalette.TEXT_BRIGHT : Glass.dim(), false);
         }
     }
