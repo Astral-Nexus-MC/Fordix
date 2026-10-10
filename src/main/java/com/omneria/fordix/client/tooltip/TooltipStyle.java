@@ -56,10 +56,7 @@ public final class TooltipStyle {
         }
         ItemStack stack = event.getItemStack();
         List<Component> lines = event.getToolTip();
-        String layout = FordixConfig.tooltipStyle();
-        if (!layout.equals(TooltipStyles.CLASSIC)) {
-            removeVanillaModifierLines(stack, lines);
-        }
+        removeVanillaModifierLines(stack, lines);
         if (!lines.isEmpty() && !stack.isEmpty()) {
             int nameColor = ItemRarity.color(stack) & 0xFFFFFF;
             lines.set(0, lines.get(0).copy().withStyle(style -> style.withColor(nameColor)));
@@ -70,11 +67,7 @@ public final class TooltipStyle {
             String vanillaLine = enchantment.getFullname(level).getString();
             for (int i = 0; i < lines.size(); i++) {
                 if (lines.get(i).getString().equals(vanillaLine)) {
-                    if (layout.equals(TooltipStyles.FULL)) {
-                        lines.remove(i);
-                    } else {
-                        lines.set(i, styled(enchantment, level));
-                    }
+                    lines.remove(i);
                     break;
                 }
             }

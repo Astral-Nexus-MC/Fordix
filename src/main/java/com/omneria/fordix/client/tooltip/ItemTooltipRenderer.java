@@ -48,7 +48,6 @@ public final class ItemTooltipRenderer {
     private static final int VALUE_WIDTH = 46;
     private static final int DELTA_WIDTH = 34;
     private static final int BAR_MIN_WIDTH = 60;
-    private static final int COMPACT_HEADER_HEIGHT = 22;
     private static final int CHIP_ROW_HEIGHT = 17;
     private static final int ENCHANT_SECTION = 0xFF8E77C8;
     private static final int ENCHANT_COLOR = 0xFFC9A8FF;
@@ -70,14 +69,12 @@ public final class ItemTooltipRenderer {
 
     public static void onPre(RenderTooltipEvent.Pre event) {
         ItemStack stack = event.getItemStack();
-        String style = FordixConfig.tooltipStyle();
-        if (stack.isEmpty() || style.equals(TooltipStyles.CLASSIC) || event.getComponents().isEmpty()) {
+        if (stack.isEmpty() || event.getComponents().isEmpty()) {
             return;
         }
-        boolean compact = style.equals(TooltipStyles.COMPACT);
-        int headerHeight = compact ? COMPACT_HEADER_HEIGHT : HEADER_HEIGHT;
-        int sectionHeight = compact ? 0 : SECTION_HEIGHT;
-        List<Chip> chips = compact ? List.of() : chipsOf(stack);
+        int headerHeight = HEADER_HEIGHT;
+        int sectionHeight = SECTION_HEIGHT;
+        List<Chip> chips = chipsOf(stack);
         Font font = event.getFont();
         List<ClientTooltipComponent> components = event.getComponents();
         ClientTooltipComponent title = components.get(0);
@@ -88,7 +85,7 @@ public final class ItemTooltipRenderer {
         GearCompare.Verdict verdict = diffs.isEmpty() ? null : GearCompare.verdict(diffs);
 
         String subLine = (typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack)).toUpperCase(java.util.Locale.ROOT);
-        int width = Math.max(title.getWidth(font) + 30, compact ? 0 : font.width(subLine) + 30);
+        int width = Math.max(title.getWidth(font) + 30, font.width(subLine) + 30);
         for (Chip chip : chips) {
             width = Math.max(width, chip.width(font) + 8 + font.width(chip.effect()));
         }
@@ -134,20 +131,16 @@ public final class ItemTooltipRenderer {
         HudStyle.panel(guiGraphics, x, y, totalWidth, totalHeight, accent & 0xFFFFFF, 246, FordixPalette.PANEL_FILL & 0xFFFFFF);
         Glass.rule(guiGraphics, x + 6, y + headerHeight - 1, totalWidth - 12, accent);
 
-        guiGraphics.renderItem(stack, x + PAD + 4, y + (compact ? 3 : 11));
+        guiGraphics.renderItem(stack, x + PAD + 4, y + 11);
         int textX = x + PAD + 26;
-        title.renderText(font, textX, y + (compact ? 6 : 9), guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
-        if (!compact) {
-            guiGraphics.drawString(font, subLine, textX, y + 23, FordixPalette.TEXT, false);
-        }
+        title.renderText(font, textX, y + 9, guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
+        guiGraphics.drawString(font, subLine, textX, y + 23, FordixPalette.TEXT, false);
 
         int cursorY = y + headerHeight + 4;
         int contentX = x + PAD + 3;
         int contentWidth = width - 3;
         for (Section section : sections) {
-            if (!compact) {
-                Glass.label(guiGraphics, font, section.title().getString(), contentX, cursorY + 4);
-            }
+            Glass.label(guiGraphics, font, section.title().getString(), contentX, cursorY + 4);
             cursorY += sectionHeight;
             for (Row row : section.rows()) {
                 drawRow(guiGraphics, font, row, contentX, cursorY, contentWidth);

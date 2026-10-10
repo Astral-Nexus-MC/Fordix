@@ -2,7 +2,6 @@ package com.omneria.fordix;
 
 import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.gui.layout.HudAnchors;
-import com.omneria.fordix.client.tooltip.TooltipStyles;
 import com.omneria.fordix.client.guide.GuideEntry;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -19,7 +18,6 @@ import java.util.Map;
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
-    public static final ForgeConfigSpec.ConfigValue<String> TOOLTIP_STYLE;
     /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
     public static final List<String> HUD_ELEMENTS = List.of("health", "hunger", "armor", "air", "experience", "boss");
     private static final Map<String, ForgeConfigSpec.IntValue[]> HUD_OFFSETS = new LinkedHashMap<>();
@@ -54,11 +52,6 @@ public final class FordixConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        TOOLTIP_STYLE = builder
-                .comment("Item tooltip layout: " + String.join(", ", TooltipStyles.NAMES) + ".",
-                        "full: header, attribute bars and enchantment chips; compact: bars only, no header line or chips;",
-                        "classic: vanilla layout in Fordix colors.")
-                .defineInList("tooltipStyle", TooltipStyles.FULL, TooltipStyles.NAMES);
         builder.comment("Offsets in pixels (scaled GUI) of the Voidframe HUD elements from their default spot; edited from the in-game layout screen.")
                 .push("hud");
         for (String element : HUD_ELEMENTS) {
@@ -261,10 +254,5 @@ public final class FordixConfig {
         } catch (IllegalStateException notLoadedYet) {
             return true;
         }
-    }
-
-    /** The tooltip layout in force. */
-    public static String tooltipStyle() {
-        return TOOLTIP_STYLE.get();
     }
 }
