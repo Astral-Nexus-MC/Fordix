@@ -18,8 +18,6 @@ import java.util.Map;
  */
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
-    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_CHAT;
-    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
     public static final ForgeConfigSpec.ConfigValue<String> TOOLTIP_STYLE;
     /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
@@ -56,16 +54,10 @@ public final class FordixConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        VOIDFRAME_CHAT = builder
-                .comment("Replace the chat with the Voidframe one: tabs, player heads, times and a styled text field.")
-                .define("voidframeChat", true);
-        VOIDFRAME_TOOLTIPS = builder
-                .comment("Draw item tooltips with a header, attribute bars and rarity colors.")
-                .define("voidframeTooltips", true);
         TOOLTIP_STYLE = builder
                 .comment("Item tooltip layout: " + String.join(", ", TooltipStyles.NAMES) + ".",
                         "full: header, attribute bars and enchantment chips; compact: bars only, no header line or chips;",
-                        "classic: vanilla layout in Fordix colors. Ignored (classic) when voidframeTooltips is false.")
+                        "classic: vanilla layout in Fordix colors.")
                 .defineInList("tooltipStyle", TooltipStyles.FULL, TooltipStyles.NAMES);
         builder.comment("Offsets in pixels (scaled GUI) of the Voidframe HUD elements from their default spot; edited from the in-game layout screen.")
                 .push("hud");
@@ -221,6 +213,11 @@ public final class FordixConfig {
         return true;
     }
 
+    /** The Voidframe chat (tabs, heads, times, styled field) is always on. */
+    public static boolean voidframeChat() {
+        return true;
+    }
+
     /** The Voidframe HUD is always on. */
     public static boolean voidframeHud() {
         return true;
@@ -266,8 +263,8 @@ public final class FordixConfig {
         }
     }
 
-    /** The tooltip layout in force: "classic" when the tooltip option is off. */
+    /** The tooltip layout in force. */
     public static String tooltipStyle() {
-        return VOIDFRAME_TOOLTIPS.get() ? TOOLTIP_STYLE.get() : TooltipStyles.CLASSIC;
+        return TOOLTIP_STYLE.get();
     }
 }

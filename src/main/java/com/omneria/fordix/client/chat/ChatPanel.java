@@ -70,7 +70,7 @@ public final class ChatPanel {
     }
 
     public static boolean enabled() {
-        return FordixConfig.VOIDFRAME_CHAT.get();
+        return FordixConfig.voidframeChat();
     }
 
     /** The chat's width in scaled GUI pixels: the player's chat width setting, kept readable. */
