@@ -127,9 +127,13 @@ public final class VoidframeStations {
                     color = VANILLA_RED;
                 }
             }
-            int x = imageWidth - 8 - font.width(text) - 2;
-            guiGraphics.fill(x - 2, 67, imageWidth - 8, 79, FordixPalette.TOOLTIP_FILL);
-            guiGraphics.drawString(font, text, x, 69, color);
+            // The cost as a pill (green when it can be paid, red when not) and the player's levels next to it.
+            int pillColor = color == VANILLA_RED ? FordixPalette.ERROR : 0xFF5ED68A;
+            int pillWidth = Glass.pill(guiGraphics, font, text.getString(), 8, 67, pillColor);
+            if (!player.getAbilities().instabuild) {
+                Glass.pill(guiGraphics, font, Component.translatable("fordix.anvil.levels", player.experienceLevel).getString(),
+                        8 + pillWidth + 4, 67, FordixPalette.TEXT);
+            }
         }
     }
 

@@ -340,6 +340,7 @@ public final class FordixClient {
         @SubscribeEvent(priority = EventPriority.LOW)
         static void onScreenInitSkin(ScreenEvent.Init.Post event) {
             PauseSkin.onScreenInit(event);
+            com.omneria.fordix.client.gui.vanilla.OptionsSkin.onScreenInit(event);
             VoidframeButtons.onScreenInit(event);
         }
 

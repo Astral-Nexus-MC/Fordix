@@ -44,6 +44,7 @@ public final class VoidframeDeathScreen extends DeathScreen implements Voidframe
 
     private final Component cause;
     private final boolean hardcoreMode;
+    private final long openedAt = System.currentTimeMillis();
 
     private VoidframeDeathScreen(@Nullable Component cause, boolean hardcore) {
         super(cause, hardcore);
@@ -124,6 +125,10 @@ public final class VoidframeDeathScreen extends DeathScreen implements Voidframe
         g.drawString(this.font, String.format("%d  %d  %d", player.getBlockX(), player.getBlockY(), player.getBlockZ()), column + 124, y + 22,
                 FordixPalette.TEXT_BRIGHT, false);
         String dimension = minecraft.level == null ? "" : minecraft.level.dimension().location().getPath().replace('_', ' ');
-        Glass.pill(g, this.font, dimension, column, y + 38, FordixPalette.ACCENT);
+        int cursor = column + Glass.pill(g, this.font, dimension, column, y + 38, FordixPalette.ACCENT) + 4;
+        // Dropped items disappear five minutes after the death: a countdown from the moment the screen opened.
+        long left = 300L - (System.currentTimeMillis() - openedAt) / 1000L;
+        String items = left > 0L ? Tr.s("death.items", String.format("%d:%02d", left / 60L, left % 60L)) : Tr.s("death.items.gone");
+        Glass.pill(g, this.font, items, cursor, y + 38, left > 60L ? 0xFFE8A64A : 0xFFE5534B);
     }
 }

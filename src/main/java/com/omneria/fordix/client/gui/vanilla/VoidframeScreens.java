@@ -1,6 +1,9 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.hud.HudStyle;
+import com.omneria.fordix.Tr;
+import com.omneria.fordix.client.gui.Glass;
 import com.omneria.fordix.client.guide.GuideTabs;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
@@ -53,6 +56,7 @@ public final class VoidframeScreens {
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
             VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            VoidframeDraw.fillCount(guiGraphics, font, menu, menu.getRowCount() * 9, imageWidth, titleLabelY);
         }
     }
 
@@ -72,6 +76,7 @@ public final class VoidframeScreens {
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
             VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            VoidframeDraw.fillCount(guiGraphics, font, menu, 5, imageWidth, titleLabelY);
         }
     }
 
@@ -92,6 +97,7 @@ public final class VoidframeScreens {
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
             VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            VoidframeDraw.fillCount(guiGraphics, font, menu, 9, imageWidth, titleLabelY);
         }
     }
 
@@ -111,6 +117,7 @@ public final class VoidframeScreens {
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
             VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            VoidframeDraw.fillCount(guiGraphics, font, menu, 27, imageWidth, titleLabelY);
         }
     }
 
@@ -135,6 +142,7 @@ public final class VoidframeScreens {
     }
 
     public static class Furnace extends FurnaceScreen implements VoidframeScreen {
+        private static final int COOK_TICKS = 200;
         public Furnace(FurnaceMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
@@ -142,7 +150,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight, COOK_TICKS);
         }
 
         @Override
@@ -153,6 +161,7 @@ public final class VoidframeScreens {
     }
 
     public static class BlastFurnace extends BlastFurnaceScreen implements VoidframeScreen {
+        private static final int COOK_TICKS = 100;
         public BlastFurnace(BlastFurnaceMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
@@ -160,7 +169,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight, COOK_TICKS);
         }
 
         @Override
@@ -171,6 +180,7 @@ public final class VoidframeScreens {
     }
 
     public static class Smoker extends SmokerScreen implements VoidframeScreen {
+        private static final int COOK_TICKS = 100;
         public Smoker(SmokerMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
@@ -178,7 +188,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            furnaceBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight, COOK_TICKS);
         }
 
         @Override
@@ -223,6 +233,27 @@ public final class VoidframeScreens {
             VoidframeDraw.arrow(guiGraphics, leftPos + 134, topPos + 31, 13, 11, 13);
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 51, topPos + 75, 30,
                     (float) (leftPos + 51 - mouseX), (float) (topPos + 75 - 50 - mouseY), minecraft.player);
+            statsCard(guiGraphics);
+        }
+
+        /** Armor and experience as two bars, in a small card on the left of the panel (hidden when the recipe book takes that place). */
+        private void statsCard(GuiGraphics guiGraphics) {
+            int width = 96;
+            int x = leftPos - width - 6;
+            if (x < 4 || getRecipeBookComponent().isVisible() || minecraft.player == null) {
+                return;
+            }
+            int y = topPos;
+            Glass.panel(guiGraphics, x, y, width, 56);
+            int armor = minecraft.player.getArmorValue();
+            Glass.label(guiGraphics, font, Tr.s("inv.armor"), x + 10, y + 8);
+            String armorText = armor + " / 20";
+            guiGraphics.drawString(font, armorText, x + width - 8 - font.width(armorText), y + 8, FordixPalette.TEXT_BRIGHT, false);
+            HudStyle.bar(guiGraphics, x + 10, y + 19, width - 20, 5, Math.min(1.0F, armor / 20.0F), 0xFF6FD6E0);
+            Glass.label(guiGraphics, font, Tr.s("inv.xp"), x + 10, y + 31);
+            String levelText = Tr.s("inv.level", minecraft.player.experienceLevel);
+            guiGraphics.drawString(font, levelText, x + width - 8 - font.width(levelText), y + 31, 0xFF9BF0B9, false);
+            HudStyle.bar(guiGraphics, x + 10, y + 42, width - 20, 5, minecraft.player.experienceProgress, 0xFF5ED68A);
         }
 
         @Override
@@ -233,11 +264,19 @@ public final class VoidframeScreens {
 
     /** Shared by the three furnace kinds: fuel gauge between the input and fuel slots, progress arrow to the result. */
     private static void furnaceBackground(GuiGraphics guiGraphics, AbstractFurnaceMenu menu,
-                                          int left, int top, int width, int height) {
+                                          int left, int top, int width, int height, int cookTicks) {
         VoidframeDraw.containerBackground(guiGraphics, menu, left, top, width, height);
         VoidframeDraw.titleBand(guiGraphics, left, top, width);
         int fuel = menu.isLit() ? menu.getLitProgress() + 1 : 0;
         VoidframeDraw.flame(guiGraphics, left + 57, top + 37, 12, 14, fuel);
         VoidframeDraw.arrow(guiGraphics, left + 79, top + 34, 24, 17, menu.getBurnProgress());
+        // The time left on the item being cooked, in clear text under the arrow (the arrow is 24 steps for the whole cook).
+        int burn = menu.getBurnProgress();
+        if (burn > 0 && burn < 24) {
+            int seconds = Math.max(1, Math.round((24 - burn) / 24.0F * cookTicks / 20.0F));
+            net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+            String text = seconds + " s";
+            guiGraphics.drawString(font, text, left + 91 - font.width(text) / 2, top + 53, Glass.dim(), false);
+        }
     }
 }

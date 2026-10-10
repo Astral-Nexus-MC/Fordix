@@ -529,5 +529,11 @@
     "fordix.death.level": "Niveau",
     "fordix.death.place": "Lieu",
     "fordix.hud.editor.first.title": "Disposition du HUD",
-    "fordix.hud.editor.first.detail": "Glisse un élément pour le déplacer. H masque les panneaux, Ctrl+Z annule."
+    "fordix.hud.editor.first.detail": "Glisse un élément pour le déplacer. H masque les panneaux, Ctrl+Z annule.",
+    "fordix.anvil.levels": "Tu as %s",
+    "fordix.death.items": "Objets au sol : %s",
+    "fordix.death.items.gone": "Objets disparus",
+    "fordix.inv.armor": "Armure",
+    "fordix.inv.xp": "Expérience",
+    "fordix.inv.level": "niveau %s"
 }

@@ -529,5 +529,11 @@
     "fordix.death.level": "Level",
     "fordix.death.place": "Place of death",
     "fordix.hud.editor.first.title": "HUD layout",
-    "fordix.hud.editor.first.detail": "Drag an element to move it. H hides the panels, Ctrl+Z undoes."
+    "fordix.hud.editor.first.detail": "Drag an element to move it. H hides the panels, Ctrl+Z undoes.",
+    "fordix.anvil.levels": "You have %s",
+    "fordix.death.items": "Items on the ground: %s",
+    "fordix.death.items.gone": "Items gone",
+    "fordix.inv.armor": "Armor",
+    "fordix.inv.xp": "Experience",
+    "fordix.inv.level": "level %s"
 }

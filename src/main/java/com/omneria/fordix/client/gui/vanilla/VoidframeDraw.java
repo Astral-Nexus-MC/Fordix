@@ -46,6 +46,19 @@ public final class VoidframeDraw {
         Glass.rule(guiGraphics, left + 6, top + 15, width - 12);
     }
 
+    /** "14 / 27" at the right end of the title row: how many of the container's own slots hold something. */
+    public static void fillCount(GuiGraphics guiGraphics, Font font, AbstractContainerMenu menu, int slots, int width, int titleY) {
+        int used = 0;
+        int total = Math.min(slots, menu.slots.size());
+        for (int i = 0; i < total; i++) {
+            if (menu.getSlot(i).hasItem()) {
+                used++;
+            }
+        }
+        String text = used + " / " + total;
+        guiGraphics.drawString(font, text, width - 8 - font.width(text), titleY, used >= total ? FordixPalette.ERROR : Glass.dim(), false);
+    }
+
     /** A recessed rectangle: see {@link Glass#well}. */
     public static void well(GuiGraphics guiGraphics, int x, int y, int width, int height) {
         Glass.well(guiGraphics, x, y, width, height);
