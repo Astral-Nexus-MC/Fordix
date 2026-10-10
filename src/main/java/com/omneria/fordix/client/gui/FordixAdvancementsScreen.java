@@ -124,9 +124,25 @@ public class FordixAdvancementsScreen extends FordixScreen {
     private boolean dragging;
     private boolean draggingBar;
 
+    /** The screen the advancements were opened from (the inventory's trophy button), given back when they close; null = close everything. */
+    private static net.minecraft.client.gui.screens.Screen pendingParent;
+    private final net.minecraft.client.gui.screens.Screen parent;
+
+    /** Asks the next advancements screen to return to {@code screen} when it closes. */
+    public static void returnTo(net.minecraft.client.gui.screens.Screen screen) {
+        pendingParent = screen;
+    }
+
     public FordixAdvancementsScreen(ClientAdvancements advancements) {
         super(Component.translatable("gui.advancements"));
         this.advancements = advancements;
+        this.parent = pendingParent;
+        pendingParent = null;
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(parent);
     }
 
     private int testHoverIndex = -1;

@@ -121,13 +121,14 @@ public final class RarityFrames {
                 continue;
             }
             int x = centerX - 90 + i * 20 + 1;
-            int y = bottom - 19;
+            // The box starts one pixel above and left of the item (the game draws it at bottom - 19): the item sits inside it.
+            int y = bottom - 20;
             int rank = ItemRarity.rank(stack);
             int color = ItemRarity.color(stack);
             // The game draws the item before this: tint behind it, then the item again over the tint.
             tint(g, x, y, 18, rank, color);
-            g.renderItem(stack, x + 1, y, i);
-            g.renderItemDecorations(minecraft.font, stack, x + 1, y);
+            g.renderItem(stack, x + 1, y + 1, i);
+            g.renderItemDecorations(minecraft.font, stack, x + 1, y + 1);
             over(g, x, y, 18, rank, color, RarityMotion.delayOf(i), -1.0D, -1.0D, false);
         }
     }

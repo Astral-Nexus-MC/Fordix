@@ -66,7 +66,7 @@ public final class PetWheelScreen extends Screen {
     /** The wheel is a HUD element like the others: the layout screen moves and sizes it (see {@link #ID}). */
     public static final String ID = "fordix:pet_wheel";
     /** Its size at normal scale, the box the layout screen shows. */
-    public static final int BOX = 224;
+    public static final int BOX = 320;
 
     private final LivingEntity pet;
     private double centerX;
@@ -89,7 +89,8 @@ public final class PetWheelScreen extends Screen {
     @Override
     protected void init() {
         var placed = com.omneria.fordix.client.gui.vanilla.HudSlots.placed(ID, this.width, this.height);
-        scale = com.omneria.fordix.client.gui.vanilla.HudSlots.scale(ID);
+        // Never larger than the screen: on a small interface the wheel shrinks to fit.
+        scale = Math.min(com.omneria.fordix.client.gui.vanilla.HudSlots.scale(ID), (Math.min(this.width, this.height) - 30) / (float) BOX);
         centerX = placed.x() + placed.w() / 2.0;
         centerY = placed.y() + placed.h() / 2.0;
     }
@@ -212,12 +213,13 @@ public final class PetWheelScreen extends Screen {
         return Math.hypot(x - centerX, y - centerY);
     }
 
+    /** The wheel of the mockup: sectors from 70 to 150, a card of 62 in the middle. */
     private double outerRadius() {
-        return BOX / 2.0 - 8;
+        return 150;
     }
 
     private double hubRadius() {
-        return outerRadius() * 0.44;
+        return 70;
     }
 
     // ---- drawing
@@ -241,74 +243,97 @@ public final class PetWheelScreen extends Screen {
         g.pose().translate(centerX, centerY, 0);
         g.pose().scale(scale, scale, 1);
         double width = 2 * Math.PI / SLOTS.length;
+        double gap = 0.035;
         for (int i = 0; i < SLOTS.length; i++) {
             double middle = WheelGeometry.middleOf(i, SLOTS.length);
             boolean usable = unavailable(SLOTS[i]) == null;
-            boolean on = i == hovered;
+            boolean on = i == hovered && usable;
             int tone = ACTION_COLORS[Math.min(i, ACTION_COLORS.length - 1)];
-            double grow = on && usable ? 6 : 0;
-            double from = middle - width / 2 + 0.02;
-            double to = middle + width / 2 - 0.02;
-            int top = on ? (usable ? withAlpha(tone, 0x88) : 0xEE34404A) : (usable ? 0xEE26343F : 0xEE141C23);
-            int bottom = on ? (usable ? withAlpha(tone, 0x38) : 0xEE222B33) : (usable ? 0xEE0B131A : 0xEE0A1015);
-            sector(g, 0, 0, hub + 3, outer + grow, from, to, top, bottom);
-            // The light on the upper face of the glass, and a fine rim on the inside.
-            sector(g, 0, 0, hub + 3, outer + grow, from, to, 0x1CFFFFFF, 0x00FFFFFF);
-            sector(g, 0, 0, hub + 3, hub + 4, from, to, 0x22FFFFFF);
-            if (on && usable) {
-                // Halo and bright rim in the color of the action, like a lit glass edge.
-                sector(g, 0, 0, outer + grow, outer + grow + 6, from, to, withAlpha(tone, 0x30), withAlpha(tone, 0x08));
-                sector(g, 0, 0, outer + grow - 2, outer + grow, from, to, 0xFF000000 | tone);
-            } else if (usable) {
-                sector(g, 0, 0, outer - 1, outer, from, to, withAlpha(tone, 0x60), withAlpha(tone, 0x20));
+            double from = middle - width / 2 + gap;
+            double to = middle + width / 2 - gap;
+            boolean release = SLOTS[i] == Slot.RELEASE;
+            // Glass: dark and lit from above; the sector under the pointer takes the color of its action, with a glow and a bright edge.
+            int top = on ? withAlpha(tone, 0x58) : release ? withAlpha(tone, 0x20) : 0xDC1A2834;
+            int bottom = on ? withAlpha(tone, 0x24) : release ? withAlpha(tone, 0x0C) : 0xDC0C141C;
+            if (on) {
+                sector(g, 0, 0, outer, outer + 12, from, to, withAlpha(tone, 0x30), withAlpha(tone, 0x00));
             }
-            double labelRadius = (hub + outer) / 2 + grow / 2;
+            sector(g, 0, 0, hub, outer, from, to, top, bottom);
+            sector(g, 0, 0, hub, outer, from, to, 0x16FFFFFF, 0x00FFFFFF);
+            int edge = on ? 0xFF000000 | tone : 0x1AFFFFFF;
+            double thick = on ? 2 : 1;
+            sector(g, 0, 0, outer - thick, outer, from, to, edge);
+            sector(g, 0, 0, hub, hub + thick, from, to, edge);
+            radial(g, hub, outer, from, thick, edge);
+            radial(g, hub, outer, to, thick, edge);
+            double labelRadius = (hub + outer) / 2;
             int lx = (int) Math.round(labelRadius * Math.sin(middle));
             int ly = (int) Math.round(-labelRadius * Math.cos(middle));
-            int color = !usable ? 0xFF5B6B75 : on ? 0xFFFFFFFF : FordixPalette.TEXT_BRIGHT;
-            g.pose().pushPose();
-            g.pose().translate(lx - 12, ly - 22, 0);
-            g.pose().scale(1.5F, 1.5F, 1);
-            if (usable) {
-                g.renderItem(SLOTS[i].icon, 0, 0);
-            } else {
-                RenderSystem.setShaderColor(0.45F, 0.45F, 0.45F, 1);
-                g.renderItem(SLOTS[i].icon, 0, 0);
-                RenderSystem.setShaderColor(1, 1, 1, 1);
-            }
-            g.pose().popPose();
-            String label = i == SLOTS.length - 1 && releaseArmed ? Tr.s("pet.confirm") : Tr.s("pet.slot." + SLOTS[i].key);
-            g.drawCenteredString(this.font, label, lx, ly + 6, i == SLOTS.length - 1 && releaseArmed ? 0xFFFF7A7A : color);
-            g.drawCenteredString(this.font, String.valueOf(i + 1), lx, ly + 17, usable ? withAlpha(tone, 0xFF) : 0xFF5B6B75);
+            int ink = usable ? 0xFF000000 | tone : 0xFF5B6B75;
+            // The number in a round badge, then the name under it.
+            sector(g, lx, ly - 8, 0, 13, 0, 2 * Math.PI, 0x66000000);
+            sector(g, lx, ly - 8, 12, 13, 0, 2 * Math.PI, withAlpha(ink, usable ? 0xFF : 0x99));
+            g.drawCenteredString(this.font, String.valueOf(i + 1), lx, ly - 12, ink);
+            String label = release && releaseArmed ? Tr.s("pet.confirm") : Tr.s("pet.slot." + SLOTS[i].key);
+            int nameColor = !usable ? 0xFF5B6B75 : release && releaseArmed ? 0xFFFF7A7A : on ? 0xFFFFFFFF : 0xFFCFE3E8;
+            g.drawCenteredString(this.font, label, lx, ly + 10, nameColor);
         }
-        drawHub(g, hub);
+        drawHub(g);
         g.pose().popPose();
         drawCaption(g, centerY + (outer + 18) * scale);
         super.render(g, mouseX, mouseY, partialTick);
     }
 
-    private void drawHub(GuiGraphics g, double hub) {
-        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0xF01C2832, 0xF00A1118);
-        sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0x18FFFFFF, 0x00FFFFFF);
-        sector(g, 0, 0, hub, hub + 5, 0, 2 * Math.PI, withAlpha(FordixPalette.ACCENT, 0x34), withAlpha(FordixPalette.ACCENT, 0x08));
-        sector(g, 0, 0, hub - 2, hub, 0, 2 * Math.PI, 0xFF000000 | FordixPalette.ACCENT);
-        int x = 0;
-        int y = -34;
-        g.drawCenteredString(this.font, this.font.plainSubstrByWidth(pet.getDisplayName().getString(), (int) hub * 2 - 10), x, y, 0xFFFFFFFF);
+    /** The glass card in the middle: name, owner, life as a number and a bar, and the state as a pill. */
+    private void drawHub(GuiGraphics g) {
+        double radius = 62;
+        sector(g, 0, 0, radius, radius + 8, 0, 2 * Math.PI, withAlpha(FordixPalette.ACCENT, 0x34), withAlpha(FordixPalette.ACCENT, 0x00));
+        sector(g, 0, 0, 0, radius, 0, 2 * Math.PI, 0xF2222F3C, 0xF808121A);
+        sector(g, 0, 0, 0, radius, 0, 2 * Math.PI, 0x1CFFFFFF, 0x00FFFFFF);
+        sector(g, 0, 0, radius - 1, radius, 0, 2 * Math.PI, 0x30FFFFFF);
+        int y = -36;
+        g.pose().pushPose();
+        g.pose().translate(0, y, 0);
+        g.pose().scale(1.25F, 1.25F, 1);
+        g.drawCenteredString(this.font, this.font.plainSubstrByWidth(pet.getDisplayName().getString(), 88), 0, 0, 0xFFFFFFFF);
+        g.pose().popPose();
         UUID ownerId = pet instanceof OwnableEntity ownable ? ownable.getOwnerUUID() : null;
         String owner = ownerId != null && this.minecraft.player != null && ownerId.equals(this.minecraft.player.getUUID())
                 ? Tr.s("pet.owner_you") : Tr.s("pet.owner_other");
-        g.drawCenteredString(this.font, this.font.plainSubstrByWidth(owner, (int) hub * 2 - 10), x, y + 12, FordixPalette.TEXT);
-        String life = "♥ " + format(pet.getHealth()) + " / " + format(pet.getMaxHealth());
-        g.drawCenteredString(this.font, life, x, y + 26, 0xFFFF7A7A);
+        g.drawCenteredString(this.font, this.font.plainSubstrByWidth(owner, 110), 0, y + 14, 0xFF9FB4BD);
+        String life = "\u2665 " + format(pet.getHealth()) + " / " + format(pet.getMaxHealth());
+        g.drawCenteredString(this.font, life, 0, y + 27, 0xFFFF8A7A);
         float left = Math.max(0, Math.min(1, pet.getHealth() / Math.max(1, pet.getMaxHealth())));
-        com.omneria.fordix.client.hud.HudStyle.bar(g, x - 36, y + 38, 72, 3, left, 0xFFE5534B);
-        if (pet instanceof TamableAnimal animal) {
-            // The state as a pill, like the other panels of Voidframe 2.
+        com.omneria.fordix.client.hud.HudStyle.bar(g, -37, y + 40, 74, 5, left, 0xFFE5534B);
+        if (pet instanceof TamableAnimal) {
             String state = Tr.s(sitting() ? "pet.state.sitting" : "pet.state.standing");
             int pillWidth = this.font.width(state) + 14;
-            com.omneria.fordix.client.gui.Glass.pill(g, this.font, state, x - pillWidth / 2, y + 47, FordixPalette.ACCENT);
+            com.omneria.fordix.client.gui.Glass.pill(g, this.font, state, -pillWidth / 2, y + 50, FordixPalette.ACCENT);
         }
+    }
+
+    /** A straight edge between two radii at the given angle (clockwise from the top), {@code thick} wide. */
+    private static void radial(GuiGraphics g, double inner, double outer, double angle, double thick, int argb) {
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+        double nx = cos * thick / 2;
+        double ny = sin * thick / 2;
+        Matrix4f matrix = g.pose().last().pose();
+        int a = argb >>> 24 & 255;
+        int r = argb >> 16 & 255;
+        int gr = argb >> 8 & 255;
+        int b = argb & 255;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        buffer.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+        buffer.vertex(matrix, (float) (outer * sin - nx), (float) (-outer * cos - ny), 0).color(r, gr, b, a).endVertex();
+        buffer.vertex(matrix, (float) (outer * sin + nx), (float) (-outer * cos + ny), 0).color(r, gr, b, a).endVertex();
+        buffer.vertex(matrix, (float) (inner * sin - nx), (float) (-inner * cos - ny), 0).color(r, gr, b, a).endVertex();
+        buffer.vertex(matrix, (float) (inner * sin + nx), (float) (-inner * cos + ny), 0).color(r, gr, b, a).endVertex();
+        Tesselator.getInstance().end();
+        RenderSystem.disableBlend();
     }
 
     private void drawCaption(GuiGraphics g, double y) {
@@ -326,7 +351,7 @@ public final class PetWheelScreen extends Screen {
     private static final int[] ACTION_COLORS = {0xFF3FD1C7, 0xFF9FB3C0, 0xFF5ED68A, 0xFFE8A64A, 0xFF4DA3FF, 0xFFB45FE0, 0xFFE5534B};
 
     /** Half the wheel's height, in its own units: the span over which a sector's top-to-bottom shading runs. */
-    private static final double WHEEL_HALF = 96;
+    private static final double WHEEL_HALF = 150;
 
     private static int shade(int top, int bottom, double t) {
         double f = Math.max(0.0D, Math.min(1.0D, t));

@@ -31,7 +31,25 @@ public final class ContainerLayout {
     private static boolean usable;
     private static final Map<Slot, int[]> ORIGINAL = new WeakHashMap<>();
 
+    /** What the open recipe book takes at the left of a panel: its 147 and a few pixels of air. */
+    public static final int BOOK_ROOM = 151;
+
     private ContainerLayout() {
+    }
+
+    /**
+     * Where a wide panel and the recipe book go on a {@code screenWidth} screen: {@code [panelLeft, bookWidth]}. The book is
+     * drawn by the game from the middle of the screen as if the panel were its own 176 wide, so the book is given a width of
+     * its own, chosen so that it sits against the left edge of the panel, and the panel and the book are centered together.
+     * Closed, the panel is centered alone and the book keeps the real width.
+     */
+    public static int[] bookLayout(int screenWidth, int panelWidth, boolean open) {
+        if (!open) {
+            return new int[]{(screenWidth - panelWidth) / 2, screenWidth};
+        }
+        int groupLeft = Math.max(4, (screenWidth - panelWidth - BOOK_ROOM) / 2);
+        // The game puts the book at (width - 147) / 2 - 86 from the left.
+        return new int[]{groupLeft + BOOK_ROOM, 2 * (groupLeft + 86) + 147};
     }
 
     /** Whether a panel of this size fits the screen with a margin: the layout is wide only then. */

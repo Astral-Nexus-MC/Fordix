@@ -44,15 +44,14 @@ public final class VoidframeScreens {
     // ---------- the wide layout (mockup), shared by the chest-like containers ----------
 
     /**
-     * Whether a container with a recipe book gets the wide layout. The game places its open book from the middle of the screen
-     * as if the panel were its own 176 wide, so beside a wide panel it would sit on top of it: while the book is open the
-     * screen goes back to the compact layout, where the book fits as it always did, and returns to the wide one when it closes.
+     * Whether a container with a recipe book gets the wide layout: the panel must fit, with the open book beside it while it is
+     * open (when it does not fit, the screen goes back to the compact layout, where the book fits as it always did).
      */
     private static boolean wantsWide(net.minecraft.client.gui.screens.Screen screen, int width, int height,
                                      net.minecraft.world.inventory.RecipeBookType book) {
         net.minecraft.client.player.LocalPlayer player = Minecraft.getInstance().player;
         boolean open = player != null && player.getRecipeBook().isOpen(book);
-        return !open && ContainerLayout.fits(screen, width, height)
+        return ContainerLayout.fits(screen, width + (open ? ContainerLayout.BOOK_ROOM : 0), height)
                 && ContainerLayout.ready(((net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) screen).getMenu());
     }
 
@@ -330,11 +329,34 @@ public final class VoidframeScreens {
             return slot instanceof net.minecraft.world.inventory.ResultSlot ? new int[]{5, 26} : new int[]{2, 20};
         }
 
+        private boolean lastBook;
+
+        /** The wide panel with the recipe book open: the book to its left, both centered, the buttons following the panel. */
+        private void placeWide() {
+            net.minecraft.client.gui.screens.recipebook.RecipeBookComponent book = getRecipeBookComponent();
+            boolean open = book.isVisible();
+            int[] at = ContainerLayout.bookLayout(this.width, imageWidth, open);
+            leftPos = at[0];
+            if (open != lastBook) {
+                lastBook = open;
+                book.init(at[1], this.height, minecraft, false, menu);
+            }
+            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
+                    button.setX(leftPos + 176);
+                    button.setY(topPos + 40);
+                }
+            }
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
             if (wantsWide(this, WIDE_W, CRAFT_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING) != wide) {
                 rebuildWidgets();
+            }
+            if (wide) {
+                placeWide();
             }
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -451,11 +473,36 @@ public final class VoidframeScreens {
             return !onTabs && super.hasClickedOutside(mouseX, mouseY, guiLeft, guiTop, mouseButton);
         }
 
+        private boolean lastBook;
+
+        /** The wide panel with the recipe book open: the book to its left, both centered, the buttons following the panel. */
+        private void placeWide() {
+            net.minecraft.client.gui.screens.recipebook.RecipeBookComponent book = getRecipeBookComponent();
+            boolean open = book.isVisible();
+            int[] at = ContainerLayout.bookLayout(this.width, imageWidth, open);
+            leftPos = at[0];
+            if (open != lastBook) {
+                lastBook = open;
+                book.init(at[1], this.height, minecraft, false, menu);
+            }
+            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
+                    button.setX(leftPos + 506);
+                    button.setY(topPos + 290);
+                    button.setWidth(66);
+                    button.setHeight(22);
+                }
+            }
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
             if (wantsWide(this, INV_W, INV_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING) != wide) {
                 rebuildWidgets();
+            }
+            if (wide) {
+                placeWide();
             }
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -670,11 +717,29 @@ public final class VoidframeScreens {
             return furnaceBox(wide, slot);
         }
 
+        private boolean lastBook;
+
+        /** The wide panel with the recipe book open: the book to its left, both centered, the buttons following the panel. */
+        private void placeWide() {
+            net.minecraft.client.gui.screens.recipebook.RecipeBookComponent book = getRecipeBookComponent();
+            boolean open = book.isVisible();
+            int[] at = ContainerLayout.bookLayout(this.width, imageWidth, open);
+            leftPos = at[0];
+            if (open != lastBook) {
+                lastBook = open;
+                book.init(at[1], this.height, minecraft, false, menu);
+            }
+            wideFurnaceRecipeButton(this, leftPos, topPos, children());
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
             if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.FURNACE) != wide) {
                 rebuildWidgets();
+            }
+            if (wide) {
+                placeWide();
             }
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -723,11 +788,29 @@ public final class VoidframeScreens {
             return furnaceBox(wide, slot);
         }
 
+        private boolean lastBook;
+
+        /** The wide panel with the recipe book open: the book to its left, both centered, the buttons following the panel. */
+        private void placeWide() {
+            net.minecraft.client.gui.screens.recipebook.RecipeBookComponent book = getRecipeBookComponent();
+            boolean open = book.isVisible();
+            int[] at = ContainerLayout.bookLayout(this.width, imageWidth, open);
+            leftPos = at[0];
+            if (open != lastBook) {
+                lastBook = open;
+                book.init(at[1], this.height, minecraft, false, menu);
+            }
+            wideFurnaceRecipeButton(this, leftPos, topPos, children());
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
             if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.BLAST_FURNACE) != wide) {
                 rebuildWidgets();
+            }
+            if (wide) {
+                placeWide();
             }
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
@@ -776,11 +859,29 @@ public final class VoidframeScreens {
             return furnaceBox(wide, slot);
         }
 
+        private boolean lastBook;
+
+        /** The wide panel with the recipe book open: the book to its left, both centered, the buttons following the panel. */
+        private void placeWide() {
+            net.minecraft.client.gui.screens.recipebook.RecipeBookComponent book = getRecipeBookComponent();
+            boolean open = book.isVisible();
+            int[] at = ContainerLayout.bookLayout(this.width, imageWidth, open);
+            leftPos = at[0];
+            if (open != lastBook) {
+                lastBook = open;
+                book.init(at[1], this.height, minecraft, false, menu);
+            }
+            wideFurnaceRecipeButton(this, leftPos, topPos, children());
+        }
+
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
             if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.SMOKER) != wide) {
                 rebuildWidgets();
+            }
+            if (wide) {
+                placeWide();
             }
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }

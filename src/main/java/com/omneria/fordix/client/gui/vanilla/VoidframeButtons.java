@@ -2,6 +2,7 @@ package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.FordixAdvancementsScreen;
 import com.omneria.fordix.client.gui.Glass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -131,6 +132,7 @@ public final class VoidframeButtons {
         public void onClick(double mouseX, double mouseY) {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.player != null) {
+                FordixAdvancementsScreen.returnTo(minecraft.screen);
                 minecraft.setScreen(new AdvancementsScreen(minecraft.player.connection.getAdvancements()));
             }
         }

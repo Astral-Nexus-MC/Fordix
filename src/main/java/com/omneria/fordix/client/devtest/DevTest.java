@@ -149,8 +149,8 @@ public final class DevTest {
                 Component.literal("Bon jeu ! Ceci est une notification de test plus longue pour verifier la taille du fond."), 80)), 30, false));
         steps.add(new Step("03-inventory", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, false));
         steps.add(new Step("03b-inventory-book", () -> {
-            mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, true);
             mc.setScreen(new InventoryScreen(mc.player));
+            ((net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener) mc.screen).getRecipeBookComponent().toggleVisibility();
         }, 40, false));
         steps.add(new Step("03c-inventory-book-closed", () -> {
             mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
