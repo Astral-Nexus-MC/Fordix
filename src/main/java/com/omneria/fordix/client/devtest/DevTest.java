@@ -147,6 +147,27 @@ public final class DevTest {
                 mc.player.getInventory(), Component.translatable("container.loom"))), 30, false));
         steps.add(new Step("07-cartography", () -> mc.setScreen(new CartographyTableScreen(new CartographyTableMenu(1, mc.player.getInventory()),
                 mc.player.getInventory(), Component.translatable("container.cartography_table"))), 30, false));
+        steps.add(new Step("07b-anvil", () -> mc.setScreen(new net.minecraft.client.gui.screens.inventory.AnvilScreen(
+                new net.minecraft.world.inventory.AnvilMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                Component.translatable("container.repair"))), 30, false));
+        steps.add(new Step("07c-brewing", () -> mc.setScreen(new net.minecraft.client.gui.screens.inventory.BrewingStandScreen(
+                new net.minecraft.world.inventory.BrewingStandMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                Component.translatable("container.brewing"))), 30, false));
+        steps.add(new Step("07d-enchanting", () -> mc.setScreen(new net.minecraft.client.gui.screens.inventory.EnchantmentScreen(
+                new net.minecraft.world.inventory.EnchantmentMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                Component.translatable("container.enchant"))), 30, false));
+        steps.add(new Step("07e-furnace", () -> mc.setScreen(new net.minecraft.client.gui.screens.inventory.FurnaceScreen(
+                new net.minecraft.world.inventory.FurnaceMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                Component.translatable("container.furnace"))), 30, false));
+        steps.add(new Step("07f-chest", () -> mc.setScreen(new net.minecraft.client.gui.screens.inventory.ContainerScreen(
+                net.minecraft.world.inventory.ChestMenu.threeRows(1, mc.player.getInventory()), mc.player.getInventory(),
+                Component.translatable("container.chest"))), 30, false));
+        steps.add(new Step("07g-title", () -> {
+            mc.setScreen(null);
+            mc.gui.setTimes(0, 400, 20);
+            mc.gui.setSubtitle(Component.literal("Niveau de danger : eleve"));
+            mc.gui.setTitle(Component.literal("La foret d'emeraude"));
+        }, 25, false));
         steps.add(new Step("08-creative", () -> {
             cmd(mc, "gamemode creative");
             mc.setScreen(new CreativeModeInventoryScreen(mc.player, mc.player.connection.enabledFeatures(), false));

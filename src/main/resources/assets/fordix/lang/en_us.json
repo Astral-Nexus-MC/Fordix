@@ -527,5 +527,7 @@
     "fordix.death.hardcore": "Hardcore",
     "fordix.death.score": "Score",
     "fordix.death.level": "Level",
-    "fordix.death.place": "Place of death"
+    "fordix.death.place": "Place of death",
+    "fordix.hud.editor.first.title": "HUD layout",
+    "fordix.hud.editor.first.detail": "Drag an element to move it. H hides the panels, Ctrl+Z undoes."
 }

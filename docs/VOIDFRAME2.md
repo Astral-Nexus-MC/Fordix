@@ -44,7 +44,7 @@ Principes, par ordre de priorité quand ils s'opposent :
 
 | Domaine | Éléments | Référence code |
 |---|---|---|
-| HUD | barres de vie et de faim, jauges (XP, armure, air, monture, boss), barre d'objets, panneaux d'information, cibles, effets, chat, liste des joueurs, notifications, alertes, scoreboard, message de la barre d'action | `client/hud`, `client/gui/vanilla/Voidframe*`, `client/chat` |
+| HUD | barres de vie et de faim, jauges (XP, armure, air, monture, boss), barre d'objets, panneaux d'information, cibles, effets, chat, liste des joueurs, notifications, alertes, scoreboard, titre à l'écran, message de la barre d'action | `client/hud`, `client/gui/vanilla/Voidframe*`, `client/chat` |
 | Conteneurs | inventaire du joueur, coffres, tonneaux, shulkers, entonnoir, distributeur, établi, fourneaux | `VoidframeScreens` |
 | Stations | enclume, meule, alambic, balise, enchantement, villageois, tailleur de pierre, forge, cheval | `VoidframeStations` |
 | Objets | infobulle, liseré de rareté, durabilité | `client/tooltip`, `RarityFrames`, `VoidframeDurability` |
@@ -57,7 +57,7 @@ Principes, par ordre de priorité quand ils s'opposent :
 |---|---|
 | **Écran titre et liste des mondes** | Cachés par le mod **Astral-launcher** : le joueur n'y passe pas. C'est la situation normale, ne pas y investir. Ils gardent seulement la recoloration des boutons. |
 | Métier à tisser, cartographie, créatif | Peu utilisés en survie : textures recolorées (`TextureRecolor`), plus le halo de case et l'ouverture communs. |
-| Titre à l'écran, sous-titre, sous-titres sonores, F3 | Le jeu ne publie aucun événement exploitable (ou le texte est un champ privé non unique) ; F3 est un outil de diagnostic. Restent vanilla (voir la dette, section 14). |
+| Sous-titres sonores, F3 | Le jeu ne publie aucun événement exploitable pour les sous-titres ; F3 est un outil de diagnostic. Restent vanilla (voir la dette, section 14). |
 | Signes, livres, blocs de commande, cartes | Ce sont des objets du monde, pas de l'interface. |
 | Écrans des autres mods (Create, Twilight Forest, MineColonies, JourneyMap) | Dessinés par ces mods. Fordix ne touche qu'aux écrans du jeu, de Forge et les siens (`VoidframeButtons.isGameScreen`). |
 
@@ -315,7 +315,7 @@ propriétaire, vie, état), aide en bas. Un secteur inutilisable est grisé et d
 
 ### 6.7 Overlays du HUD
 
-Un overlay du jeu qu'on remplace (`ScoreboardHud`, `ActionBarHud`) : s'enregistre sur `RenderGuiOverlayEvent.Pre`, annule celui du
+Un overlay du jeu qu'on remplace (`ScoreboardHud`, `ActionBarHud`, `TitleHud`) : s'enregistre sur `RenderGuiOverlayEvent.Pre`, annule celui du
 jeu **seulement quand il a quelque chose à dessiner**, dessine au même endroit, et reste donc déplaçable et redimensionnable par
 l'éditeur. Le HUD complet (barres, panneaux, situations, règles serveur) est décrit dans `CLAUDE.md`, section « HUD Voidframe 2 ».
 
@@ -437,10 +437,10 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 
 Dette connue (à traiter dans l'ordre) :
 
-1. Titre à l'écran et sous-titre (`TITLE_TEXT`) : aucun événement du jeu ; il faudrait lire les champs privés du `Gui` par type.
-2. Sous-titres sonores (`SUBTITLES`) et F3 : restent vanilla.
+1. Sous-titres sonores (`SUBTITLES`) : la liste est privée à `SubtitleOverlay` ; elle reste vanilla. F3 reste vanilla (outil de diagnostic).
+2. Titre à l'écran : lu par type et ordre de déclaration dans `Gui` (`TitleHud`, repli sur le titre du jeu si la disposition diffère) ; à revérifier à chaque version du jeu.
 3. Options > Contrôles, Vidéo, Sons : seuls les boutons et le fond sont habillés ; les listes de réglages gardent leur forme.
-4. Éditeur de HUD : pas d'assistant de première ouverture ni de prévisualisation multi-résolution.
+4. Éditeur de HUD : une notice à la première ouverture (`firstOpenHint`) mais pas d'assistant pas à pas ni de prévisualisation multi-résolution.
 5. Champs `EditBox` du chat et des commandes : le chat de Voidframe a le sien, la ligne de commande du jeu garde le champ vanilla.
 6. Fiche d'objet : les barres de caractéristiques de la maquette ne sont pas encore dessinées (liste de chiffres alignés).
 7. Créatif, métier à tisser, cartographie : textures recolorées seulement.
@@ -506,7 +506,8 @@ sont repris qu'écran par écran, avec leur capture avant et après, jamais en b
 | Menu pause, écran de mort | fait |
 | Autres écrans du jeu (options, statistiques, multijoueur, packs…) | boutons et fond habillés |
 | Écran titre, liste des mondes | **hors périmètre** (Astral-launcher) |
-| Titre à l'écran, sous-titres sonores, F3 | vanilla (dette 1 et 2) |
+| Titre à l'écran | fait (`TitleHud`) |
+| Sous-titres sonores, F3 | vanilla (dette 1) |
 
 ## Annexe C. Glossaire
 

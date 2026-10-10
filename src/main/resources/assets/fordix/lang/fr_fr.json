@@ -527,5 +527,7 @@
     "fordix.death.hardcore": "Hardcore",
     "fordix.death.score": "Score",
     "fordix.death.level": "Niveau",
-    "fordix.death.place": "Lieu"
+    "fordix.death.place": "Lieu",
+    "fordix.hud.editor.first.title": "Disposition du HUD",
+    "fordix.hud.editor.first.detail": "Glisse un élément pour le déplacer. H masque les panneaux, Ctrl+Z annule."
 }

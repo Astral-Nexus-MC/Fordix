@@ -93,8 +93,23 @@ public class HudLayoutScreen extends FordixScreen {
         this.parent = parent;
     }
 
+    /** The first time the editor opens, a notice says how it works; a marker file remembers that it was shown. */
+    private static void firstOpenHint() {
+        java.nio.file.Path marker = net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("fordix-hud-editor-seen.txt");
+        if (java.nio.file.Files.exists(marker)) {
+            return;
+        }
+        HudToast.show(Tr.s("hud.editor.first.title"), Tr.s("hud.editor.first.detail"), 0x3FD1C7);
+        try {
+            java.nio.file.Files.writeString(marker, "1");
+        } catch (java.io.IOException ignored) {
+            // Shown again next time: harmless.
+        }
+    }
+
     @Override
     protected void init() {
+        firstOpenHint();
         propertyButtons.clear();
         leftWidgets.clear();
         int x = PANEL_MARGIN + 6;
