@@ -71,8 +71,8 @@ public final class VoidframeButtons {
             StandIn standIn = new StandIn(original);
             event.addListener(standIn);
             // Room next to the recipe book toggle on the inventory: a shortcut to the advancements.
-            if (original instanceof ImageButton && event.getScreen() instanceof VoidframeScreens.PlayerInventory inventory && !inventory.wide()) {
-                event.addListener(new AdvancementsButton(standIn));
+            if (original instanceof ImageButton && event.getScreen() instanceof VoidframeScreens.PlayerInventory inventory) {
+                event.addListener(new AdvancementsButton(standIn, inventory.wide()));
             }
         }
     }
@@ -83,18 +83,22 @@ public final class VoidframeButtons {
         private static final int GAP = 4;
         private final StandIn recipeToggle;
 
-        AdvancementsButton(StandIn recipeToggle) {
+        /** In the wide inventory the panel has no room at the right of the toggle: the trophy goes under it. */
+        private final boolean below;
+
+        AdvancementsButton(StandIn recipeToggle, boolean below) {
             super(recipeToggle.getX() + recipeToggle.getWidth() + GAP, recipeToggle.getY(),
                     recipeToggle.getWidth(), recipeToggle.getHeight(), Component.translatable("gui.advancements"));
             this.recipeToggle = recipeToggle;
+            this.below = below;
             setTooltip(Tooltip.create(getMessage()));
         }
 
         /** Follows the toggle, which slides sideways when the recipe book opens. */
         @Override
         public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-            setX(recipeToggle.getX() + recipeToggle.getWidth() + GAP);
-            setY(recipeToggle.getY());
+            setX(below ? recipeToggle.getX() : recipeToggle.getX() + recipeToggle.getWidth() + GAP);
+            setY(below ? recipeToggle.getY() + recipeToggle.getHeight() + GAP : recipeToggle.getY());
             visible = recipeToggle.visible;
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }

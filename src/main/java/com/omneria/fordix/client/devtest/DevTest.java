@@ -148,6 +148,14 @@ public final class DevTest {
                 NotificationStyle.SUCCESS, Component.literal("Bienvenue sur Astral Nexus v0.1.5"),
                 Component.literal("Bon jeu ! Ceci est une notification de test plus longue pour verifier la taille du fond."), 80)), 30, false));
         steps.add(new Step("03-inventory", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, false));
+        steps.add(new Step("03b-inventory-book", () -> {
+            mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, true);
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 40, false));
+        steps.add(new Step("03c-inventory-book-closed", () -> {
+            mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 40, false));
         steps.add(new Step("04-tooltip-sword", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, true));
         steps.add(new Step("05-advancements", () -> mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements())), 40, false));
         steps.add(new Step("06-loom", () -> mc.setScreen(new LoomScreen(new LoomMenu(1, mc.player.getInventory()),

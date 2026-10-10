@@ -131,7 +131,8 @@ public final class OptionsSkin {
                 original.setY(y);
                 original.setWidth(columnWidth);
                 original.setHeight(height);
-                ProxyRow proxy = new ProxyRow(original, entry.title(), slim ? () -> "" : entry.detail(), x, y, columnWidth, height);
+                ProxyRow proxy = new ProxyRow(original, entry.title(), slim ? () -> "" : entry.detail(), x, y, columnWidth, height,
+                        entry.key().equals("fov") ? () -> (Minecraft.getInstance().options.fov().get() - 30) / 80.0 : null);
                 event.removeListener(original);
                 event.addListener(proxy);
                 if (entry.key().equals("difficulty") && lock != null) {
@@ -247,12 +248,22 @@ public final class OptionsSkin {
         private final String title;
         private final java.util.function.Supplier<String> detail;
         private final Glass.Fade fade = new Glass.Fade();
+        /** For a slider: how far along it is (0 to 1); null for the rows that are not one. */
+        private final java.util.function.DoubleSupplier fraction;
 
-        ProxyRow(AbstractWidget original, String title, java.util.function.Supplier<String> detail, int x, int y, int width, int height) {
+        ProxyRow(AbstractWidget original, String title, java.util.function.Supplier<String> detail, int x, int y, int width, int height,
+                 java.util.function.DoubleSupplier fraction) {
             super(x, y, width, height, CommonComponents.EMPTY);
             this.original = original;
             this.title = title;
             this.detail = detail;
+            this.fraction = fraction;
+            if (fraction != null) {
+                // The game's slider maps the pointer over its own width: it covers just the drawn track.
+                int textX = x + 6 + Math.min(18, height - 6) + 7;
+                original.setX(textX - 4);
+                original.setWidth(x + width - 12 - textX + 8);
+            }
         }
 
         @Override
@@ -267,10 +278,31 @@ public final class OptionsSkin {
             g.drawString(font, icon, bx + (box - font.width(icon)) / 2, by + (box - 8) / 2 + 1, com.omneria.fordix.client.gui.FordixPalette.ACCENT, false);
             int textX = bx + box + 7;
             String detailText = detail.get();
-            g.drawString(font, title, textX, detailText.isEmpty() ? getY() + (getHeight() - 8) / 2 : getY() + getHeight() / 2 - 9,
-                    Glass.buttonText(Glass.Kind.NORMAL, true), false);
-            if (!detailText.isEmpty()) {
-                g.drawString(font, detailText, textX, getY() + getHeight() / 2 + 1, Glass.dim(), false);
+            if (fraction != null) {
+                // A slider: its name and value on one line, the track under it.
+                int lineY = getY() + (getHeight() < 26 ? (getHeight() - 8) / 2 - 2 : 5);
+                g.drawString(font, title, textX, lineY, Glass.buttonText(Glass.Kind.NORMAL, true), false);
+                String value = detailText.isEmpty() ? valueOf(original) : detailText;
+                g.drawString(font, value, getX() + getWidth() - 12 - font.width(value), lineY, Glass.dim(), false);
+            } else {
+                g.drawString(font, title, textX, detailText.isEmpty() ? getY() + (getHeight() - 8) / 2 : getY() + getHeight() / 2 - 9,
+                        Glass.buttonText(Glass.Kind.NORMAL, true), false);
+                if (!detailText.isEmpty()) {
+                    g.drawString(font, detailText, textX, getY() + getHeight() / 2 + 1, Glass.dim(), false);
+                }
+            }
+            if (fraction != null) {
+                // The slider itself: a track along the bottom of the row and a knob where the value is.
+                boolean thin = getHeight() < 26;
+                int trackX = textX;
+                int trackW = getX() + getWidth() - 12 - trackX;
+                int trackY = getY() + getHeight() - (thin ? 4 : 9);
+                int trackH = thin ? 2 : 4;
+                double value = Math.max(0.0D, Math.min(1.0D, fraction.getAsDouble()));
+                int filled = (int) Math.round(trackW * value);
+                VoidframeDraw.gauge(g, trackX, trackY, trackW, trackH, filled, com.omneria.fordix.client.gui.FordixPalette.ACCENT);
+                int knobX = trackX + Math.max(0, Math.min(trackW - 3, filled - 1));
+                g.fill(knobX, trackY - 2, knobX + 3, trackY + trackH + 2, com.omneria.fordix.client.gui.FordixPalette.TEXT_BRIGHT);
             }
         }
 

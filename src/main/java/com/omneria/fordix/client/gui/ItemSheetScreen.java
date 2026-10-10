@@ -23,7 +23,7 @@ import java.util.List;
  * used in and its figures. Clicking an ingredient or a result opens that item's sheet, Back returns.
  */
 public final class ItemSheetScreen extends FordixScreen {
-    private static final int PANEL_WIDTH = 714;
+    private static final int PANEL_WIDTH = 600;
     private static final int PANEL_HEIGHT = 400;
     private static final int PADDING = 10;
     private static final int SLOT = 18;
@@ -40,6 +40,9 @@ public final class ItemSheetScreen extends FordixScreen {
     private int panelWidth = PANEL_WIDTH;
     private int panelHeight = PANEL_HEIGHT;
     private Panel panel;
+    /** Where the "used in" band starts under the panel's top, and whether the figures have room for their bars. */
+    private int usesTop = 156;
+    private boolean tall;
     private final List<Hit> hits = new ArrayList<>();
     private ItemStack hovered = ItemStack.EMPTY;
 
@@ -66,7 +69,26 @@ public final class ItemSheetScreen extends FordixScreen {
     @Override
     protected void init() {
         panelWidth = Math.min(PANEL_WIDTH, this.width - 10);
-        panelHeight = Math.min(PANEL_HEIGHT, this.height - 10);
+        // The sheet is as tall as what it shows (the recipe, the figures, the uses): no empty middle. The wiki page takes all it can.
+        int figures = 22;
+        for (ItemFacts.Fact fact : sheet.facts()) {
+            figures += fact.fraction() >= 0.0F ? 30 : 22;
+        }
+        int recipe = sheet.makes().isEmpty() ? 24 : 40 + sheet.makes().stream().mapToInt(m -> m.rows()).max().orElse(1) * SLOT + 14;
+        int columns = Math.max(figures, recipe) + 8;
+        int useRows = Math.max(1, Math.min(3, (sheet.uses().size() + USES_PER_ROW - 1) / USES_PER_ROW));
+        int wanted = 46 + columns + 14 + 12 + useRows * SLOT + 40;
+        int available = this.height - 10;
+        panelHeight = showWiki ? Math.min(PANEL_HEIGHT, available) : Math.min(available, Math.max(260, Math.min(PANEL_HEIGHT, wanted)));
+        tall = panelHeight >= wanted || showWiki && panelHeight >= 360;
+        if (!tall) {
+            figures = 22;
+            for (ItemFacts.Fact fact : sheet.facts()) {
+                figures += fact.fraction() >= 0.0F ? 15 : 11;
+            }
+            columns = Math.max(figures, recipe) + 8;
+        }
+        usesTop = 46 + columns + 14;
         int left = centerX(panelWidth);
         int top = centerY(panelHeight);
         panel = new Panel(left, top, panelWidth, panelHeight);
@@ -129,7 +151,6 @@ public final class ItemSheetScreen extends FordixScreen {
         Glass.rule(g, left, top + 42, right - left);
         hit(left, top + 8, 32, 32, sheet.stack(), mouseX, mouseY, false);
 
-        boolean tall = panelHeight >= 360;
         // Left column: how to make it.
         int columnWidth = (right - left) / 2 - 6;
         Glass.label(g, this.font, Tr.s("sheet.make"), left, top + 48);
@@ -147,8 +168,9 @@ public final class ItemSheetScreen extends FordixScreen {
         int fx = left + columnWidth + 12;
         Glass.label(g, this.font, Tr.s("sheet.facts"), fx, top + 48);
         int fy = top + (tall ? 70 : 62);
+        int factsLimit = top + usesTop - 12;
         for (ItemFacts.Fact fact : sheet.facts()) {
-            if (fy > top + (tall ? panelHeight - 90 : 150)) {
+            if (fy + 10 > factsLimit) {
                 break;
             }
             int available = right - fx;
@@ -165,10 +187,10 @@ public final class ItemSheetScreen extends FordixScreen {
         }
 
         if (showWiki) {
-            drawWiki(g, left, top + (tall ? 206 : 156), right, mouseX, mouseY);
+            drawWiki(g, left, top + usesTop, right, mouseX, mouseY);
         } else {
             // Uses.
-            int uy = top + (tall ? 206 : 156);
+            int uy = top + usesTop;
             g.fill(left, uy - 4, right, uy - 3, 0x20FFFFFF);
             Glass.label(g, this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy);
             int shown = 0;
@@ -223,9 +245,9 @@ public final class ItemSheetScreen extends FordixScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (showWiki && shownPage != null && mouseY > panel.getY() + 152) {
+        if (showWiki && shownPage != null && mouseY > panel.getY() + usesTop - 4) {
             int width = panelWidth - 2 * PADDING;
-            int max = Math.max(0, pageView.contentHeight(width) - wikiHeight(panel.getY() + 156));
+            int max = Math.max(0, pageView.contentHeight(width) - wikiHeight(panel.getY() + usesTop));
             pageScroll = Math.max(0, Math.min(max, pageScroll - delta * 18));
             return true;
         }

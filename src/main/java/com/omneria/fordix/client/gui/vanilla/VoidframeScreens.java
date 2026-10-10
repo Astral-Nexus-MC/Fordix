@@ -5,6 +5,7 @@ import com.omneria.fordix.client.hud.HudStyle;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.Glass;
 import com.omneria.fordix.client.guide.GuideTabs;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.BlastFurnaceScreen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
@@ -41,6 +42,19 @@ public final class VoidframeScreens {
     }
 
     // ---------- the wide layout (mockup), shared by the chest-like containers ----------
+
+    /**
+     * Whether a container with a recipe book gets the wide layout. The game places its open book from the middle of the screen
+     * as if the panel were its own 176 wide, so beside a wide panel it would sit on top of it: while the book is open the
+     * screen goes back to the compact layout, where the book fits as it always did, and returns to the wide one when it closes.
+     */
+    private static boolean wantsWide(net.minecraft.client.gui.screens.Screen screen, int width, int height,
+                                     net.minecraft.world.inventory.RecipeBookType book) {
+        net.minecraft.client.player.LocalPlayer player = Minecraft.getInstance().player;
+        boolean open = player != null && player.getRecipeBook().isOpen(book);
+        return !open && ContainerLayout.fits(screen, width, height)
+                && ContainerLayout.ready(((net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) screen).getMenu());
+    }
 
     private static final int WIDE_W = 218;
     private static final int GRID_Y = 56;
@@ -317,8 +331,17 @@ public final class VoidframeScreens {
         }
 
         @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
+            if (wantsWide(this, WIDE_W, CRAFT_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING) != wide) {
+                rebuildWidgets();
+            }
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+
+        @Override
         protected void init() {
-            wide = ContainerLayout.fits(this, WIDE_W, CRAFT_H) && ContainerLayout.ready(menu);
+            wide = wantsWide(this, WIDE_W, CRAFT_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING);
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? CRAFT_H : 166;
             super.init();
@@ -428,8 +451,17 @@ public final class VoidframeScreens {
         }
 
         @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
+            if (wantsWide(this, INV_W, INV_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING) != wide) {
+                rebuildWidgets();
+            }
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+
+        @Override
         protected void init() {
-            wide = ContainerLayout.fits(this, INV_W, INV_H) && ContainerLayout.ready(menu);
+            wide = wantsWide(this, INV_W, INV_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING);
             imageWidth = wide ? INV_W : 176;
             imageHeight = wide ? INV_H : 166;
             super.init();
@@ -603,8 +635,17 @@ public final class VoidframeScreens {
         }
 
         @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
+            if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.FURNACE) != wide) {
+                rebuildWidgets();
+            }
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+
+        @Override
         public void init() {
-            wide = ContainerLayout.fits(this, WIDE_W, FURNACE_H) && ContainerLayout.ready(menu);
+            wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.FURNACE);
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();
@@ -647,8 +688,17 @@ public final class VoidframeScreens {
         }
 
         @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
+            if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.BLAST_FURNACE) != wide) {
+                rebuildWidgets();
+            }
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+
+        @Override
         public void init() {
-            wide = ContainerLayout.fits(this, WIDE_W, FURNACE_H) && ContainerLayout.ready(menu);
+            wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.BLAST_FURNACE);
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();
@@ -691,8 +741,17 @@ public final class VoidframeScreens {
         }
 
         @Override
+        public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+            // The recipe book opening or closing can change whether the wide layout still has room: lay out again.
+            if (wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.SMOKER) != wide) {
+                rebuildWidgets();
+            }
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+        }
+
+        @Override
         public void init() {
-            wide = ContainerLayout.fits(this, WIDE_W, FURNACE_H) && ContainerLayout.ready(menu);
+            wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.SMOKER);
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();

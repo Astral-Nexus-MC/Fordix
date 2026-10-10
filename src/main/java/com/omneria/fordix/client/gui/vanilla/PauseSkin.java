@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -37,6 +38,10 @@ public final class PauseSkin {
     private static final int CARD_WIDTH = 234;
     private static final int CARD_HEIGHT = 110;
 
+    private static final int ICON = 22;
+    private static int iconCount;
+    private static int iconRowY;
+    private static int iconRowHeight;
     private static int panelHeight;
     private static int panelTop = ROOMY_TOP;
     private static PauseScreen laidOut;
@@ -62,6 +67,7 @@ public final class PauseSkin {
         AbstractWidget reporting = null;
         AbstractWidget quit = null;
         List<AbstractWidget> extra = new ArrayList<>();
+        List<Button> icons = new ArrayList<>();
         for (GuiEventListener listener : event.getListenersList()) {
             if (!(listener instanceof Button button) || !button.visible) {
                 continue;
@@ -76,7 +82,13 @@ public final class PauseSkin {
                 case "menu.playerReporting" -> reporting = button;
                 case "menu.returnToMenu", "menu.disconnect" -> quit = button;
                 case "menu.sendFeedback", "menu.reportBugs" -> button.visible = false;
-                default -> extra.add(button);
+                default -> {
+                    if (isIcon(button)) {
+                        icons.add(button);
+                    } else {
+                        extra.add(button);
+                    }
+                }
             }
         }
         if (back == null) {
@@ -108,6 +120,21 @@ public final class PauseSkin {
             rows.add(List.of(other));
             heights.add(26);
         }
+        if (!icons.isEmpty()) {
+            // The buttons other mods put beside the menu (Quark, Create...): icons side by side in one small frame.
+            List<AbstractWidget> row = new ArrayList<>();
+            for (Button icon : icons) {
+                IconButton wrapper = new IconButton(icon);
+                event.removeListener(icon);
+                event.addListener(wrapper);
+                row.add(wrapper);
+            }
+            iconCount = row.size();
+            rows.add(row);
+            heights.add(30);
+        } else {
+            iconCount = 0;
+        }
         if (lan != null || reporting != null) {
             List<AbstractWidget> pair = new ArrayList<>();
             if (lan != null) {
@@ -138,6 +165,19 @@ public final class PauseSkin {
             List<AbstractWidget> row = rows.get(i);
             int height = Math.max(18, heights.get(i) - shrink);
             int each = (inner - (row.size() - 1) * 4) / row.size();
+            if (row.get(0) instanceof IconButton) {
+                iconRowY = y;
+                iconRowHeight = height;
+                for (int k = 0; k < row.size(); k++) {
+                    AbstractWidget icon = row.get(k);
+                    icon.setWidth(ICON);
+                    icon.setHeight(ICON);
+                    icon.setX(COLUMN_X + PAD + 4 + k * (ICON + 4));
+                    icon.setY(y + (height - ICON) / 2);
+                }
+                y += height + gapAfter(i, rows.size(), heights, shrink);
+                continue;
+            }
             for (int k = 0; k < row.size(); k++) {
                 AbstractWidget widget = row.get(k);
                 widget.setX(COLUMN_X + PAD + k * (each + 4));
@@ -202,9 +242,83 @@ public final class PauseSkin {
         g.drawString(font, font.plainSubstrByWidth(worldName(minecraft), (int) ((COLUMN_WIDTH - 4) / scale)), 0, 0, FordixPalette.TEXT_BRIGHT, true);
         g.pose().popPose();
         Glass.rule(g, COLUMN_X + 2, panelTop - 6, COLUMN_WIDTH - 4);
+        if (iconCount > 0) {
+            // A small frame, only as wide as its icons.
+            Glass.card(g, COLUMN_X + PAD, iconRowY, iconCount * (ICON + 4) + 4, iconRowHeight);
+        }
         int cardX = width - CARD_WIDTH - 40;
         if (cardX >= COLUMN_X + COLUMN_WIDTH + 16) {
             sessionCard(g, font, minecraft, cardX, 34);
+        }
+    }
+
+    /** A button with no text of its own: another mod's icon (its message is one letter at most, or it is not a plain game button). */
+    private static boolean isIcon(Button button) {
+        return button.getClass() != Button.class || button.getMessage().getString().strip().length() <= 2;
+    }
+
+    private static final String[] QUARK = {
+            ".######.",
+            "#......#",
+            "#......#",
+            "#......#",
+            "#...#..#",
+            "#....#.#",
+            ".######.",
+            "......##"};
+
+    /** An icon button in a glass square: Quark's drawn as its logo, the others as the mod made them. Clicks go to the real button. */
+    private static final class IconButton extends AbstractWidget {
+        private final Button original;
+        private final boolean quark;
+        private final Glass.Fade fade = new Glass.Fade();
+
+        IconButton(Button original) {
+            super(original.getX(), original.getY(), ICON, ICON, original.getMessage());
+            this.original = original;
+            this.quark = original.getMessage().getString().strip().equalsIgnoreCase("q");
+            if (original.getTooltip() != null) {
+                setTooltip(original.getTooltip());
+            }
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+            Glass.button(g, getX(), getY(), getWidth(), getHeight(), Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
+            if (quark) {
+                int color = isHoveredOrFocused() ? FordixPalette.TEXT_BRIGHT : FordixPalette.ACCENT;
+                int ox = getX() + (getWidth() - 8) / 2;
+                int oy = getY() + (getHeight() - 8) / 2;
+                for (int row = 0; row < QUARK.length; row++) {
+                    for (int col = 0; col < 8; col++) {
+                        if (QUARK[row].charAt(col) == '#') {
+                            g.fill(ox + col, oy + row, ox + col + 1, oy + row + 1, color);
+                        }
+                    }
+                }
+            } else {
+                // The mod's own picture, in its own 20 x 20, centered in the square.
+                original.setX(getX() + (getWidth() - original.getWidth()) / 2);
+                original.setY(getY() + (getHeight() - original.getHeight()) / 2);
+                int before = original.getWidth();
+                original.setWidth(Math.min(before, ICON - 2));
+                original.setHeight(Math.min(original.getHeight(), ICON - 2));
+                original.render(g, mouseX, mouseY, partialTick);
+                original.setWidth(before);
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (!visible || !active || !isMouseOver(mouseX, mouseY)) {
+                return false;
+            }
+            return original.mouseClicked(original.getX() + 1, original.getY() + 1, button) | true;
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput output) {
+            defaultButtonNarrationText(output);
         }
     }
 
