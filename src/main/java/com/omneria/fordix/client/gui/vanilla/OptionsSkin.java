@@ -107,25 +107,31 @@ public final class OptionsSkin {
         int rows = (ENTRIES.size() + 1) / 2;
         int available = panelH - 76 - 54;
         int step = Math.min(46, available / Math.max(1, rows));
-        int height = Math.max(22, step - 6);
+        // Too little room for two-line rows: single-line rows at button height, the detail line dropped.
+        boolean slim = step - 6 < 26;
+        if (slim) {
+            step = Math.max(16, Math.min(22, (panelH - 58 - 30) / Math.max(1, rows)));
+        }
+        int height = slim ? step - 2 : step - 6;
+        int top = slim ? panelY + 58 : panelY + 76;
         for (int i = 0; i < ENTRIES.size(); i++) {
             Entry entry = ENTRIES.get(i);
             int x = panelX + 14 + i % 2 * (columnWidth + 8);
-            int y = panelY + 76 + i / 2 * step;
+            int y = top + i / 2 * step;
             AbstractWidget original = entry.widget();
             if (original.getClass() == Button.class) {
                 original.setX(x);
                 original.setY(y);
                 original.setWidth(columnWidth);
                 original.setHeight(height);
-                RowButtons.register((Button) original, "", entry.detail());
+                RowButtons.register((Button) original, "", slim ? () -> "" : entry.detail());
             } else {
                 // Wrapped: the original keeps working but is not drawn; the row draws it and passes the mouse on.
                 original.setX(x);
                 original.setY(y);
                 original.setWidth(columnWidth);
                 original.setHeight(height);
-                ProxyRow proxy = new ProxyRow(original, entry.title(), entry.detail(), x, y, columnWidth, height);
+                ProxyRow proxy = new ProxyRow(original, entry.title(), slim ? () -> "" : entry.detail(), x, y, columnWidth, height);
                 event.removeListener(original);
                 event.addListener(proxy);
                 if (entry.key().equals("difficulty") && lock != null) {
@@ -135,9 +141,9 @@ public final class OptionsSkin {
             }
         }
         done.setWidth(200);
-        done.setHeight(30);
+        done.setHeight(slim ? 20 : 30);
         done.setX(panelX + (panelW - 200) / 2);
-        done.setY(panelY + panelH - 48);
+        done.setY(panelY + panelH - (slim ? 26 : 48));
         search = new FieldBox(Minecraft.getInstance().font, panelX + 14, panelY + 34, panelW - 28, 22, Component.translatable("fordix.options.search"));
         search.setHint(Component.translatable("fordix.options.search"));
         search.setValue(query);
@@ -220,7 +226,7 @@ public final class OptionsSkin {
             case "options.sounds" -> Math.round(options.getSoundSourceVolume(net.minecraft.sounds.SoundSource.MASTER) * 100.0F) + " %";
             case "options.language" -> {
                 var language = Minecraft.getInstance().getLanguageManager().getLanguage(options.languageCode);
-                yield language == null ? options.languageCode : language.toString();
+                yield language == null ? options.languageCode : language.name();
             }
             default -> {
                 if (key.startsWith("options.resourcepack") || key.startsWith("resourcePack")) {
