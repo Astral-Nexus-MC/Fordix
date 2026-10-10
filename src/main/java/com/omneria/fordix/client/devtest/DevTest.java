@@ -166,6 +166,15 @@ public final class DevTest {
             mc.setScreen(new InventoryScreen(mc.player));
             clickBook(mc);
         }, 40, false));
+        steps.add(new Step("03f-book-return", () -> {
+            mc.setScreen(new InventoryScreen(mc.player));
+            clickBook(mc);
+            net.minecraft.client.gui.screens.Screen back = mc.screen;
+            mc.setScreen(new net.minecraft.client.gui.screens.inventory.CraftingScreen(
+                    new net.minecraft.world.inventory.CraftingMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                    Component.literal("x")));
+            mc.setScreen(back);
+        }, 40, false));
         steps.add(new Step("03d-crafting-book", () -> {
             mc.setScreen(new net.minecraft.client.gui.screens.inventory.CraftingScreen(
                     new net.minecraft.world.inventory.CraftingMenu(1, mc.player.getInventory()), mc.player.getInventory(),

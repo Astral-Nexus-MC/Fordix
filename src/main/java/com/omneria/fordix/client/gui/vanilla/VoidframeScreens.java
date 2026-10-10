@@ -106,12 +106,12 @@ public final class VoidframeScreens {
 
         @Override
         public int[] searchRect() {
-            return wide ? new int[]{154, 28, 54, 20} : null;
+            return wide ? new int[]{58, 28, 150, 20} : null;
         }
 
         @Override
         public int[] sortRect() {
-            return wide ? new int[]{106, 28, 44, 20} : null;
+            return wide ? new int[]{10, 28, 44, 20} : null;
         }
 
         @Override
@@ -261,12 +261,12 @@ public final class VoidframeScreens {
 
         @Override
         public int[] searchRect() {
-            return wide ? new int[]{154, 28, 54, 20} : null;
+            return wide ? new int[]{58, 28, 150, 20} : null;
         }
 
         @Override
         public int[] sortRect() {
-            return wide ? new int[]{106, 28, 44, 20} : null;
+            return wide ? new int[]{10, 28, 44, 20} : null;
         }
 
         @Override
@@ -361,6 +361,7 @@ public final class VoidframeScreens {
         @Override
         protected void init() {
             wide = wantsWide(this, WIDE_W, CRAFT_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING);
+            lastBook = false;
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? CRAFT_H : 166;
             super.init();
@@ -502,6 +503,7 @@ public final class VoidframeScreens {
         @Override
         protected void init() {
             wide = wantsWide(this, INV_W, INV_H, net.minecraft.world.inventory.RecipeBookType.CRAFTING);
+            lastBook = false;
             imageWidth = wide ? INV_W : 176;
             imageHeight = wide ? INV_H : 166;
             super.init();
@@ -744,6 +746,7 @@ public final class VoidframeScreens {
         @Override
         public void init() {
             wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.FURNACE);
+            lastBook = false;
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();
@@ -817,6 +820,7 @@ public final class VoidframeScreens {
         @Override
         public void init() {
             wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.BLAST_FURNACE);
+            lastBook = false;
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();
@@ -890,6 +894,7 @@ public final class VoidframeScreens {
         @Override
         public void init() {
             wide = wantsWide(this, WIDE_W, FURNACE_H, net.minecraft.world.inventory.RecipeBookType.SMOKER);
+            lastBook = false;
             imageWidth = wide ? WIDE_W : 176;
             imageHeight = wide ? FURNACE_H : 166;
             super.init();
