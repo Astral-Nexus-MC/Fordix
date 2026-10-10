@@ -557,5 +557,10 @@
     "fordix.admin.label.target": "Destinataires",
     "fordix.admin.label.preview": "Aperçu",
     "fordix.admin.operator": "Opérateur",
-    "fordix.admin.sched.add_short": "Planifier"
+    "fordix.admin.sched.add_short": "Planifier",
+    "fordix.options.packs": "%s actifs",
+    "fordix.pause.mode.survival": "Survie",
+    "fordix.pause.mode.creative": "Créatif",
+    "fordix.pause.mode.adventure": "Aventure",
+    "fordix.pause.mode.spectator": "Spectateur"
 }

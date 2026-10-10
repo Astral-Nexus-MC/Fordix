@@ -339,6 +339,7 @@ public final class FordixClient {
         /** After every other handler has added or moved its widgets (the pause menu, the guide tabs): lay out and skin them. */
         @SubscribeEvent(priority = EventPriority.LOW)
         static void onScreenInitSkin(ScreenEvent.Init.Post event) {
+            com.omneria.fordix.client.gui.vanilla.RowButtons.clear();
             PauseSkin.onScreenInit(event);
             com.omneria.fordix.client.gui.vanilla.OptionsSkin.onScreenInit(event);
             VoidframeButtons.onScreenInit(event);

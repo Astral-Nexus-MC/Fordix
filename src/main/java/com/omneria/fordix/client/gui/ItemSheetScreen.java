@@ -106,8 +106,16 @@ public final class ItemSheetScreen extends FordixScreen {
         g.pose().scale(2, 2, 1);
         g.renderItem(sheet.stack(), 0, 0);
         g.pose().popPose();
-        g.drawString(this.font, sheet.name(), left + 40, top + 10, FordixPalette.TEXT_BRIGHT, false);
-        g.drawString(this.font, sheet.mod() + " - " + sheet.id(), left + 40, top + 22, FordixPalette.TEXT, false);
+        g.pose().pushPose();
+        g.pose().translate(left + 40, top + 8, 0);
+        g.pose().scale(1.6F, 1.6F, 1);
+        g.drawString(this.font, sheet.name(), 0, 0, FordixPalette.TEXT_BRIGHT, false);
+        g.pose().popPose();
+        g.drawString(this.font, sheet.id(), left + 40, top + 26, Glass.dim(), false);
+        int pillX = left + 40 + Math.round(this.font.width(sheet.name()) * 1.6F) + 10;
+        pillX += Glass.pill(g, this.font, com.omneria.fordix.client.tooltip.ItemRarity.label(sheet.stack()), pillX, top + 10,
+                com.omneria.fordix.client.tooltip.ItemRarity.color(sheet.stack())) + 4;
+        Glass.pill(g, this.font, com.omneria.fordix.client.tooltip.ItemTooltipRenderer.typeOf(sheet.stack()), pillX, top + 10, FordixPalette.TEXT);
         Glass.rule(g, left, top + 42, right - left);
         hit(left, top + 8, 32, 32, sheet.stack(), mouseX, mouseY, false);
 

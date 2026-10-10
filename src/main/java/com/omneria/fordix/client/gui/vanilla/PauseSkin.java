@@ -34,8 +34,8 @@ public final class PauseSkin {
     private static final int PAD = 12;
     private static final int ROOMY_TOP = 98;
     private static final int TIGHT_TOP = 54;
-    private static final int CARD_WIDTH = 190;
-    private static final int CARD_HEIGHT = 96;
+    private static final int CARD_WIDTH = 234;
+    private static final int CARD_HEIGHT = 110;
 
     private static int panelHeight;
     private static int panelTop = ROOMY_TOP;
@@ -50,7 +50,6 @@ public final class PauseSkin {
     }
 
     public static void onScreenInit(ScreenEvent.Init.Post event) {
-        RowButtons.clear();
         laidOut = null;
         if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || event.getScreen().getClass() != PauseScreen.class) {
             return;
@@ -210,9 +209,9 @@ public final class PauseSkin {
         g.drawString(font, font.plainSubstrByWidth(worldName(minecraft), (int) ((COLUMN_WIDTH - 4) / scale)), 0, 0, FordixPalette.TEXT_BRIGHT, true);
         g.pose().popPose();
         Glass.rule(g, COLUMN_X + 2, panelTop - 6, COLUMN_WIDTH - 4);
-        int cardX = width - CARD_WIDTH - 24;
+        int cardX = width - CARD_WIDTH - 40;
         if (cardX >= COLUMN_X + COLUMN_WIDTH + 16) {
-            sessionCard(g, font, minecraft, cardX, panelTop);
+            sessionCard(g, font, minecraft, cardX, 34);
         }
     }
 
@@ -232,19 +231,21 @@ public final class PauseSkin {
             return;
         }
         Glass.panel(g, x, y, CARD_WIDTH, CARD_HEIGHT);
-        Glass.label(g, font, Tr.s("pause.session"), x + 12, y + 9);
-        g.drawString(font, player.getName().getString(), x + 12, y + 22, FordixPalette.TEXT_BRIGHT, false);
+        Glass.label(g, font, Tr.s("pause.session"), x + 14, y + 10);
+        String mode = minecraft.gameMode == null ? "" : Tr.s("pause.mode." + minecraft.gameMode.getPlayerMode().getName());
+        g.drawString(font, player.getName().getString(), x + 14, y + 24, FordixPalette.TEXT_BRIGHT, false);
+        g.drawString(font, " \u00B7 " + mode, x + 14 + font.width(player.getName().getString()), y + 24, Glass.dim(), false);
         String position = String.format("X %d  Y %d  Z %d", player.getBlockX(), player.getBlockY(), player.getBlockZ());
-        g.drawString(font, position, x + 12, y + 38, FordixPalette.TEXT, false);
+        g.drawString(font, position, x + 14, y + 42, FordixPalette.TEXT, false);
         long day = minecraft.level.getDayTime() / 24000L + 1L;
-        g.drawString(font, Tr.s("pause.day", day), x + 12, y + 52, FordixPalette.TEXT, false);
-        int cursor = x + 12;
+        g.drawString(font, Tr.s("pause.day", day), x + 14, y + 58, Glass.dim(), false);
+        int cursor = x + 14;
         PlayerInfo info = minecraft.getConnection() == null ? null : minecraft.getConnection().getPlayerInfo(player.getUUID());
         if (info != null && info.getLatency() > 0) {
             int latency = info.getLatency();
             int color = latency < 80 ? 0xFF5ED68A : latency < 160 ? 0xFFE8A64A : 0xFFE5534B;
-            cursor += Glass.pill(g, font, latency + " ms", cursor, y + 72, color) + 4;
+            cursor += Glass.pill(g, font, "\u25CF " + latency + " ms", cursor, y + 86, color) + 4;
         }
-        Glass.pill(g, font, Tr.s(minecraft.getSingleplayerServer() != null ? "pause.solo" : "pause.online"), cursor, y + 72, FordixPalette.ACCENT);
+        Glass.pill(g, font, Tr.s(minecraft.getSingleplayerServer() != null ? "pause.solo" : "pause.online"), cursor, y + 86, FordixPalette.ACCENT);
     }
 }

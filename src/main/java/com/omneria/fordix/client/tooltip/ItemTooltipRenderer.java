@@ -323,7 +323,7 @@ public final class ItemTooltipRenderer {
         return ItemRarity.isNotable(stack) ? ItemRarity.color(stack) : FordixPalette.TOOLTIP_BORDER_TOP | 0xFF000000;
     }
 
-    private static String typeOf(ItemStack stack) {
+    public static String typeOf(ItemStack stack) {
         var item = stack.getItem();
         if (item instanceof ArmorItem) {
             return Tr.s("tooltip.type.armor");

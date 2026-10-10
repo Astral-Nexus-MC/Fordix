@@ -38,8 +38,8 @@ public final class OptionsSkin {
     private static final Field TITLE = Reflect.uniqueField(Screen.class, Component.class);
 
     private static final String[] ORDER = {"fov", "difficulty", "options.video", "options.sounds", "options.controls", "options.language",
-            "resourcePack.title", "options.skinCustomisation", "options.accessibility.title", "options.chat.title", "options.telemetry",
-            "options.credits_and_attribution"};
+            "options.resourcepack", "resourcePack", "options.skinCustomisation", "options.accessibility", "options.chat", "options.telemetry",
+            "options.credits"};
 
     /** One entry of the grid: the widget that does the work and its place. */
     private record Entry(AbstractWidget widget, String title, java.util.function.Supplier<String> detail, String key) {
@@ -58,7 +58,6 @@ public final class OptionsSkin {
     }
 
     public static void onScreenInit(ScreenEvent.Init.Post event) {
-        RowButtons.clear();
         ENTRIES.clear();
         laidOut = null;
         if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || event.getScreen().getClass() != OptionsScreen.class) {
@@ -93,7 +92,7 @@ public final class OptionsSkin {
         // The game's own order is replaced by the mockup's; anything unknown (another mod's button) goes last.
         ENTRIES.sort(java.util.Comparator.comparingInt(entry -> {
             for (int i = 0; i < ORDER.length; i++) {
-                if (ORDER[i].equals(entry.key())) {
+                if (entry.key().startsWith(ORDER[i])) {
                     return i;
                 }
             }
@@ -219,11 +218,20 @@ public final class OptionsSkin {
             case "options.video" -> options.renderDistance().get() + " chunks · "
                     + (options.framerateLimit().get() >= 260 ? "FPS max" : options.framerateLimit().get() + " FPS");
             case "options.sounds" -> Math.round(options.getSoundSourceVolume(net.minecraft.sounds.SoundSource.MASTER) * 100.0F) + " %";
-            case "options.language" -> options.languageCode;
-            case "resourcePack.title" -> String.valueOf(options.resourcePacks.size());
-            case "options.chat.title" -> Component.translatable(options.chatVisibility().get().getKey()).getString();
-            case "options.accessibility.title" -> options.narrator().get().getName().getString();
-            default -> "";
+            case "options.language" -> {
+                var language = Minecraft.getInstance().getLanguageManager().getLanguage(options.languageCode);
+                yield language == null ? options.languageCode : language.toString();
+            }
+            default -> {
+                if (key.startsWith("options.resourcepack") || key.startsWith("resourcePack")) {
+                    yield Tr.s("options.packs", options.resourcePacks.size());
+                } else if (key.startsWith("options.chat")) {
+                    yield Component.translatable(options.chatVisibility().get().getKey()).getString();
+                } else if (key.startsWith("options.accessibility")) {
+                    yield options.narrator().get().getName().getString();
+                }
+                yield "";
+            }
         };
     }
 
