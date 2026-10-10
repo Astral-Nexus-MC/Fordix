@@ -60,7 +60,7 @@ public final class OptionsSkin {
     public static void onScreenInit(ScreenEvent.Init.Post event) {
         ENTRIES.clear();
         laidOut = null;
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || event.getScreen().getClass() != OptionsScreen.class) {
+        if (!FordixConfig.voidframeScreens() || event.getScreen().getClass() != OptionsScreen.class) {
             return;
         }
         OptionsScreen screen = (OptionsScreen) event.getScreen();

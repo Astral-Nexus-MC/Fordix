@@ -18,7 +18,7 @@ public final class ScreenBackdrop {
 
     public static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
         Screen screen = event.getScreen();
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || screen instanceof TitleScreen || screen instanceof VoidframeScreen) {
+        if (!FordixConfig.voidframeScreens() || screen instanceof TitleScreen || screen instanceof VoidframeScreen) {
             return;
         }
         String name = screen.getClass().getName();

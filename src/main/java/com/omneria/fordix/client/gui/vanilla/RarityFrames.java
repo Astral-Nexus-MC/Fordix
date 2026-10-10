@@ -23,7 +23,7 @@ public final class RarityFrames {
 
     /** Containers: after slots and labels, already translated to the container's top-left corner. */
     public static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (!FordixConfig.voidframeScreens()) {
             return;
         }
         AbstractContainerScreen<?> screen = event.getContainerScreen();

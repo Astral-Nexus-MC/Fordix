@@ -51,7 +51,7 @@ public final class TooltipStyle {
     }
 
     public static void onItemTooltip(ItemTooltipEvent event) {
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (!FordixConfig.voidframeScreens()) {
             return;
         }
         ItemStack stack = event.getItemStack();

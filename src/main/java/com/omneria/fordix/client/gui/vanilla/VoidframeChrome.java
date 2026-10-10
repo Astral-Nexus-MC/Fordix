@@ -103,7 +103,7 @@ public final class VoidframeChrome {
     }
 
     public static void onTooltipColor(RenderTooltipEvent.Color event) {
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (!FordixConfig.voidframeScreens()) {
             return;
         }
         event.setBackground(FordixPalette.TOOLTIP_FILL);

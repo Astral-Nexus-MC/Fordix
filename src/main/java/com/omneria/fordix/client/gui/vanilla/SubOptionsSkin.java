@@ -61,7 +61,7 @@ public final class SubOptionsSkin {
     public static void onScreenInit(ScreenEvent.Init.Post event) {
         laidOut = null;
         Screen screen = event.getScreen();
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || !SCREENS.contains(screen.getClass())) {
+        if (!FordixConfig.voidframeScreens() || !SCREENS.contains(screen.getClass())) {
             return;
         }
         if (screen instanceof StatsScreen) {

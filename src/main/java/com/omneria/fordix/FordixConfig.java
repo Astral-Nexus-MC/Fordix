@@ -18,7 +18,6 @@ import java.util.Map;
  */
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
-    public static final ForgeConfigSpec.BooleanValue VOIDFRAME_VANILLA_SCREENS;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_CHAT;
     public static final ForgeConfigSpec.BooleanValue VOIDFRAME_TOOLTIPS;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
@@ -57,9 +56,6 @@ public final class FordixConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
-        VOIDFRAME_VANILLA_SCREENS = builder
-                .comment("Draw vanilla container screens (inventory, chests, furnaces...) in the Fordix Voidframe style.")
-                .define("voidframeVanillaScreens", true);
         VOIDFRAME_CHAT = builder
                 .comment("Replace the chat with the Voidframe one: tabs, player heads, times and a styled text field.")
                 .define("voidframeChat", true);
@@ -219,6 +215,11 @@ public final class FordixConfig {
     }
 
     // ---- imposed on every player: no option, the HUD works this way
+
+    /** The game's own screens (pause, options, containers, tooltips frames, death...) are always drawn in Voidframe: no option, a stale client file cannot turn them off. */
+    public static boolean voidframeScreens() {
+        return true;
+    }
 
     /** The Voidframe HUD is always on. */
     public static boolean voidframeHud() {

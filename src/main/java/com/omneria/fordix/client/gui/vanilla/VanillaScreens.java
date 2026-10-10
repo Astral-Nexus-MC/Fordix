@@ -44,7 +44,7 @@ public final class VanillaScreens {
     }
 
     public static void onScreenOpening(ScreenEvent.Opening event) {
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (!FordixConfig.voidframeScreens()) {
             return;
         }
         Screen replacement = replacementFor(event.getNewScreen());

@@ -21,8 +21,7 @@ import java.util.Optional;
  * Vanilla screens that Fordix doesn't redraw (the recipe book, loom, cartography table, vanilla buttons) draw from
  * texture atlases. Their grey pixels are recolored with the current theme and registered
  * over the vanilla textures, so those screens follow the Voidframe look without being
- * reimplemented. Redone after every resource reload and every theme change; switching
- * "voidframeVanillaScreens" off puts the vanilla textures back.
+ * reimplemented. Redone after every resource reload and every theme change.
  */
 public final class TextureRecolor {
     /** A texture and the rows of it to recolor (the rest is left as vanilla drew it). */
@@ -43,7 +42,6 @@ public final class TextureRecolor {
             // The tiled backdrop of the options, world list and mod list screens.
             new Target(new ResourceLocation("textures/gui/options_background.png"), 0, Integer.MAX_VALUE, true),
             // Header behind the tabs of the create-world screen, and the tab buttons themselves.
-            new Target(new ResourceLocation("textures/gui/tab_header_background.png"), 0, Integer.MAX_VALUE, true),
             new Target("textures/gui/tab_button.png"),
             new Target("textures/gui/container/loom.png"),
             new Target("textures/gui/container/cartography_table.png"),
@@ -82,7 +80,7 @@ public final class TextureRecolor {
             return;
         }
         try {
-            if (FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()
+            if (FordixConfig.voidframeScreens()
                     && !(minecraft.getTextureManager().getTexture(TARGETS.get(TARGETS.size() - 1).location()) instanceof DynamicTexture)) {
                 apply(minecraft);
             }
@@ -97,7 +95,7 @@ public final class TextureRecolor {
         }
         boolean voidframe;
         try {
-            voidframe = FordixConfig.VOIDFRAME_VANILLA_SCREENS.get();
+            voidframe = FordixConfig.voidframeScreens();
         } catch (IllegalStateException notLoadedYet) {
             return;
         }

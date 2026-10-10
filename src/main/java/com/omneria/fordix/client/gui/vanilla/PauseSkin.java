@@ -51,7 +51,7 @@ public final class PauseSkin {
 
     public static void onScreenInit(ScreenEvent.Init.Post event) {
         laidOut = null;
-        if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || event.getScreen().getClass() != PauseScreen.class) {
+        if (!FordixConfig.voidframeScreens() || event.getScreen().getClass() != PauseScreen.class) {
             return;
         }
         AbstractWidget back = null;
@@ -178,7 +178,7 @@ public final class PauseSkin {
 
     /** Drawn right after the dimmed world and before the buttons: the shade, the column, the heading and the session card. */
     public static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
-        if (event.getScreen() != laidOut || !FordixConfig.VOIDFRAME_VANILLA_SCREENS.get()) {
+        if (event.getScreen() != laidOut || !FordixConfig.voidframeScreens()) {
             return;
         }
         GuiGraphics g = event.getGuiGraphics();
