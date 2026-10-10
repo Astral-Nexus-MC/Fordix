@@ -5,7 +5,7 @@ le construit et comment on le fait évoluer. **Toute production d'interface (éc
 respecter** ; toute évolution du langage visuel commence par une modification de ce document. Il sert aussi de base de départ
 à Voidframe 3 (voir la section 15).
 
-- Version du document : **2.0** (octobre 2026, mod Fordix 0.1.69).
+- Version du document : **2.0** (octobre 2026, mod Fordix 0.1.70).
 - Public : développeurs du mod, intégrateurs du serveur Astral Nexus, toute personne ou assistant qui produit de l'interface.
 - Convention : **DOIT** = obligatoire, **DEVRAIT** = attendu sauf raison écrite, **PEUT** = libre.
 - Maquettes de référence (privées, à rouvrir avant tout travail visuel) :

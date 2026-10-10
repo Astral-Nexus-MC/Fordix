@@ -534,6 +534,6 @@
     "fordix.death.items": "Items on the ground: %s",
     "fordix.death.items.gone": "Items gone",
     "fordix.inv.armor": "Armor",
-    "fordix.inv.xp": "Experience",
+    "fordix.inv.xp": "XP",
     "fordix.inv.level": "level %s"
 }

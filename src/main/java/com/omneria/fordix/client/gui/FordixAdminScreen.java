@@ -138,7 +138,7 @@ public class FordixAdminScreen extends FordixScreen {
         switch (tab) {
             case TAB_NOTIFY -> {
                 int next = initForm(x, y, inner);
-                addRenderableWidget(new FordixButton(x, next, 130, 18, Tr.c("admin.send"), this::sendNotification));
+                addRenderableWidget(new FordixButton(x, next, 130, 18, Tr.c("admin.send"), this::sendNotification).kind(Glass.Kind.PRIMARY));
             }
             case TAB_SCHEDULE -> initSchedule(x, y, inner);
             case TAB_TEMPLATES -> initTemplates(x, y, inner);
