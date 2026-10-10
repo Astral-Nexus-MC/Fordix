@@ -574,6 +574,11 @@ public final class FordixClient {
         }
 
         @SubscribeEvent
+        static void onContainerBackground(ContainerScreenEvent.Render.Background event) {
+            RarityFrames.onContainerBackground(event);
+        }
+
+        @SubscribeEvent
         static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
             RarityFrames.onContainerForeground(event);
             VoidframeChrome.onContainerForeground(event);

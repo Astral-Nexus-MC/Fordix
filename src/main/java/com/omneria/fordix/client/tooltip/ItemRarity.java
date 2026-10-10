@@ -24,7 +24,7 @@ public final class ItemRarity {
     private ItemRarity() {
     }
 
-    private record Resolved(String label, int color, boolean notable) {
+    private record Resolved(String label, int color, boolean notable, int rank) {
     }
 
     /** Opaque ARGB color of the stack's rarity. */
@@ -34,6 +34,11 @@ public final class ItemRarity {
 
     public static String label(ItemStack stack) {
         return resolve(stack).label();
+    }
+
+    /** 0 for a common item, up to 4 for a legendary one: what the slot's background and its movement follow. */
+    public static int rank(ItemStack stack) {
+        return stack.isEmpty() ? 0 : resolve(stack).rank();
     }
 
     /** Commons stay unmarked: a frame on every plain item would drown the rare ones. */
@@ -57,7 +62,7 @@ public final class ItemRarity {
         Optional<RarityTier> ruled = ServerRarities.tierOf(stack.getItem());
         if (ruled.isPresent() && !(stack.getItem() instanceof EnchantedBookItem)) {
             RarityTier tier = ruled.get().bump(EnchantPower.tiersAdded(EnchantPower.score(enchantmentsOf(stack))));
-            return new Resolved(labelOf(tier.name()), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON);
+            return new Resolved(labelOf(tier.name()), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON, tier.ordinal());
         }
         Rarity rarity = stack.getRarity();
         Integer color = RarityPalette.colorOf(rarity.name());
@@ -65,7 +70,10 @@ public final class ItemRarity {
             Integer own = rarity.color.getColor();
             color = own == null ? RarityPalette.COMMON : 0xFF000000 | own;
         }
-        return new Resolved(labelOf(rarity.name()), color, !"COMMON".equals(rarity.name()));
+        RarityTier known = RarityTier.fromName(rarity.name());
+        int rank = known != null ? known.ordinal() : rarity.name().toUpperCase(java.util.Locale.ROOT).contains("LEGEND") ? 4
+                : "COMMON".equals(rarity.name()) ? 0 : 2;
+        return new Resolved(labelOf(rarity.name()), color, !"COMMON".equals(rarity.name()), rank);
     }
 
     private static List<EnchantPower.Entry> enchantmentsOf(ItemStack stack) {
