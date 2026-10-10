@@ -51,7 +51,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -70,7 +70,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -90,7 +90,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -109,7 +109,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -129,7 +129,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -147,7 +147,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -165,7 +165,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -183,7 +183,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -227,7 +227,7 @@ public final class VoidframeScreens {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
         }
     }
 

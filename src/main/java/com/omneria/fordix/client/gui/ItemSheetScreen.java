@@ -80,7 +80,7 @@ public final class ItemSheetScreen extends FordixScreen {
             String label = this.font.plainSubstrByWidth(guide.label(), 140);
             addRenderableWidget(new FordixButton(x, by, 150, 18, Component.literal(label), () -> GuideActions.run(guide, sheet.stack())));
         }
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, by, 70, 18, Tr.c("common.back"), this::onClose));
+        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, by, 70, 18, Tr.c("common.back"), this::onClose).kind(Glass.Kind.PRIMARY));
         if (sheet.makes().size() > 1) {
             addRenderableWidget(new FordixButton(left + PADDING + 150, top + 62, 16, 14, Component.literal("<"),
                     () -> recipeIndex = (recipeIndex + sheet.makes().size() - 1) % sheet.makes().size()));
@@ -99,7 +99,8 @@ public final class ItemSheetScreen extends FordixScreen {
         int top = panel.getY();
         int right = panel.getX() + panelWidth - PADDING;
 
-        // Header: big icon, name, id and mod.
+        // Header: big icon in a well, name, id and mod.
+        Glass.well(g, left - 2, top + 6, 36, 36);
         g.pose().pushPose();
         g.pose().translate(left, top + 8, 0);
         g.pose().scale(2, 2, 1);
@@ -107,12 +108,12 @@ public final class ItemSheetScreen extends FordixScreen {
         g.pose().popPose();
         g.drawString(this.font, sheet.name(), left + 40, top + 10, FordixPalette.TEXT_BRIGHT, false);
         g.drawString(this.font, sheet.mod() + " - " + sheet.id(), left + 40, top + 22, FordixPalette.TEXT, false);
-        g.fill(left, top + 42, right, top + 43, FordixPalette.BEVEL_HIGHLIGHT);
+        Glass.rule(g, left, top + 42, right - left);
         hit(left, top + 8, 32, 32, sheet.stack(), mouseX, mouseY, false);
 
         // Left column: how to make it.
         int columnWidth = (right - left) / 2 - 6;
-        g.drawString(this.font, Tr.s("sheet.make"), left, top + 48, FordixPalette.ACCENT, false);
+        Glass.label(g, this.font, Tr.s("sheet.make"), left, top + 48);
         List<ItemFacts.RecipeView> makes = sheet.makes();
         if (makes.isEmpty()) {
             g.drawString(this.font, Tr.s("sheet.nomake"), left, top + 66, FordixPalette.TEXT, false);
@@ -125,7 +126,7 @@ public final class ItemSheetScreen extends FordixScreen {
 
         // Right column: figures.
         int fx = left + columnWidth + 12;
-        g.drawString(this.font, Tr.s("sheet.facts"), fx, top + 48, FordixPalette.ACCENT, false);
+        Glass.label(g, this.font, Tr.s("sheet.facts"), fx, top + 48);
         int fy = top + 62;
         for (ItemFacts.Fact fact : sheet.facts()) {
             if (fy > top + 150) {
@@ -144,8 +145,8 @@ public final class ItemSheetScreen extends FordixScreen {
         } else {
             // Uses.
             int uy = top + 156;
-            g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
-            g.drawString(this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy, FordixPalette.ACCENT, false);
+            g.fill(left, uy - 4, right, uy - 3, 0x20FFFFFF);
+            Glass.label(g, this.font, Tr.s(sheet.uses().isEmpty() ? "sheet.uses_none" : "sheet.uses"), left, uy);
             int shown = 0;
             for (ItemStack use : sheet.uses()) {
                 int column = shown % USES_PER_ROW;
@@ -172,7 +173,7 @@ public final class ItemSheetScreen extends FordixScreen {
     }
 
     private void drawWiki(GuiGraphics g, int left, int uy, int right, int mouseX, int mouseY) {
-        g.fill(left, uy - 4, right, uy - 3, FordixPalette.BEVEL_HIGHLIGHT);
+        g.fill(left, uy - 4, right, uy - 3, 0x20FFFFFF);
         String path = sheet.id().substring(sheet.id().indexOf(':') + 1);
         String namespace = sheet.id().contains(":") ? sheet.id().substring(0, sheet.id().indexOf(':')) : "minecraft";
         WikiAnswers.Page page = ClientWiki.pageFor(namespace, path, sheet.name());
@@ -212,7 +213,7 @@ public final class ItemSheetScreen extends FordixScreen {
         for (int i = 0; i < view.cells().size(); i++) {
             int cx = x + (i % view.columns()) * SLOT;
             int cy = y + (i / view.columns()) * SLOT;
-            g.fill(cx, cy, cx + SLOT - 1, cy + SLOT - 1, FordixPalette.SLOT_FILL);
+            Glass.well(g, cx, cy, SLOT - 1, SLOT - 1);
             List<ItemStack> options = view.cells().get(i);
             if (!options.isEmpty()) {
                 ItemStack stack = options.get((int) (tick % options.size()));
@@ -225,7 +226,7 @@ public final class ItemSheetScreen extends FordixScreen {
         g.drawString(this.font, "->", ax, ay, FordixPalette.ACCENT, false);
         int rx = ax + 18;
         int ry = y + (view.rows() * SLOT) / 2 - SLOT / 2;
-        g.fill(rx, ry, rx + SLOT - 1, ry + SLOT - 1, FordixPalette.SLOT_FILL);
+        Glass.well(g, rx, ry, SLOT - 1, SLOT - 1);
         g.renderItem(view.result(), rx + 1, ry + 1);
         g.renderItemDecorations(this.font, view.result(), rx + 1, ry + 1);
         hit(rx, ry, SLOT - 1, SLOT - 1, view.result(), mouseX, mouseY, false);

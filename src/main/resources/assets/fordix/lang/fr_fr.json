@@ -517,5 +517,15 @@
     "fordix.wiki.source": "Source : %s · %s",
     "fordix.wiki.title": "Wiki",
     "fordix.wiki.unknown": "Wiki introuvable",
-    "fordix.wiki.zoom_close": "Cliquez ou appuyez sur Échap pour fermer"
+    "fordix.wiki.zoom_close": "Cliquez ou appuyez sur Échap pour fermer",
+    "fordix.pause.heading": "Pause",
+    "fordix.pause.session": "Session",
+    "fordix.pause.day": "Jour %s",
+    "fordix.pause.solo": "Solo",
+    "fordix.pause.online": "En ligne",
+    "fordix.death.heading": "Décès",
+    "fordix.death.hardcore": "Hardcore",
+    "fordix.death.score": "Score",
+    "fordix.death.level": "Niveau",
+    "fordix.death.place": "Lieu"
 }

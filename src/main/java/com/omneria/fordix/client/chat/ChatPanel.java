@@ -11,6 +11,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
+import com.omneria.fordix.client.gui.widget.FieldBox;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -282,7 +283,7 @@ public final class ChatPanel {
         scroll = 0;
         ChatLog.markRead(selected);
         query = "";
-        search = new EditBox(Minecraft.getInstance().font, 0, 0, SEARCH_MIN_WIDTH, ChatLayout.TABS_HEIGHT, Tr.c("chat.search"));
+        search = new FieldBox(Minecraft.getInstance().font, 0, 0, SEARCH_MIN_WIDTH, ChatLayout.TABS_HEIGHT, Tr.c("chat.search"));
         search.setBordered(false);
         search.setMaxLength(60);
         search.setHint(Tr.c("chat.search").withStyle(style -> style.withColor(TIME_COLOR)));

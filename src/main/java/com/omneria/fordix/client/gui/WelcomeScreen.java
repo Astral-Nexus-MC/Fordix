@@ -71,7 +71,7 @@ public class WelcomeScreen extends FordixScreen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawString(this.font, this.title, left + PADDING, top + 9, FordixPalette.ACCENT, false);
+        Glass.title(guiGraphics, this.font, this.title.getString(), left + PADDING, top + 9);
         long done = steps.stream().filter(ClientboundWelcomePayload.Step::done).count();
         float progress = steps.isEmpty() ? 0 : done / (float) steps.size();
         Chevron.draw(guiGraphics, left + PADDING, top + 26, panelWidth - PADDING * 2, 7, true, 3, progress, 0xFF7DFFB0, 0xFF2BB56A, false);
@@ -84,13 +84,17 @@ public class WelcomeScreen extends FordixScreen {
             boolean hover = step.manual() && mouseX >= left + PADDING && mouseX < left + panelWidth - PADDING
                     && mouseY >= y && mouseY < y + ROW - 2;
             if (hover) {
-                guiGraphics.fill(left + PADDING - 2, y, left + panelWidth - PADDING + 2, y + ROW - 2, FordixPalette.BUTTON_FILL);
+                Glass.row(guiGraphics, left + PADDING - 2, y, panelWidth - PADDING * 2 + 4, ROW - 2, false, true);
             }
             int box = 12;
             int by = y + 3;
-            guiGraphics.fill(left + PADDING, by, left + PADDING + box, by + box, step.done() ? FordixPalette.ACCENT : FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(left + PADDING + 1, by + 1, left + PADDING + box - 1, by + box - 1,
-                    step.done() ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.SLOT_FILL);
+            Glass.well(guiGraphics, left + PADDING, by, box, box);
+            if (step.done()) {
+                guiGraphics.fill(left + PADDING, by, left + PADDING + box, by + 1, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+                guiGraphics.fill(left + PADDING, by + box - 1, left + PADDING + box, by + box, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+                guiGraphics.fill(left + PADDING, by + 1, left + PADDING + 1, by + box - 1, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+                guiGraphics.fill(left + PADDING + box - 1, by + 1, left + PADDING + box, by + box - 1, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+            }
             if (step.done()) {
                 guiGraphics.drawString(this.font, "v", left + PADDING + 3, by + 2, FordixPalette.ACCENT, false);
             }

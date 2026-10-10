@@ -1,6 +1,8 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
+import com.omneria.fordix.client.hud.HudTokens;
 import com.omneria.fordix.client.gui.widget.Panel;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,50 +41,55 @@ public final class VoidframeDraw {
         }
     }
 
-    /** Lighter strip behind the title row, ending just above the first row of slots. */
+    /** The accent rule under the title row, fading to the right: container titles sit on the glass, not on a band. */
     public static void titleBand(GuiGraphics guiGraphics, int left, int top, int width) {
-        guiGraphics.fill(left + 2, top + 2, left + width - 2, top + 16, FordixPalette.TITLE_BAND);
-        guiGraphics.fill(left + 2, top + 15, left + width - 2, top + 16, FordixPalette.TITLE_RULE);
+        Glass.rule(guiGraphics, left + 6, top + 15, width - 12);
     }
 
-    /** A recessed rectangle: dark along top/left, light along bottom/right - the inverse of a panel's bevel. */
+    /** A recessed rectangle: see {@link Glass#well}. */
     public static void well(GuiGraphics guiGraphics, int x, int y, int width, int height) {
-        guiGraphics.fill(x, y, x + width, y + height, FordixPalette.SLOT_FILL);
-        guiGraphics.fill(x, y, x + width, y + 1, FordixPalette.BEVEL_SHADOW);
-        guiGraphics.fill(x, y, x + 1, y + height, FordixPalette.BEVEL_SHADOW);
-        guiGraphics.fill(x, y + height - 1, x + width, y + height, FordixPalette.BEVEL_HIGHLIGHT);
-        guiGraphics.fill(x + width - 1, y, x + width, y + height, FordixPalette.BEVEL_HIGHLIGHT);
+        Glass.well(guiGraphics, x, y, width, height);
     }
 
-    /** A right-pointing arrow: the full outline as a track, then {@code filled} pixels of it in the accent color. */
+    /** A right-pointing arrow: the full outline as a track, then {@code filled} pixels of it as a glossy accent bar. */
     public static void arrow(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled) {
         for (ArrowShape.Span span : ArrowShape.spans(width, height, width)) {
             fillSpan(guiGraphics, x, y, span, FordixPalette.PROGRESS_TRACK);
         }
+        int top = HudTokens.mix(FordixPalette.ACCENT, 0xFFFFFFFF, 0.3F);
+        int bottom = HudTokens.mix(FordixPalette.ACCENT, 0xFF000000, 0.25F);
         for (ArrowShape.Span span : ArrowShape.spans(width, height, filled)) {
-            fillSpan(guiGraphics, x, y, span, FordixPalette.ACCENT);
+            float t = height <= 1 ? 0.0F : span.y() / (float) (height - 1);
+            fillSpan(guiGraphics, x, y, span, HudTokens.mix(top, bottom, t));
         }
     }
 
-    /** A furnace fuel gauge: a track that fills from the bottom by {@code filled} pixels. */
+    /** A furnace fuel gauge: a track that fills from the bottom by {@code filled} pixels, bright at the top of the flame. */
     public static void flame(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled) {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
         int clamped = Math.max(0, Math.min(filled, height));
-        guiGraphics.fill(x, y + height - clamped, x + width, y + height, FordixPalette.FLAME);
+        if (clamped > 0) {
+            guiGraphics.fillGradient(x, y + height - clamped, x + width, y + height,
+                    HudTokens.mix(FordixPalette.FLAME, 0xFFFFFFFF, 0.35F), HudTokens.mix(FordixPalette.FLAME, 0xFF000000, 0.3F));
+        }
     }
 
     /** A horizontal gauge filling from the left by {@code filled} pixels. */
     public static void gauge(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled, int color) {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
         int clamped = Math.max(0, Math.min(filled, width));
-        guiGraphics.fill(x, y, x + clamped, y + height, color);
+        if (clamped > 0) {
+            guiGraphics.fillGradient(x, y, x + clamped, y + height, HudTokens.mix(color, 0xFFFFFFFF, 0.3F), color);
+        }
     }
 
     /** A vertical gauge filling downward from the top by {@code filled} pixels. */
     public static void gaugeDown(GuiGraphics guiGraphics, int x, int y, int width, int height, int filled, int color) {
         guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PROGRESS_TRACK);
         int clamped = Math.max(0, Math.min(filled, height));
-        guiGraphics.fill(x, y, x + width, y + clamped, color);
+        if (clamped > 0) {
+            guiGraphics.fillGradient(x, y, x + width, y + clamped, HudTokens.mix(color, 0xFFFFFFFF, 0.3F), color);
+        }
     }
 
     /** A 2px-thick diagonal cross, used where vanilla shows its red "can't do that" X. */
@@ -100,8 +107,14 @@ public final class VoidframeDraw {
         guiGraphics.fill(centerX - 1, centerY - half, centerX + 1, centerY + half, color);
     }
 
+    /** A section label (the inventory heading, a station caption): capitals in a dim tone. */
     public static void label(GuiGraphics guiGraphics, Font font, Component text, int x, int y) {
-        guiGraphics.drawString(font, text, x, y, FordixPalette.TEXT, false);
+        Glass.label(guiGraphics, font, text.getString(), x, y);
+    }
+
+    /** The title of a container: capitals in a light accent. */
+    public static void title(GuiGraphics guiGraphics, Font font, Component text, int x, int y) {
+        Glass.title(guiGraphics, font, text.getString(), x, y);
     }
 
     private static void fillSpan(GuiGraphics guiGraphics, int x, int y, ArrowShape.Span span, int color) {

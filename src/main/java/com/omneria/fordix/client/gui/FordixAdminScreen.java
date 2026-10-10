@@ -9,6 +9,7 @@ import com.omneria.fordix.panel.network.PanelNetwork;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import com.omneria.fordix.client.gui.widget.FieldBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -125,7 +126,7 @@ public class FordixAdminScreen extends FordixScreen {
         for (int i = 0; i < TAB_NAMES.size(); i++) {
             int index = i;
             FordixButton button = new FordixButton(x + i * (tabWidth + 4), top + 22, tabWidth, 18,
-                    Component.literal((tab == i ? "> " : "") + Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index));
+                    Component.literal(Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index)).selected(tab == i);
             addRenderableWidget(button);
         }
         addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Tr.c("common.close"), this::onClose));
@@ -312,8 +313,8 @@ public class FordixAdminScreen extends FordixScreen {
             String[] parts = pageLines.get(index).split("\t", 2);
             String id = parts[0];
             addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18,
-                    Component.literal((id.equals(selectedPage) ? "> " : "") + this.font.plainSubstrByWidth(parts.length > 1 ? parts[1] : id, 100)),
-                    () -> selectPage(id)));
+                    Component.literal(this.font.plainSubstrByWidth(parts.length > 1 ? parts[1] : id, 100)),
+                    () -> selectPage(id)).selected(id.equals(selectedPage)));
         }
         addRenderableWidget(new FordixButton(x, listY + listRows() * 20, 58, 16, Component.literal("▲"), () -> {
             pageListOffset = Math.max(0, pageListOffset - listRows());
@@ -392,11 +393,11 @@ public class FordixAdminScreen extends FordixScreen {
                 break;
             }
             addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18,
-                    Component.literal((index == selectedStep ? "> " : "") + this.font.plainSubstrByWidth(bookSteps.get(index)[0], 100)),
+                    Component.literal(this.font.plainSubstrByWidth(bookSteps.get(index)[0], 100)),
                     () -> {
                         selectedStep = index;
                         rebuildWidgets();
-                    }));
+                    }).selected(index == selectedStep));
         }
         int pagerY = listY + (listRows() - 1) * 20;
         addRenderableWidget(new FordixButton(x, pagerY, 58, 16, Component.literal("▲"), () -> {
@@ -483,7 +484,7 @@ public class FordixAdminScreen extends FordixScreen {
                 break;
             }
             String id = panelIds.get(index);
-            addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18, Component.literal(id.equals(selectedId) ? "> " + id : id), () -> select(id)));
+            addRenderableWidget(new FordixButton(x, listY + i * 20, 120, 18, Component.literal(id), () -> select(id)).selected(id.equals(selectedId)));
         }
         addRenderableWidget(new FordixButton(x, listY + listRows() * 20, 58, 16, Component.literal("▲"), () -> {
             listOffset = Math.max(0, listOffset - listRows());
@@ -585,7 +586,7 @@ public class FordixAdminScreen extends FordixScreen {
     }
 
     private EditBox edit(int x, int y, int width, String hint, String value, int maxLength, java.util.function.Consumer<String> responder) {
-        EditBox box = new EditBox(this.font, x, y, width, 18, Component.literal(hint));
+        EditBox box = new FieldBox(this.font, x, y, width, 18, Component.literal(hint));
         box.setMaxLength(maxLength);
         box.setHint(Component.literal(hint));
         box.setValue(value);
@@ -603,7 +604,7 @@ public class FordixAdminScreen extends FordixScreen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         int x = panel.getX() + PADDING;
         Font font = this.font;
-        guiGraphics.drawString(font, this.title, x, panel.getY() + 8, FordixPalette.ACCENT, false);
+        Glass.title(guiGraphics, font, this.title.getString(), x, panel.getY() + 8);
         int bottom = panel.getY() + panelHeight - 14;
         String status = ClientAdminData.status();
         if (!status.isEmpty()) {
@@ -644,12 +645,12 @@ public class FordixAdminScreen extends FordixScreen {
                 guiGraphics.drawString(font, Tr.s("admin.page.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
             } else {
                 guiGraphics.drawString(font, font.plainSubstrByWidth(Tr.s("admin.page.help"),
-                        panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, FordixPalette.BEVEL_HIGHLIGHT, false);
+                        panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, Glass.dim(), false);
             }
         } else if (tab == TAB_BOOK) {
             int hy = panel.getY() + 48 + 24 + (listRows() - 1) * 20 + 20;
             guiGraphics.drawString(font, Tr.s(selectedStep < 0 ? "admin.book.count_pick" : "admin.book.count", bookSteps.size()), x, hy, FordixPalette.TEXT, false);
-            guiGraphics.drawString(font, Tr.s("admin.book.player"), x + 130, panel.getY() + 48 + 150, FordixPalette.BEVEL_HIGHLIGHT, false);
+            guiGraphics.drawString(font, Tr.s("admin.book.player"), x + 130, panel.getY() + 48 + 150, Glass.dim(), false);
             if (selectedStep >= 0 && selectedStep < bookSteps.size()) {
                 String kind = bookSteps.get(selectedStep)[1];
                 String help = switch (kind) {
@@ -658,7 +659,7 @@ public class FordixAdminScreen extends FordixScreen {
                     case "guides" -> Tr.s("admin.book.help.guides");
                     default -> Tr.s("admin.book.help.manual");
                 };
-                guiGraphics.drawString(font, font.plainSubstrByWidth(help, panelWidth - 150), x + 130, panel.getY() + 48 + 94, FordixPalette.BEVEL_HIGHLIGHT, false);
+                guiGraphics.drawString(font, font.plainSubstrByWidth(help, panelWidth - 150), x + 130, panel.getY() + 48 + 94, Glass.dim(), false);
             }
         } else if (selectedId.isEmpty()) {
             guiGraphics.drawString(font, Tr.s("admin.panel.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);

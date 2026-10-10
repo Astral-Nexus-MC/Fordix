@@ -251,7 +251,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
         this.renderBackground(guiGraphics);
         Panel.draw(guiGraphics, left, top, panelWidth, panelHeight);
         VoidframeDraw.titleBand(guiGraphics, left, top, panelWidth);
-        guiGraphics.drawString(this.font, this.title, left + PAD, top + 5, FordixPalette.ACCENT, false);
+        Glass.title(guiGraphics, this.font, this.title.getString(), left + PAD, top + 5);
 
         drawTabs(guiGraphics, mouseX, mouseY);
         VoidframeDraw.well(guiGraphics, viewX - 1, viewY - 1, viewWidth + 2, viewHeight + 2);
@@ -292,10 +292,10 @@ public class FordixAdvancementsScreen extends FordixScreen {
             int width = tabWidths[i];
             boolean active = tab == selected;
             boolean hover = mouseX >= x && mouseX < x + width && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT;
-            guiGraphics.fill(x, tabsY, x + width - 2, tabsY + TAB_HEIGHT,
-                    active || hover ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL);
-            guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + width - 2, tabsY + TAB_HEIGHT,
-                    active ? FordixPalette.ACCENT : FordixPalette.BEVEL_SHADOW);
+            Glass.row(guiGraphics, x, tabsY, width - 2, TAB_HEIGHT, active, hover);
+            if (active) {
+                guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + width - 2, tabsY + TAB_HEIGHT, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+            }
             guiGraphics.renderFakeItem(tab.root.getDisplay().getIcon(), x + 4, tabsY + 3);
             String title = ModNames.of(tab.root.getId().getNamespace());
             guiGraphics.drawString(this.font, title, x + 23, tabsY + 7,
@@ -383,7 +383,14 @@ public class FordixAdvancementsScreen extends FordixScreen {
         int endX = offsetX + to.worldX() + NODE / 2;
         int endY = offsetY + to.worldY() + NODE / 2;
         int middle = (startX + endX) / 2;
-        int color = isDone(to) ? FordixPalette.ACCENT : FordixPalette.BEVEL_HIGHLIGHT;
+        boolean done = isDone(to);
+        int color = done ? FordixPalette.ACCENT : 0x40FFFFFF;
+        if (done) {
+            int glow = 0x30000000 | (FordixPalette.ACCENT & 0xFFFFFF);
+            guiGraphics.fill(Math.min(startX, middle), startY - 2, Math.max(startX, middle) + 2, startY + 2, glow);
+            guiGraphics.fill(middle - 2, Math.min(startY, endY), middle + 2, Math.max(startY, endY) + 1, glow);
+            guiGraphics.fill(Math.min(middle, endX), endY - 2, Math.max(middle, endX) + 1, endY + 2, glow);
+        }
         guiGraphics.fill(Math.min(startX, middle), startY - 1, Math.max(startX, middle) + 1, startY + 1, color);
         guiGraphics.fill(middle - 1, Math.min(startY, endY), middle + 1, Math.max(startY, endY) + 1, color);
         guiGraphics.fill(Math.min(middle, endX), endY - 1, Math.max(middle, endX) + 1, endY + 1, color);
@@ -392,10 +399,13 @@ public class FordixAdvancementsScreen extends FordixScreen {
     private void drawNode(GuiGraphics guiGraphics, Node node, int x, int y, boolean hover) {
         boolean done = isDone(node);
         int frame = frameColor(node.display().getFrame());
-        int border = hover ? FordixPalette.TEXT_BRIGHT : done ? frame : FordixPalette.BEVEL_HIGHLIGHT;
+        int border = hover ? FordixPalette.TEXT_BRIGHT : done ? frame : 0x40FFFFFF;
+        if (done) {
+            guiGraphics.fill(x - 2, y - 2, x + NODE + 2, y + NODE + 2, 0x28000000 | (frame & 0xFFFFFF));
+        }
         guiGraphics.fill(x, y, x + NODE, y + NODE, border);
-        guiGraphics.fill(x + 2, y + 2, x + NODE - 2, y + NODE - 2,
-                done ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.SLOT_FILL);
+        guiGraphics.fillGradient(x + 1, y + 1, x + NODE - 1, y + NODE - 1,
+                done ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL, FordixPalette.SLOT_FILL);
         guiGraphics.renderFakeItem(node.display().getIcon(), x + 5, y + 5);
         if (!done) {
             guiGraphics.fill(x + 2, y + 2, x + NODE - 2, y + NODE - 2, 0x99000000 | (FordixPalette.SLOT_FILL & 0xFFFFFF));

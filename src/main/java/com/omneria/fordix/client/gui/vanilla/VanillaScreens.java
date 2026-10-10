@@ -60,6 +60,9 @@ public final class VanillaScreens {
         }
         Inventory inventory = player.getInventory();
         Class<?> type = screen.getClass();
+        if (type == net.minecraft.client.gui.screens.DeathScreen.class) {
+            return VoidframeDeathScreen.replacing((net.minecraft.client.gui.screens.DeathScreen) screen);
+        }
         if (type == ContainerScreen.class) {
             ContainerScreen vanilla = (ContainerScreen) screen;
             return new VoidframeScreens.Chest(vanilla.getMenu(), inventory, vanilla.getTitle());

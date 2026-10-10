@@ -2,7 +2,7 @@ package com.omneria.fordix.client.guide;
 
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.FordixConfig;
-import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
 import com.omneria.fordix.client.gui.vanilla.VoidframeScreens;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -101,6 +101,8 @@ public final class GuideTabs {
             follow();
         }
 
+        private final Glass.Fade fade = new Glass.Fade();
+
         /** Re-anchors to the inventory panel every frame, since the recipe book moves it. */
         private void follow() {
             // The Voidframe inventory already counts the column in its width; vanilla's doesn't.
@@ -121,13 +123,7 @@ public final class GuideTabs {
         protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             int x = getX();
             int y = getY();
-            int fill = isHoveredOrFocused() ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.PANEL_FILL;
-            guiGraphics.fill(x, y, x + SIZE, y + SIZE, fill);
-            guiGraphics.fill(x, y, x + SIZE, y + 1, FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(x + SIZE - 1, y, x + SIZE, y + SIZE, FordixPalette.BEVEL_SHADOW);
-            guiGraphics.fill(x, y + SIZE - 1, x + SIZE, y + SIZE, FordixPalette.BEVEL_SHADOW);
-            // Accent strip on the edge facing the inventory, lit on hover.
-            guiGraphics.fill(x, y, x + 2, y + SIZE, isHoveredOrFocused() ? FordixPalette.ACCENT : FordixPalette.BEVEL_HIGHLIGHT);
+            Glass.button(guiGraphics, x, y, SIZE, SIZE, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
             guiGraphics.renderItem(icon, x + 3, y + 2);
         }
 

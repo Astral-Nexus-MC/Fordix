@@ -12,6 +12,7 @@ import com.omneria.fordix.client.gui.FordixSettingsScreen;
 import com.omneria.fordix.client.gui.vanilla.RarityFrames;
 import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
+import com.omneria.fordix.client.gui.vanilla.PauseSkin;
 import com.omneria.fordix.client.gui.vanilla.VoidframeButtons;
 import com.omneria.fordix.client.gui.vanilla.VoidframeChrome;
 import com.omneria.fordix.client.gui.vanilla.VoidframeDurability;
@@ -324,17 +325,27 @@ public final class FordixClient {
         static void onEffectsOverlayPre(RenderGuiOverlayEvent.Pre event) {
             InfoHud.onOverlayPre(event);
             PlayerListHud.onOverlayPre(event);
+            com.omneria.fordix.client.hud.ScoreboardHud.onOverlayPre(event);
+            com.omneria.fordix.client.hud.ActionBarHud.onOverlayPre(event);
         }
 
         @SubscribeEvent
         static void onScreenInit(ScreenEvent.Init.Post event) {
-            VoidframeButtons.onScreenInit(event);
             InventoryTools.onScreenInit(event);
             GuideTabs.onScreenInit(event);
         }
 
+        /** After every other handler has added or moved its widgets (the pause menu, the guide tabs): lay out and skin them. */
+        @SubscribeEvent(priority = EventPriority.LOW)
+        static void onScreenInitSkin(ScreenEvent.Init.Post event) {
+            PauseSkin.onScreenInit(event);
+            VoidframeButtons.onScreenInit(event);
+        }
+
         @SubscribeEvent
         static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
+            com.omneria.fordix.client.gui.vanilla.ScreenBackdrop.onBackgroundRendered(event);
+            PauseSkin.onBackgroundRendered(event);
             VoidframeChrome.onBackgroundRendered(event);
         }
 
@@ -482,6 +493,11 @@ public final class FordixClient {
         }
 
         @SubscribeEvent
+        static void onSystemChat(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
+            com.omneria.fordix.client.hud.ActionBarHud.onChat(event);
+        }
+
+        @SubscribeEvent
         static void onItemTooltip(ItemTooltipEvent event) {
             TooltipStyle.onItemTooltip(event);
         }
@@ -564,9 +580,10 @@ public final class FordixClient {
         }
     }
 
-    /** Vanilla-styled pause-menu button carrying a small "New" flag. */
+    /** Glass pause-menu button carrying a small "New" flag. */
     private static final class GuidesPauseButton extends net.minecraft.client.gui.components.Button {
         private final boolean unread;
+        private final com.omneria.fordix.client.gui.Glass.Fade fade = new com.omneria.fordix.client.gui.Glass.Fade();
 
         GuidesPauseButton(int x, int y, int width, boolean unread, Runnable onPress) {
             super(x, y, width, 20, Tr.c("guides.button"), b -> onPress.run(), DEFAULT_NARRATION);
@@ -575,14 +592,16 @@ public final class FordixClient {
 
         @Override
         public void renderWidget(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float pt) {
-            super.renderWidget(g, mx, my, pt);
+            var font = Minecraft.getInstance().font;
+            com.omneria.fordix.client.gui.Glass.button(g, getX(), getY(), getWidth(), getHeight(),
+                    com.omneria.fordix.client.gui.Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
+            g.drawCenteredString(font, getMessage(), getX() + getWidth() / 2, getY() + (getHeight() - 8) / 2,
+                    com.omneria.fordix.client.gui.Glass.buttonText(com.omneria.fordix.client.gui.Glass.Kind.NORMAL, true));
             if (unread) {
-                var font = Minecraft.getInstance().font;
-                int w = font.width(Tr.s("guides.new_badge")) + 6;
-                int x = getX() + getWidth() - w - 4;
-                int y = getY() + 5;
-                g.fill(x, y, x + w, y + 10, com.omneria.fordix.client.gui.FordixPalette.ACCENT | 0xFF000000);
-                g.drawString(font, Tr.s("guides.new_badge"), x + 3, y + 1, 0xFF101018, false);
+                String badge = Tr.s("guides.new_badge");
+                int w = font.width(badge) + 10;
+                com.omneria.fordix.client.gui.Glass.pill(g, font, badge, getX() + getWidth() - w - 4, getY() + (getHeight() - 11) / 2,
+                        com.omneria.fordix.client.gui.FordixPalette.ACCENT);
             }
         }
     }

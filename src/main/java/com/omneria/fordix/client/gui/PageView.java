@@ -196,9 +196,7 @@ public final class PageView {
             boolean hover = mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + CONTENTS_ROW;
             String text = font.plainSubstrByWidth(heading.text(), width - indent - 6);
             graphics.drawString(font, text, x + 4 + indent, y + 1, hover ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
-            if (hover) {
-                graphics.fill(x, y, x + 2, y + CONTENTS_ROW - 1, FordixPalette.ACCENT);
-            }
+            Glass.row(graphics, x, y, width, CONTENTS_ROW - 1, hover, false);
             y += CONTENTS_ROW;
         }
     }
@@ -206,7 +204,7 @@ public final class PageView {
     private void drawPicture(GuiGraphics graphics, int x, int y, Placed item) {
         ClientWiki.Picture picture = ClientWiki.picture(item.block().action());
         if (picture == null) {
-            graphics.fill(x, y, x + 60, y + item.pictureHeight(), FordixPalette.BUTTON_FILL);
+            Glass.well(graphics, x, y, 60, item.pictureHeight());
             graphics.drawString(font, Tr.s("wiki.loading"), x + 6, y + item.pictureHeight() / 2 - 4, FordixPalette.TEXT, false);
             return;
         }
@@ -228,10 +226,9 @@ public final class PageView {
 
     private void drawButton(GuiGraphics graphics, int x, int y, int w, String label, int mouseX, int mouseY, boolean link) {
         boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + 16;
-        graphics.fill(x, y, x + w, y + 16, hover ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL);
-        graphics.fill(x, y + 15, x + w, y + 16, hover ? FordixPalette.ACCENT : FordixPalette.BEVEL_SHADOW);
+        Glass.button(graphics, x, y, w, 16, link ? Glass.Kind.NORMAL : Glass.Kind.NORMAL, hover ? 1.0F : 0.0F, true);
         if (link) {
-            graphics.fill(x, y, x + 2, y + 16, FordixPalette.ACCENT);
+            graphics.fill(x + 1, y + 2, x + 3, y + 14, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
         }
         graphics.drawCenteredString(font, font.plainSubstrByWidth(label, w - 8), x + w / 2, y + 4, FordixPalette.TEXT_BRIGHT);
     }

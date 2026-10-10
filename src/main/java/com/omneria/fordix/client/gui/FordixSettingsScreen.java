@@ -114,7 +114,7 @@ public class FordixSettingsScreen extends FordixScreen {
 
         int by = panelY + PANEL_HEIGHT - FOOTER + 7;
         addRenderableWidget(new FordixButton(panelX + PADDING, by, 130, 20, Tr.c("settings.reset_tab"), this::resetTab));
-        addRenderableWidget(new FordixButton(panelX + PANEL_WIDTH - PADDING - 100, by, 100, 20, Tr.c("common.close"), this::onClose));
+        addRenderableWidget(new FordixButton(panelX + PANEL_WIDTH - PADDING - 100, by, 100, 20, Tr.c("common.close"), this::onClose).kind(Glass.Kind.PRIMARY));
     }
 
     // ---- the tabs

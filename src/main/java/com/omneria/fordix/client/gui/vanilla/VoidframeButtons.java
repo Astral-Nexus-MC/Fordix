@@ -1,6 +1,7 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -30,13 +31,37 @@ public final class VoidframeButtons {
     private VoidframeButtons() {
     }
 
+    /** Screens of the game itself (menus, options, pause): their plain buttons take the glass look; other mods' screens keep theirs. */
+    private static boolean isGameScreen(net.minecraft.client.gui.screens.Screen screen) {
+        String name = screen.getClass().getName();
+        return name.startsWith("net.minecraft.client.gui.screens.") || name.startsWith("net.minecraftforge.client.gui.");
+    }
+
+    /** The main action of a screen (done, back to game, respawn, play) gets the accent button, destructive ones the red edge. */
+    static Glass.Kind kindOf(Button original) {
+        if (original.getMessage().getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents translatable) {
+            String key = translatable.getKey();
+            if (key.equals("gui.done") || key.equals("menu.returnToGame") || key.equals("deathScreen.respawn")
+                    || key.equals("selectWorld.select") || key.equals("gui.proceed")) {
+                return Glass.Kind.PRIMARY;
+            }
+            if (key.equals("menu.returnToMenu") || key.equals("menu.disconnect") || key.equals("selectWorld.delete")) {
+                return Glass.Kind.DANGER;
+            }
+        }
+        return Glass.Kind.NORMAL;
+    }
+
     public static void onScreenInit(ScreenEvent.Init.Post event) {
-        if (!(event.getScreen() instanceof VoidframeScreen)) {
+        boolean ours = event.getScreen() instanceof VoidframeScreen;
+        if (!ours && !isGameScreen(event.getScreen())) {
             return;
         }
         List<Button> originals = new ArrayList<>();
         for (GuiEventListener listener : event.getListenersList()) {
-            if (listener.getClass() == Button.class || listener.getClass() == ImageButton.class) {
+            // Icon buttons only on our container screens (the recipe book toggle): on the game's own menus they are
+            // language or accessibility icons, which keep their texture.
+            if (listener.getClass() == Button.class || ours && listener.getClass() == ImageButton.class) {
                 originals.add((Button) listener);
             }
         }
@@ -73,18 +98,15 @@ public final class VoidframeButtons {
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
+        private final Glass.Fade fade = new Glass.Fade();
+
         @Override
         protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             int x = getX();
             int y = getY();
             int w = getWidth();
             int h = getHeight();
-            int fill = isHoveredOrFocused() ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL;
-            guiGraphics.fill(x, y, x + w, y + h, fill);
-            guiGraphics.fill(x, y, x + w, y + BEVEL_WIDTH, FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(x, y, x + BEVEL_WIDTH, y + h, FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(x, y + h - BEVEL_WIDTH, x + w, y + h, FordixPalette.BEVEL_SHADOW);
-            guiGraphics.fill(x + w - BEVEL_WIDTH, y, x + w, y + h, FordixPalette.BEVEL_SHADOW);
+            Glass.button(guiGraphics, x, y, w, h, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
             drawTrophy(guiGraphics, x + w / 2, y + h / 2, isHoveredOrFocused());
         }
 
@@ -130,26 +152,22 @@ public final class VoidframeButtons {
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
+        private final Glass.Fade fade = new Glass.Fade();
+
         @Override
         protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
             int x = getX();
             int y = getY();
             int w = getWidth();
             int h = getHeight();
-            int fill = isHoveredOrFocused() ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL;
-            guiGraphics.fill(x, y, x + w, y + h, fill);
-            guiGraphics.fill(x, y, x + w, y + BEVEL_WIDTH, FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(x, y, x + BEVEL_WIDTH, y + h, FordixPalette.BEVEL_HIGHLIGHT);
-            guiGraphics.fill(x, y + h - BEVEL_WIDTH, x + w, y + h, FordixPalette.BEVEL_SHADOW);
-            guiGraphics.fill(x + w - BEVEL_WIDTH, y, x + w, y + h, FordixPalette.BEVEL_SHADOW);
-
+            Glass.Kind kind = VoidframeButtons.kindOf(original);
+            Glass.button(guiGraphics, x, y, w, h, kind, fade.update(active && isHoveredOrFocused()), active);
             if (original instanceof ImageButton) {
                 // Image buttons in these screens are the recipe book toggle: draw a small book glyph.
                 drawBook(guiGraphics, x + w / 2, y + h / 2, isHoveredOrFocused());
             } else {
                 Font font = Minecraft.getInstance().font;
-                int color = active ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT;
-                guiGraphics.drawCenteredString(font, getMessage(), x + w / 2, y + (h - 8) / 2, color);
+                guiGraphics.drawCenteredString(font, getMessage(), x + w / 2, y + (h - 8) / 2, Glass.buttonText(kind, active));
             }
         }
 
@@ -176,6 +194,10 @@ public final class VoidframeButtons {
             visible = original.visible;
             active = original.active;
             setMessage(original.getMessage());
+            net.minecraft.client.gui.components.Tooltip tooltip = original.getTooltip();
+            if (tooltip != getTooltip()) {
+                setTooltip(tooltip);
+            }
         }
 
         @Override

@@ -9,6 +9,7 @@ import com.omneria.fordix.client.gui.widget.FordixButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import com.omneria.fordix.client.gui.widget.FieldBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -100,7 +101,7 @@ public final class InventoryTools {
         int right = container.getGuiLeft() + container.getXSize();
         int y = Math.max(2, container.getGuiTop() - HEIGHT - 2);
         Minecraft minecraft = Minecraft.getInstance();
-        search = new EditBox(minecraft.font, right - SORT_WIDTH - 4 - SEARCH_WIDTH, y, SEARCH_WIDTH, HEIGHT, Tr.c("inventory.search"));
+        search = new FieldBox(minecraft.font, right - SORT_WIDTH - 4 - SEARCH_WIDTH, y, SEARCH_WIDTH, HEIGHT, Tr.c("inventory.search"));
         search.setMaxLength(40);
         search.setBordered(false);
         search.setHint(Tr.c("inventory.search").withStyle(style -> style.withColor(0x8AA0AD)));

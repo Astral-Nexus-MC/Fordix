@@ -60,7 +60,7 @@ public final class EntitySheetScreen extends FordixScreen {
         pageView = new PageView(this.font);
         shownPage = null;
         addRenderableWidget(new FordixButton(panel.getX() + panelWidth - PADDING - 70, panel.getY() + panelHeight - PADDING - 18, 70, 18,
-                Tr.c("common.back"), this::onClose));
+                Tr.c("common.back"), this::onClose).kind(Glass.Kind.PRIMARY));
     }
 
     private String namespace() {
@@ -87,7 +87,7 @@ public final class EntitySheetScreen extends FordixScreen {
         g.drawString(this.font, type.getDescription(), left, top + 10, FordixPalette.TEXT_BRIGHT, false);
         String sub = id + (boss ? "  -  " + Tr.s("entity.boss") : "");
         g.drawString(this.font, sub, left, top + 22, boss ? FordixPalette.ACCENT : FordixPalette.TEXT, false);
-        g.fill(left, top + 36, right, top + 37, FordixPalette.BEVEL_HIGHLIGHT);
+        Glass.rule(g, left, top + 36, right - left);
 
         int listBottom = top + panelHeight - PADDING - 22;
         drawLoot(g, left, top + 42, Math.min(LIST_WIDTH, (right - left) / 2), listBottom, mouseX, mouseY);
@@ -100,7 +100,7 @@ public final class EntitySheetScreen extends FordixScreen {
     }
 
     private void drawLoot(GuiGraphics g, int x, int top, int width, int bottom, int mouseX, int mouseY) {
-        g.drawString(this.font, Tr.s("entity.loot"), x, top, FordixPalette.ACCENT, false);
+        Glass.label(g, this.font, Tr.s("entity.loot"), x, top);
         List<WikiAnswers.Drop> loot = ClientWiki.loot(id);
         int viewTop = top + 14;
         if (loot == null) {
@@ -138,7 +138,7 @@ public final class EntitySheetScreen extends FordixScreen {
             stack = new ItemStack(ForgeRegistries.ITEMS.getValue(key));
             name = stack.getHoverName().getString();
         }
-        g.fill(x, y, x + width, y + ROW - 1, FordixPalette.SLOT_FILL);
+        Glass.card(g, x, y, width, ROW - 1);
         if (!stack.isEmpty()) {
             g.renderItem(stack, x + 1, y + 1);
             if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + ROW - 1) {
@@ -172,7 +172,7 @@ public final class EntitySheetScreen extends FordixScreen {
     }
 
     private void drawPage(GuiGraphics g, int x, int top, int right, int bottom, int mouseX, int mouseY) {
-        g.drawString(this.font, Tr.s(boss ? "entity.fight" : "entity.wiki"), x, top, FordixPalette.ACCENT, false);
+        Glass.label(g, this.font, Tr.s(boss ? "entity.fight" : "entity.wiki"), x, top);
         int viewTop = top + 14;
         if (!ClientWiki.hasWiki(namespace())) {
             g.drawString(this.font, Tr.s("entity.nowiki"), x, viewTop, FordixPalette.TEXT, false);

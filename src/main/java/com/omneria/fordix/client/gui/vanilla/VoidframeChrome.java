@@ -20,8 +20,8 @@ import net.minecraftforge.client.event.ScreenEvent;
  * Only one screen is open at a time, hence the plain static state.
  */
 public final class VoidframeChrome {
-    private static final long OPEN_DURATION_MS = 140L;
-    private static final float OPEN_START_SCALE = 0.92F;
+    private static final long OPEN_DURATION_MS = 160L;
+    private static final float OPEN_SLIDE = 8.0F;
     private static final long HOVER_FADE_MS = 150L;
 
     private static Screen animatedScreen;
@@ -35,9 +35,9 @@ public final class VoidframeChrome {
     }
 
     /**
-     * Fired right after the dimmed world backdrop is drawn: scales everything drawn
-     * after it (the container itself) from the screen center, so the backdrop stays
-     * full-screen while the panel pops in. Undone in {@link #onRenderPost}.
+     * Fired right after the dimmed world backdrop is drawn: slides everything drawn after it (the container itself) up
+     * from a few pixels lower, so the backdrop stays still while the panel settles in. Text and slots stay at their
+     * normal size (a zoom would blur them). Undone in {@link #onRenderPost}.
      */
     public static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
         Screen screen = event.getScreen();
@@ -53,14 +53,9 @@ public final class VoidframeChrome {
         if (t >= 1.0F) {
             return;
         }
-        float scale = Easing.lerp(OPEN_START_SCALE, 1.0F, t);
         GuiGraphics guiGraphics = event.getGuiGraphics();
-        float centerX = screen.width / 2.0F;
-        float centerY = screen.height / 2.0F;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(centerX, centerY, 0.0F);
-        guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.pose().translate(-centerX, -centerY, 0.0F);
+        guiGraphics.pose().translate(0.0F, Math.round((1.0F - t) * OPEN_SLIDE), 0.0F);
         scalePushed = true;
     }
 
@@ -87,14 +82,22 @@ public final class VoidframeChrome {
             return;
         }
         float alpha = Easing.progress(now - hoveredSince, HOVER_FADE_MS);
-        int color = Easing.withAlpha(FordixPalette.ACCENT, alpha);
+        int rgb = FordixPalette.ACCENT & 0xFFFFFF;
         GuiGraphics guiGraphics = event.getGuiGraphics();
         int x = slot.x - 1;
         int y = slot.y - 1;
-        guiGraphics.fill(x, y, x + 18, y + 1, color);
-        guiGraphics.fill(x, y + 17, x + 18, y + 18, color);
-        guiGraphics.fill(x, y + 1, x + 1, y + 17, color);
-        guiGraphics.fill(x + 17, y + 1, x + 18, y + 17, color);
+        int soft = Easing.withAlpha(rgb | 0xFF000000, alpha * 0.16F);
+        int glow = Easing.withAlpha(rgb | 0xFF000000, alpha * 0.22F);
+        int line = Easing.withAlpha(rgb | 0xFF000000, alpha);
+        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, soft);
+        guiGraphics.fill(x - 1, y - 1, x + 19, y, glow);
+        guiGraphics.fill(x - 1, y + 18, x + 19, y + 19, glow);
+        guiGraphics.fill(x - 1, y, x, y + 18, glow);
+        guiGraphics.fill(x + 18, y, x + 19, y + 18, glow);
+        guiGraphics.fill(x, y, x + 18, y + 1, line);
+        guiGraphics.fill(x, y + 17, x + 18, y + 18, line);
+        guiGraphics.fill(x, y + 1, x + 1, y + 17, line);
+        guiGraphics.fill(x + 17, y + 1, x + 18, y + 17, line);
     }
 
     public static void onTooltipColor(RenderTooltipEvent.Color event) {

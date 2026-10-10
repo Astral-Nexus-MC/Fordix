@@ -1,6 +1,7 @@
 package com.omneria.fordix.client.gui;
 
 import com.omneria.fordix.client.gui.layout.Layout;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -55,6 +56,13 @@ public abstract class FordixScreen extends Screen {
             widgets[i].setX(positions.get(i).x());
             widgets[i].setY(positions.get(i).y());
         }
+    }
+
+    /** The Voidframe 2 backdrop ({@link Glass#backdrop}) instead of the game's flat gray dim. */
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics) {
+        Glass.backdrop(guiGraphics, this.width, this.height);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.ScreenEvent.BackgroundRendered(this, guiGraphics));
     }
 
     @Override

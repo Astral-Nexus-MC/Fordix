@@ -78,7 +78,7 @@ public class HudLinesScreen extends FordixScreen {
             }
         }
         addRenderableWidget(new FordixButton(panelX + PANEL_WIDTH - PADDING - 100, panelY + panelHeight - 27, 100, 20,
-                Tr.c("common.back"), this::onClose));
+                Tr.c("common.back"), this::onClose).kind(Glass.Kind.PRIMARY));
     }
 
     @Override

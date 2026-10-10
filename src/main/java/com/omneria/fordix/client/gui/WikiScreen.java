@@ -10,6 +10,7 @@ import com.omneria.fordix.guide.PageMarkup;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import com.omneria.fordix.client.gui.widget.FieldBox;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -112,7 +113,7 @@ public class WikiScreen extends FordixScreen {
         pageView = new PageView(this.font);
         pageView.setInteractive(true);
         shownPage = null;
-        search = new EditBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("wiki.search"));
+        search = new FieldBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("wiki.search"));
         search.setHint(Tr.c("wiki.search_hint"));
         search.setMaxLength(60);
         search.setValue(query);
@@ -270,7 +271,8 @@ public class WikiScreen extends FordixScreen {
         resolveOpenSlug();
         panel.render(graphics, mouseX, mouseY, partialTick);
         WikiAnswers.Info info = ClientWiki.wiki(wikiId);
-        graphics.drawString(this.font, info == null ? this.title.getString() : info.title(), left + PADDING, top + 8, FordixPalette.ACCENT, false);
+        Glass.title(graphics, this.font, info == null ? this.title.getString() : info.title(), left + PADDING, top + 8);
+        Glass.rule(graphics, left + PADDING, top + 20, panelWidth - PADDING * 2);
         backButton.visible = !history.isEmpty();
         categoryButton.visible = showCategories();
         if (categoryButton.visible) {
@@ -279,7 +281,7 @@ public class WikiScreen extends FordixScreen {
         super.render(graphics, mouseX, mouseY, partialTick);
         drawList(graphics, mouseX, mouseY, info);
         int detailX = left + PADDING + LIST_WIDTH + 8;
-        graphics.fill(detailX - 5, top + 24, detailX - 4, top + panelHeight - PADDING, FordixPalette.BEVEL_HIGHLIGHT);
+        Glass.divider(graphics, detailX - 5, top + 24, top + panelHeight - PADDING);
         drawDetail(graphics, detailX, mouseX, mouseY, info);
         drawZoom(graphics, mouseX, mouseY);
     }
@@ -339,19 +341,14 @@ public class WikiScreen extends FordixScreen {
         for (int i = listOffset; i < rows.size() && shown < visibleRows(); i++, shown++) {
             Row row = rows.get(i);
             if (row.header()) {
-                graphics.drawString(this.font, row.title(), x + 6, y + 5, FordixPalette.ACCENT, false);
-                graphics.fill(x + 6 + this.font.width(row.title()) + 4, y + 9, x + LIST_WIDTH - 4, y + 10, FordixPalette.BEVEL_HIGHLIGHT);
+                Glass.title(graphics, this.font, row.title(), x + 6, y + 5);
+                graphics.fill(x + 6 + this.font.width(row.title()) + 4, y + 9, x + LIST_WIDTH - 4, y + 10, 0x20FFFFFF);
                 y += ROW;
                 continue;
             }
             boolean selected = row.wiki().equals(selectedWiki) && row.slug().equals(selectedSlug);
             boolean hover = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW;
-            if (selected) {
-                graphics.fill(x, y, x + LIST_WIDTH, y + ROW - 1, FordixPalette.BUTTON_FILL_HOVERED);
-                graphics.fill(x, y, x + 2, y + ROW - 1, FordixPalette.ACCENT);
-            } else if (hover) {
-                graphics.fill(x, y, x + LIST_WIDTH, y + ROW - 1, FordixPalette.BUTTON_FILL);
-            }
+            Glass.row(graphics, x, y, LIST_WIDTH, ROW - 1, selected, hover);
             String label = row.detail().isEmpty() ? row.title() : row.title() + " · " + row.detail();
             graphics.drawString(this.font, this.font.plainSubstrByWidth(label, LIST_WIDTH - 10), x + 6, y + 5,
                     selected ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);

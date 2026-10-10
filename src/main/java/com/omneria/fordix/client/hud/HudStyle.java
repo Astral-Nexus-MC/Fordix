@@ -12,13 +12,24 @@ public final class HudStyle {
 
     /** {@code bodyAlpha} 0..255 is the player's panel opacity; {@code accent} is an RGB color. */
     public static void panel(GuiGraphics g, int x, int y, int width, int height, int accent, int bodyAlpha) {
+        glass(g, x, y, width, height, accent, bodyAlpha, 0x1C2834, 0x0A1016);
+    }
+
+    /** Same as {@link #panel(GuiGraphics, int, int, int, int, int, int)} with the glass tinted from {@code base}, an RGB color. */
+    public static void panel(GuiGraphics g, int x, int y, int width, int height, int accent, int bodyAlpha, int base) {
+        int solid = 0xFF000000 | base;
+        glass(g, x, y, width, height, accent, bodyAlpha, HudTokens.mix(solid, 0xFFFFFFFF, 0.06F) & 0xFFFFFF,
+                HudTokens.mix(solid, 0xFF000000, 0.5F) & 0xFFFFFF);
+    }
+
+    private static void glass(GuiGraphics g, int x, int y, int width, int height, int accent, int bodyAlpha, int topRgb, int bottomRgb) {
         int rgb = accent & 0x00FFFFFF;
         // Shadow: three translucent frames growing outward and downward.
         for (int i = 3; i >= 1; i--) {
             g.fill(x - i, y - i + 2, x + width + i, y + height + i + 2, HudTokens.withAlpha(0x000000, 14 + (3 - i) * 4));
         }
-        int top = HudTokens.withAlpha(0x1C2834, Math.min(255, bodyAlpha + 12));
-        int bottom = HudTokens.withAlpha(0x0A1016, Math.min(255, bodyAlpha + 24));
+        int top = HudTokens.withAlpha(topRgb, Math.min(255, bodyAlpha + 12));
+        int bottom = HudTokens.withAlpha(bottomRgb, Math.min(255, bodyAlpha + 24));
         g.fillGradient(x, y, x + width, y + height, top, bottom);
         // Light on the top edge, shade on the bottom edge.
         g.fill(x + 1, y, x + width - 1, y + 1, 0x24FFFFFF);

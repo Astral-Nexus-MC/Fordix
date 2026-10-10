@@ -1,18 +1,15 @@
 package com.omneria.fordix.client.gui.widget;
 
-import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 
 /**
- * Pure background primitive: draws a filled rectangle with the carved 2px bevel
- * used across Fordix (Voidframe). It does not intercept input - that keeps it
+ * Pure background primitive: draws a Voidframe 2 glass panel ({@link Glass#panel}). It does not intercept input - that keeps it
  * trivially composable with real widgets, which the screen positions and adds
  * itself instead of routing events through this class.
  */
 public class Panel implements Renderable {
-    private static final int BEVEL_WIDTH = 2;
-
     private int x;
     private int y;
     private int width;
@@ -53,11 +50,6 @@ public class Panel implements Renderable {
 
     /** Draws the panel background at an arbitrary rectangle, for screens that lay out their own frame. */
     public static void draw(GuiGraphics guiGraphics, int x, int y, int width, int height) {
-        guiGraphics.fill(x, y, x + width, y + height, FordixPalette.PANEL_FILL);
-        // Raised bevel: light along top/left, dark along bottom/right.
-        guiGraphics.fill(x, y, x + width, y + BEVEL_WIDTH, FordixPalette.BEVEL_HIGHLIGHT);
-        guiGraphics.fill(x, y, x + BEVEL_WIDTH, y + height, FordixPalette.BEVEL_HIGHLIGHT);
-        guiGraphics.fill(x, y + height - BEVEL_WIDTH, x + width, y + height, FordixPalette.BEVEL_SHADOW);
-        guiGraphics.fill(x + width - BEVEL_WIDTH, y, x + width, y + height, FordixPalette.BEVEL_SHADOW);
+        Glass.panel(guiGraphics, x, y, width, height);
     }
 }

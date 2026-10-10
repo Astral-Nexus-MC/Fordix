@@ -1,6 +1,7 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
@@ -78,7 +79,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -106,7 +107,7 @@ public final class VoidframeStations {
         /** Same cost line as vanilla (red when too expensive or unaffordable), with Voidframe titles. */
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
             int cost = menu.getCost();
             if (cost <= 0) {
@@ -155,7 +156,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -252,7 +253,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -338,16 +339,15 @@ public final class VoidframeStations {
                 int x = leftPos + GRID_X + index % 4 * 16;
                 int y = topPos + GRID_Y + index / 4 * 18 + 2;
                 boolean hovered = mouseX >= x && mouseX < x + 16 && mouseY >= y - 1 && mouseY < y + 17;
-                int fill = i == menu.getSelectedRecipeIndex() ? FordixPalette.ACCENT
-                        : hovered ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL;
-                guiGraphics.fill(x, y - 1, x + 16, y + 17, fill);
+                Glass.well(guiGraphics, x, y - 1, 16, 18);
+                Glass.row(guiGraphics, x, y - 1, 16, 18, i == menu.getSelectedRecipeIndex(), hovered);
                 guiGraphics.renderItem(recipes.get(i).getResultItem(minecraft.level.registryAccess()), x, y);
             }
         }
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -395,7 +395,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -422,7 +422,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -439,7 +439,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }
@@ -453,7 +453,7 @@ public final class VoidframeStations {
 
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.label(guiGraphics, font, title, titleLabelX, titleLabelY);
+            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
             VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
         }
     }

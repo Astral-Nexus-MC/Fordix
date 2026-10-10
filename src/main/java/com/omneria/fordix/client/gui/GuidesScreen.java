@@ -14,6 +14,7 @@ import com.omneria.fordix.welcome.ServerboundWelcomePayload;
 import com.omneria.fordix.guide.PageMarkup;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
+import com.omneria.fordix.client.gui.widget.FieldBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -74,7 +75,7 @@ public class GuidesScreen extends FordixScreen {
         panel = new Panel(left, top, panelWidth, panelHeight);
         pageView = new PageView(this.font);
         shown = null;
-        search = new EditBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("guides.search"));
+        search = new FieldBox(this.font, left + PADDING, top + 24, LIST_WIDTH - 4, 16, Tr.c("guides.search"));
         search.setHint(Tr.c("guides.search_hint"));
         search.setValue(query);
         search.setResponder(text -> {
@@ -138,11 +139,12 @@ public class GuidesScreen extends FordixScreen {
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawString(this.font, this.title, left + PADDING, top + 8, FordixPalette.ACCENT, false);
+        Glass.title(guiGraphics, this.font, this.title.getString(), left + PADDING, top + 8);
+        Glass.rule(guiGraphics, left + PADDING, top + 20, panelWidth - PADDING * 2);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         drawList(guiGraphics, mouseX, mouseY);
         int detailX = left + PADDING + LIST_WIDTH + 8;
-        guiGraphics.fill(detailX - 5, top + 24, detailX - 4, top + panelHeight - PADDING, FordixPalette.BEVEL_HIGHLIGHT);
+        Glass.divider(guiGraphics, detailX - 5, top + 24, top + panelHeight - PADDING);
         if (rows.isEmpty()) {
             guiGraphics.drawString(this.font, Tr.s("guides.none"), detailX, top + 30, FordixPalette.TEXT, false);
         } else {
@@ -158,12 +160,7 @@ public class GuidesScreen extends FordixScreen {
         for (int i = listOffset; i < rows.size() && shown < visibleRows(); i++, shown++) {
             Row row = rows.get(i);
             boolean hover = mouseX >= x && mouseX < x + LIST_WIDTH && mouseY >= y && mouseY < y + ROW;
-            if (i == selected) {
-                guiGraphics.fill(x, y, x + LIST_WIDTH, y + ROW - 1, FordixPalette.BUTTON_FILL_HOVERED);
-                guiGraphics.fill(x, y, x + 2, y + ROW - 1, FordixPalette.ACCENT);
-            } else if (hover) {
-                guiGraphics.fill(x, y, x + LIST_WIDTH, y + ROW - 1, FordixPalette.BUTTON_FILL);
-            }
+            Glass.row(guiGraphics, x, y, LIST_WIDTH, ROW - 1, i == selected, hover);
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(x + 4, y + 1, 0);
             guiGraphics.pose().scale(0.75F, 0.75F, 1.0F);
@@ -173,9 +170,7 @@ public class GuidesScreen extends FordixScreen {
             guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(row.title(), textWidth), x + 20, y + 5,
                     i == selected ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
             if (row.isNew()) {
-                int bx = x + LIST_WIDTH - 32;
-                guiGraphics.fill(bx, y + 4, bx + 30, y + 14, FordixPalette.ACCENT);
-                guiGraphics.drawString(this.font, Tr.s("guides.new_short"), bx + 6, y + 5, 0xFF05070A, false);
+                Glass.pill(guiGraphics, this.font, Tr.s("guides.new_short"), x + LIST_WIDTH - 34, y + 3, FordixPalette.ACCENT);
             }
             y += ROW;
             section = row.section();
@@ -201,7 +196,7 @@ public class GuidesScreen extends FordixScreen {
         guiGraphics.drawString(this.font, page.title, x, y, FordixPalette.TEXT_BRIGHT, false);
         if (!page.author.isEmpty()) {
             String meta = Tr.s("guides.updated", java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(new java.util.Date(page.updatedAt)), page.author);
-            guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(meta, right - x), x, y + 11, FordixPalette.BEVEL_HIGHLIGHT, false);
+            guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(meta, right - x), x, y + 11, Glass.dim(), false);
         }
         int viewTop = y + 24;
         int viewBottom = top + panelHeight - PADDING;
@@ -211,9 +206,7 @@ public class GuidesScreen extends FordixScreen {
 
     private void drawButton(GuiGraphics guiGraphics, int x, int y, int w, String label, int mouseX, int mouseY) {
         boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + 16;
-        guiGraphics.fill(x, y, x + w, y + 16, hover ? FordixPalette.BUTTON_FILL_HOVERED : FordixPalette.BUTTON_FILL);
-        guiGraphics.fill(x, y + 15, x + w, y + 16, hover ? FordixPalette.ACCENT : FordixPalette.BEVEL_SHADOW);
-        guiGraphics.drawCenteredString(this.font, label, x + w / 2, y + 4, FordixPalette.TEXT_BRIGHT);
+        Glass.textButton(guiGraphics, this.font, label, x, y, w, hover);
     }
 
     /** Gives the page view this page's blocks (once per page: its layout is kept between frames). */

@@ -13,9 +13,9 @@ import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 /**
- * A frame in the item's rarity color around every uncommon-or-better item, in containers and on
- * the hotbar, so rare loot stands out without opening its tooltip. Drawn over the item with a
- * 1px outline and a faint tint, which leave the item itself readable.
+ * A line in the item's rarity color under every uncommon-or-better item, in containers and on
+ * the hotbar, so rare loot stands out without opening its tooltip. Drawn over the item's lower edge only,
+ * which leaves the item itself readable (Voidframe 2: a glow line, no longer a full frame).
  */
 public final class RarityFrames {
     private RarityFrames() {
@@ -54,13 +54,11 @@ public final class RarityFrames {
         }
     }
 
+    /** A glowing line under the item with a soft wash rising from it: the rarity reads without covering the item. */
     private static void frame(GuiGraphics guiGraphics, int x, int y, int size, int color) {
-        int outline = (0xCC << 24) | (color & 0xFFFFFF);
-        int tint = (0x28 << 24) | (color & 0xFFFFFF);
-        guiGraphics.fill(x + 1, y + 1, x + size - 1, y + size - 1, tint);
-        guiGraphics.fill(x, y, x + size, y + 1, outline);
-        guiGraphics.fill(x, y + size - 1, x + size, y + size, outline);
-        guiGraphics.fill(x, y + 1, x + 1, y + size - 1, outline);
-        guiGraphics.fill(x + size - 1, y + 1, x + size, y + size - 1, outline);
+        int rgb = color & 0xFFFFFF;
+        guiGraphics.fillGradient(x + 1, y + size - 8, x + size - 1, y + size - 3, rgb, (0x38 << 24) | rgb);
+        guiGraphics.fill(x + 1, y + size - 4, x + size - 1, y + size - 3, (0x70 << 24) | rgb);
+        guiGraphics.fill(x + 2, y + size - 3, x + size - 2, y + size - 1, (0xFF << 24) | rgb);
     }
 }

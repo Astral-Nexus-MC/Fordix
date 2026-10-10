@@ -4,6 +4,8 @@ import com.omneria.fordix.Tr;
 import com.google.common.collect.Multimap;
 import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.client.gui.FordixPalette;
+import com.omneria.fordix.client.gui.Glass;
+import com.omneria.fordix.client.hud.HudStyle;
 import com.omneria.fordix.client.gui.ModNames;
 import com.omneria.fordix.client.gui.vanilla.Chevron;
 import net.minecraft.client.Minecraft;
@@ -85,7 +87,7 @@ public final class ItemTooltipRenderer {
         List<Section> sections = sections(stack, diffs, comparedWith);
         GearCompare.Verdict verdict = diffs.isEmpty() ? null : GearCompare.verdict(diffs);
 
-        String subLine = typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack);
+        String subLine = (typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack)).toUpperCase(java.util.Locale.ROOT);
         int width = Math.max(title.getWidth(font) + 30, compact ? 0 : font.width(subLine) + 30);
         for (Chip chip : chips) {
             width = Math.max(width, chip.width(font) + 8 + font.width(chip.effect()));
@@ -129,11 +131,8 @@ public final class ItemTooltipRenderer {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
         int accent = rarityColor(stack);
-        guiGraphics.fill(x - 1, y - 1, x + totalWidth + 1, y + totalHeight + 1, accent);
-        guiGraphics.fill(x, y, x + totalWidth, y + totalHeight, FordixPalette.TOOLTIP_FILL | 0xFF000000);
-        guiGraphics.fill(x, y, x + totalWidth, y + headerHeight, FordixPalette.TITLE_BAND);
-        guiGraphics.fill(x, y + headerHeight - 1, x + totalWidth, y + headerHeight, FordixPalette.TITLE_RULE);
-        guiGraphics.fill(x, y, x + 3, y + totalHeight, accent);
+        HudStyle.panel(guiGraphics, x, y, totalWidth, totalHeight, accent & 0xFFFFFF, 246, FordixPalette.PANEL_FILL & 0xFFFFFF);
+        Glass.rule(guiGraphics, x + 6, y + headerHeight - 1, totalWidth - 12, accent);
 
         guiGraphics.renderItem(stack, x + PAD + 4, y + (compact ? 3 : 7));
         int textX = x + PAD + 26;
@@ -147,7 +146,7 @@ public final class ItemTooltipRenderer {
         int contentWidth = width - 3;
         for (Section section : sections) {
             if (!compact) {
-                guiGraphics.drawString(font, section.title(), contentX, cursorY + 2, FordixPalette.TEXT, false);
+                Glass.label(guiGraphics, font, section.title().getString(), contentX, cursorY + 2);
             }
             cursorY += sectionHeight;
             for (Row row : section.rows()) {
@@ -164,7 +163,7 @@ public final class ItemTooltipRenderer {
             cursorY += ROW_HEIGHT + 2;
         }
         if (!chips.isEmpty()) {
-            guiGraphics.drawString(font, Tr.s("tooltip.enchantments"), contentX, cursorY + 2, ENCHANT_SECTION, false);
+            guiGraphics.drawString(font, Tr.s("tooltip.enchantments").toUpperCase(java.util.Locale.ROOT), contentX, cursorY + 2, ENCHANT_SECTION, false);
             cursorY += SECTION_HEIGHT;
             for (Chip chip : chips) {
                 drawChip(guiGraphics, font, chip, contentX, cursorY);
@@ -207,14 +206,8 @@ public final class ItemTooltipRenderer {
     }
 
     private static void drawChip(GuiGraphics guiGraphics, Font font, Chip chip, int x, int y) {
-        int width = chip.width(font);
-        int height = CHIP_ROW_HEIGHT - 2;
-        int edge = 0xFF000000 | (Chevron.mix(chip.color(), 0xFF000000, 0.35F) & 0xFFFFFF);
-        guiGraphics.fill(x, y, x + width, y + height, edge);
-        guiGraphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, Chevron.mix(chip.color(), 0xFF0B1016, 0.82F));
-        guiGraphics.fill(x, y, x + 3, y + height, chip.color());
-        guiGraphics.drawString(font, chip.name(), x + 8, y + 1, chip.color(), false);
-        guiGraphics.drawString(font, chip.effect(), x + width + 6, y + 1, ENCHANT_COLOR, false);
+        int pill = Glass.pill(guiGraphics, font, chip.name(), x, y, chip.color());
+        guiGraphics.drawString(font, chip.effect(), x + pill + 6, y + 2, ENCHANT_COLOR, false);
     }
 
     private static void drawRow(GuiGraphics guiGraphics, Font font, Row row, int x, int y, int width) {

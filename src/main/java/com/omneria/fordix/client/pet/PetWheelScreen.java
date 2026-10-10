@@ -224,7 +224,7 @@ public final class PetWheelScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        g.fill(0, 0, this.width, this.height, 0x55000000);
+        g.fillGradient(0, 0, this.width, this.height, 0x66050A10, 0x88020408);
         double outer = outerRadius();
         double hub = hubRadius();
         // Everything is drawn around (0, 0) in the wheel's own units; the mouse is brought into them.
@@ -245,16 +245,21 @@ public final class PetWheelScreen extends Screen {
             double middle = WheelGeometry.middleOf(i, SLOTS.length);
             boolean usable = unavailable(SLOTS[i]) == null;
             boolean on = i == hovered;
-            int fill = on ? (usable ? withAlpha(FordixPalette.ACCENT, 0x66) : 0xCC2A3138) : (usable ? 0xDD101C24 : 0xCC0C1318);
+            int tone = ACTION_COLORS[Math.min(i, ACTION_COLORS.length - 1)];
+            int fill = on ? (usable ? withAlpha(tone, 0x55) : 0xCC2A3138) : (usable ? 0xDD101C24 : 0xCC0C1318);
             double grow = on && usable ? 6 : 0;
             sector(g, 0, 0, hub + 3, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, fill);
             if (on && usable) {
-                sector(g, 0, 0, outer + grow - 2, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, 0xFF000000 | FordixPalette.ACCENT);
+                // Halo and bright rim in the color of the action, like a lit glass edge.
+                sector(g, 0, 0, outer + grow, outer + grow + 5, middle - width / 2 + 0.02, middle + width / 2 - 0.02, withAlpha(tone, 0x28));
+                sector(g, 0, 0, outer + grow - 2, outer + grow, middle - width / 2 + 0.02, middle + width / 2 - 0.02, 0xFF000000 | tone);
+            } else if (usable) {
+                sector(g, 0, 0, outer - 1, outer, middle - width / 2 + 0.02, middle + width / 2 - 0.02, withAlpha(tone, 0x50));
             }
             double labelRadius = (hub + outer) / 2 + grow / 2;
             int lx = (int) Math.round(labelRadius * Math.sin(middle));
             int ly = (int) Math.round(-labelRadius * Math.cos(middle));
-            int color = !usable ? 0xFF5B6B75 : on ? FordixPalette.ACCENT : FordixPalette.TEXT_BRIGHT;
+            int color = !usable ? 0xFF5B6B75 : on ? 0xFFFFFFFF : FordixPalette.TEXT_BRIGHT;
             g.pose().pushPose();
             g.pose().translate(lx - 12, ly - 22, 0);
             g.pose().scale(1.5F, 1.5F, 1);
@@ -268,7 +273,7 @@ public final class PetWheelScreen extends Screen {
             g.pose().popPose();
             String label = i == SLOTS.length - 1 && releaseArmed ? Tr.s("pet.confirm") : Tr.s("pet.slot." + SLOTS[i].key);
             g.drawCenteredString(this.font, label, lx, ly + 6, i == SLOTS.length - 1 && releaseArmed ? 0xFFFF7A7A : color);
-            g.drawCenteredString(this.font, String.valueOf(i + 1), lx, ly + 17, 0xFF5B6B75);
+            g.drawCenteredString(this.font, String.valueOf(i + 1), lx, ly + 17, usable ? withAlpha(tone, 0xFF) : 0xFF5B6B75);
         }
         drawHub(g, hub);
         g.pose().popPose();
@@ -278,6 +283,8 @@ public final class PetWheelScreen extends Screen {
 
     private void drawHub(GuiGraphics g, double hub) {
         sector(g, 0, 0, 0, hub, 0, 2 * Math.PI, 0xEE0C161D);
+        sector(g, 0, 0, 0, hub * 0.55, -0.9, 0.9, 0x14FFFFFF);
+        sector(g, 0, 0, hub, hub + 5, 0, 2 * Math.PI, withAlpha(FordixPalette.ACCENT, 0x2C));
         sector(g, 0, 0, hub - 2, hub, 0, 2 * Math.PI, 0xFF000000 | FordixPalette.ACCENT);
         int x = 0;
         int y = -34;
@@ -290,8 +297,8 @@ public final class PetWheelScreen extends Screen {
         g.drawCenteredString(this.font, life, x, y + 26, 0xFFFF7A7A);
         float left = Math.max(0, Math.min(1, pet.getHealth() / Math.max(1, pet.getMaxHealth())));
         int barLeft = x - 36;
-        g.fill(barLeft, y + 38, barLeft + 72, y + 41, 0xFF2C4150);
-        g.fill(barLeft, y + 38, barLeft + Math.round(72 * left), y + 41, 0xFFFF7A7A);
+        g.fill(barLeft, y + 38, barLeft + 72, y + 41, 0x99000000);
+        g.fillGradient(barLeft, y + 38, barLeft + Math.round(72 * left), y + 41, 0xFFFFA89E, 0xFFE5534B);
         if (pet instanceof TamableAnimal animal) {
             g.drawCenteredString(this.font, Tr.s(sitting() ? "pet.state.sitting" : "pet.state.standing"), x, y + 46, FordixPalette.ACCENT);
         }
@@ -307,6 +314,9 @@ public final class PetWheelScreen extends Screen {
         }
         g.drawCenteredString(this.font, text, this.width / 2, (int) Math.min(this.height - 14, y), color);
     }
+
+    /** The color of each sector's action: follow, stay, feed, inventory, call back, rename, release. */
+    private static final int[] ACTION_COLORS = {0xFF3FD1C7, 0xFF9FB3C0, 0xFF5ED68A, 0xFFE8A64A, 0xFF4DA3FF, 0xFFB45FE0, 0xFFE5534B};
 
     private static String format(float value) {
         return value == Math.floor(value) ? Integer.toString((int) value) : String.format(Locale.ROOT, "%.1f", value);
