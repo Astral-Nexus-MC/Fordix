@@ -550,5 +550,12 @@
     "fordix.options.title": "Options",
     "fordix.options.search": "Search a setting…",
     "fordix.pause.guides.detail": "Server wikis",
-    "fordix.pause.options.detail": "Video, sound, controls"
+    "fordix.pause.options.detail": "Video, sound, controls",
+    "fordix.death.title": "You died",
+    "fordix.admin.label.type": "Type",
+    "fordix.admin.label.duration": "Duration",
+    "fordix.admin.label.target": "Recipients",
+    "fordix.admin.label.preview": "Preview",
+    "fordix.admin.operator": "Operator",
+    "fordix.admin.sched.add_short": "Schedule"
 }

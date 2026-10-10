@@ -26,8 +26,11 @@ import java.util.List;
  * server, which checks the player is an op and does the work - see {@code AdminHandler}.
  */
 public class FordixAdminScreen extends FordixScreen {
-    private static final int MAX_PANEL_WIDTH = 420;
-    private static final int MAX_PANEL_HEIGHT = 250;
+    private static final int MAX_PANEL_WIDTH = 774;
+    private static final int MAX_PANEL_HEIGHT = 424;
+    /** With this much width the tabs stand in a rail on the left, as in the mockup; narrower, they stay in a row on top. */
+    private static final int RAIL_FROM = 560;
+    private static final int RAIL_WIDTH = 150;
     private static final int PADDING = 10;
     private static final List<String> STYLES = List.of("info", "success", "warning", "error");
     private static final int[] SECONDS = {3, 5, 8, 15, 30};
@@ -45,6 +48,9 @@ public class FordixAdminScreen extends FordixScreen {
     private static final int TAB_BOOK = 5;
     private static final List<String> STEP_KINDS = List.of("advancement", "command", "guides", "manual");
 
+    private boolean rail;
+    private int contentX;
+    private int contentWidth;
     private int panelWidth = MAX_PANEL_WIDTH;
     private int panelHeight = MAX_PANEL_HEIGHT;
     private final Screen parent;
@@ -120,25 +126,42 @@ public class FordixAdminScreen extends FordixScreen {
         int left = centerX(panelWidth);
         int top = centerY(panelHeight);
         this.panel = new Panel(left, top, panelWidth, panelHeight);
+        rail = panelWidth >= RAIL_FROM;
         int x = left + PADDING;
         int inner = panelWidth - PADDING * 2;
-
-        int tabWidth = Math.min(96, (inner - 74) / TAB_NAMES.size() - 4);
-        for (int i = 0; i < TAB_NAMES.size(); i++) {
-            int index = i;
-            FordixButton button = new FordixButton(x + i * (tabWidth + 4), top + 22, tabWidth, 18,
-                    Component.literal(Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index)).selected(tab == i);
-            addRenderableWidget(button);
+        if (rail) {
+            for (int i = 0; i < TAB_NAMES.size(); i++) {
+                int index = i;
+                addRenderableWidget(new FordixButton(x, top + 36 + i * 35, RAIL_WIDTH, 30,
+                        Component.literal(Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index)).selected(tab == i));
+            }
+            addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 16, top + 6, 16, 13, Component.literal("x"), this::onClose));
+            x = left + PADDING + RAIL_WIDTH + 14;
+            inner = panelWidth - (x - left) - PADDING;
+        } else {
+            int tabWidth = Math.min(96, (inner - 74) / TAB_NAMES.size() - 4);
+            for (int i = 0; i < TAB_NAMES.size(); i++) {
+                int index = i;
+                FordixButton button = new FordixButton(x + i * (tabWidth + 4), top + 22, tabWidth, 18,
+                        Component.literal(Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index)).selected(tab == i);
+                addRenderableWidget(button);
+            }
+            addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Tr.c("common.close"), this::onClose));
         }
-        addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Tr.c("common.close"), this::onClose));
+        contentX = x;
+        contentWidth = inner;
         if (ClientAdminData.denied()) {
             return;
         }
-        int y = top + 48;
+        int y = rail && (tab == TAB_NOTIFY || tab == TAB_SCHEDULE) ? top + 36 : top + 48;
         switch (tab) {
             case TAB_NOTIFY -> {
-                int next = initForm(x, y, inner);
-                addRenderableWidget(new FordixButton(x, next, 130, 18, Tr.c("admin.send"), this::sendNotification).kind(Glass.Kind.PRIMARY));
+                int formWidth = rail ? Math.min(inner - 212, 370) : inner;
+                int next = initForm(x, y, formWidth);
+                addRenderableWidget(new FordixButton(x, next, 120, rail ? 28 : 18, Tr.c("admin.send"), this::sendNotification).kind(Glass.Kind.PRIMARY));
+                if (rail) {
+                    addRenderableWidget(new FordixButton(x + 126, next, 100, 28, Tr.c("admin.sched.add_short"), () -> switchTab(TAB_SCHEDULE)));
+                }
             }
             case TAB_SCHEDULE -> initSchedule(x, y, inner);
             case TAB_TEMPLATES -> initTemplates(x, y, inner);
@@ -172,6 +195,25 @@ public class FordixAdminScreen extends FordixScreen {
         List<String> kindLabels = new java.util.ArrayList<>();
         for (String kind : KINDS) {
             kindLabels.add(Tr.s("admin.target." + kind));
+        }
+        if (rail) {
+            addRenderableWidget(new SegmentedControl(x, y + 14, 22, styleLabels, () -> styleIndex, value -> styleIndex = value));
+            addRenderableWidget(new SegmentedControl(x, y + 58, 22, secondLabels, () -> secondsIndex, value -> secondsIndex = value));
+            SegmentedControl kindsRail = new SegmentedControl(x, y + 102, 22, kindLabels, () -> kindIndex, value -> {
+                kindIndex = value;
+                rebuildWidgets();
+            });
+            addRenderableWidget(kindsRail);
+            if (kindIndex != 0) {
+                String hint = kindIndex == 4 ? Tr.s("admin.hint.level") : KINDS.get(kindIndex);
+                int fieldX = x + kindsRail.getWidth() + 8;
+                addRenderableWidget(edit(fieldX, y + 102, Math.max(60, inner - (fieldX - x)), hint, targetValue, 32, text -> targetValue = text, 22));
+            }
+            addRenderableWidget(edit(x, y + 136, inner, Tr.s("common.title"), notifTitle, 64, text -> notifTitle = text, 22));
+            FieldBox message = (FieldBox) edit(x, y + 166, inner, Tr.s("admin.field.message"), notifMessage, 128, text -> notifMessage = text, 60);
+            message.topAligned(true);
+            addRenderableWidget(message);
+            return y + 236;
         }
         SegmentedControl styles = new SegmentedControl(x, y, 18, styleLabels, () -> styleIndex, value -> styleIndex = value);
         addRenderableWidget(styles);
@@ -599,7 +641,11 @@ public class FordixAdminScreen extends FordixScreen {
     }
 
     private EditBox edit(int x, int y, int width, String hint, String value, int maxLength, java.util.function.Consumer<String> responder) {
-        EditBox box = new FieldBox(this.font, x, y, width, 18, Component.literal(hint));
+        return edit(x, y, width, hint, value, maxLength, responder, 18);
+    }
+
+    private EditBox edit(int x, int y, int width, String hint, String value, int maxLength, java.util.function.Consumer<String> responder, int height) {
+        EditBox box = new FieldBox(this.font, x, y, width, height, Component.literal(hint));
         box.setMaxLength(maxLength);
         box.setHint(Component.literal(hint));
         box.setValue(value);
@@ -615,9 +661,13 @@ public class FordixAdminScreen extends FordixScreen {
         }
         panel.render(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        int x = panel.getX() + PADDING;
+        int x = contentX;
         Font font = this.font;
-        Glass.title(guiGraphics, font, this.title.getString(), x, panel.getY() + 8);
+        Glass.title(guiGraphics, font, this.title.getString(), panel.getX() + PADDING, panel.getY() + 8);
+        if (rail) {
+            String who = Tr.s("admin.operator").toUpperCase(java.util.Locale.ROOT);
+            guiGraphics.drawString(font, who, panel.getX() + panelWidth - PADDING - 22 - font.width(who), panel.getY() + 8, Glass.dim(), false);
+        }
         int bottom = panel.getY() + panelHeight - 14;
         String status = ClientAdminData.status();
         if (!status.isEmpty()) {
@@ -627,12 +677,26 @@ public class FordixAdminScreen extends FordixScreen {
         if (ClientAdminData.denied()) {
             return;
         }
-        int width = panelWidth - PADDING * 2;
+        int width = contentWidth;
+        int formTop = panel.getY() + 36;
+        if (rail && (tab == TAB_NOTIFY || tab == TAB_SCHEDULE)) {
+            Glass.label(guiGraphics, font, Tr.s("admin.label.type"), x, formTop);
+            Glass.label(guiGraphics, font, Tr.s("admin.label.duration"), x, formTop + 44);
+            Glass.label(guiGraphics, font, Tr.s("admin.label.target"), x, formTop + 88);
+        }
         if (tab == TAB_NOTIFY) {
-            int y = panel.getY() + 48 + 124;
-            drawPreview(guiGraphics, font, x, panel.getY() + 48 + 96, width);
-            guiGraphics.drawString(font, Tr.s("admin.history"), x, y, FordixPalette.TEXT, false);
-            y += 12;
+            int y;
+            if (rail) {
+                int formWidth = Math.min(width - 212, 370);
+                railPreview(guiGraphics, font, x + formWidth + 16, formTop);
+                Glass.label(guiGraphics, font, Tr.s("admin.history"), x, formTop + 290);
+                y = formTop + 306;
+            } else {
+                y = panel.getY() + 48 + 124;
+                drawPreview(guiGraphics, font, x, panel.getY() + 48 + 96, width);
+                guiGraphics.drawString(font, Tr.s("admin.history"), x, y, FordixPalette.TEXT, false);
+                y += 12;
+            }
             for (String line : ClientAdminData.history()) {
                 java.util.regex.Matcher style = java.util.regex.Pattern.compile("\\[(info|success|warning|error)\\]").matcher(line);
                 if (style.find()) {
@@ -655,7 +719,7 @@ public class FordixAdminScreen extends FordixScreen {
                 }
             }
         } else if (tab == TAB_SCHEDULE) {
-            int y = panel.getY() + 48 + 96 + 40 - 12;
+            int y = rail ? formTop + 236 + 40 - 12 : panel.getY() + 48 + 96 + 40 - 12;
             guiGraphics.drawString(font, Tr.s(scheduleLines.isEmpty() ? "admin.sched.none" : "admin.sched.list"), x, y, FordixPalette.TEXT, false);
             y += 12;
             for (int i = 0; i < scheduleLines.size() && i < SCHEDULE_ROWS; i++) {
@@ -673,7 +737,7 @@ public class FordixAdminScreen extends FordixScreen {
                 guiGraphics.drawString(font, Tr.s("admin.page.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
             } else {
                 guiGraphics.drawString(font, font.plainSubstrByWidth(Tr.s("admin.page.help"),
-                        panelWidth - 150), x + 130, panel.getY() + panelHeight - 26, Glass.dim(), false);
+                        contentWidth - 150), x + 130, panel.getY() + panelHeight - 26, Glass.dim(), false);
             }
         } else if (tab == TAB_BOOK) {
             int hy = panel.getY() + 48 + 24 + (listRows() - 1) * 20 + 20;
@@ -687,13 +751,36 @@ public class FordixAdminScreen extends FordixScreen {
                     case "guides" -> Tr.s("admin.book.help.guides");
                     default -> Tr.s("admin.book.help.manual");
                 };
-                guiGraphics.drawString(font, font.plainSubstrByWidth(help, panelWidth - 150), x + 130, panel.getY() + 48 + 94, Glass.dim(), false);
+                guiGraphics.drawString(font, font.plainSubstrByWidth(help, contentWidth - 150), x + 130, panel.getY() + 48 + 94, Glass.dim(), false);
             }
         } else if (selectedId.isEmpty()) {
             guiGraphics.drawString(font, Tr.s("admin.panel.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
         } else if (editButtons.isEmpty()) {
             guiGraphics.drawString(font, Tr.s("admin.panel.nobutton"), x + 130, panel.getY() + 48 + 56, FordixPalette.TEXT, false);
         }
+    }
+
+    /** The mockup's preview column: a notification as the players will see it, with its title, message and time bar. */
+    private void railPreview(GuiGraphics g, Font font, int x, int formTop) {
+        int width = Math.min(196, panel.getX() + panelWidth - PADDING - x);
+        if (width < 100) {
+            return;
+        }
+        Glass.label(g, font, Tr.s("admin.label.preview"), x, formTop);
+        int accent = switch (styleIndex) {
+            case 1 -> 0x5ED68A;
+            case 2 -> 0xE8A64A;
+            case 3 -> 0xE5534B;
+            default -> 0x3FD1C7;
+        };
+        int y = formTop + 18;
+        com.omneria.fordix.client.hud.HudStyle.panel(g, x, y, width, 62, accent, 210);
+        String title = notifTitle.isEmpty() ? Tr.s("common.title") : notifTitle;
+        g.drawString(font, font.plainSubstrByWidth(title, width - 24), x + 14, y + 10, notifTitle.isEmpty() ? Glass.dim() : FordixPalette.TEXT_BRIGHT, false);
+        if (!notifMessage.isEmpty()) {
+            g.drawString(font, font.plainSubstrByWidth(notifMessage, width - 24), x + 14, y + 25, Glass.dim(), false);
+        }
+        com.omneria.fordix.client.hud.HudStyle.bar(g, x + 14, y + 48, width - 28, 3, 0.6F, 0xFF000000 | accent);
     }
 
     /** What the players will see, drawn small to the right of the Send button: a glass strip in the color of the type, the title and the message. */

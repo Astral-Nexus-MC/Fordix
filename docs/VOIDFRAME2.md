@@ -5,7 +5,7 @@ le construit et comment on le fait évoluer. **Toute production d'interface (éc
 respecter** ; toute évolution du langage visuel commence par une modification de ce document. Il sert aussi de base de départ
 à Voidframe 3 (voir la section 15).
 
-- Version du document : **2.0** (octobre 2026, mod Fordix 0.1.70).
+- Version du document : **2.0** (octobre 2026, mod Fordix 0.1.71).
 - Public : développeurs du mod, intégrateurs du serveur Astral Nexus, toute personne ou assistant qui produit de l'interface.
 - Convention : **DOIT** = obligatoire, **DEVRAIT** = attendu sauf raison écrite, **PEUT** = libre.
 - Maquettes de référence (privées, à rouvrir avant tout travail visuel) :
@@ -140,7 +140,7 @@ une ligne (utiliser `font.plainSubstrByWidth`).
 - Unité de base : **2 px** (en pixels d'interface, après l'échelle choisie par le joueur).
 - Marge intérieure d'un panneau : **12 px** (14 px pour un panneau de réglages) ; 7 px pour une infobulle ou le scoreboard.
 - Écart entre deux lignes d'une liste : **4 à 6 px**. Écart entre deux groupes : 8 à 12 px.
-- Hauteurs de contrôle : bouton 24 (principal 26 à 28), ligne de réglage 28, ligne de liste 12 à 14, champ 16 à 22, pastille 11,
+- Case d'objet : **20 px** (pas de 22 px) dans la disposition large, 18 px dans la compacte. Hauteurs de contrôle : bouton 24 (principal 26 à 28), ligne de réglage 28, ligne de liste 12 à 14, champ 16 à 22, pastille 11,
   barre fine 5 à 7.
 - Coins : **carrés** (le jeu n'a pas de coins arrondis). Les pastilles ont leurs quatre coins coupés d'un pixel.
 - Les panneaux se centrent ; la colonne du menu pause se place à 32 px du bord gauche.
@@ -276,10 +276,22 @@ celles du serveur. Verre, liseré de la couleur du type (info, succès, alerte, 
 ### 6.1 Conteneur (inventaire, coffres, fourneaux…)
 
 Sous-classe de l'écran du jeu, remplacée à l'ouverture (`VanillaScreens`) **par classe exacte** : une sous-classe d'un autre mod
-signale une personnalisation et n'est jamais remplacée. Rendu : `VoidframeDraw.containerBackground` (panneau + un puits par
-case, d'après la position réelle de chaque case du menu, donc valable pour toute disposition), `titleBand` (filet sous le titre),
-`title` pour le titre du conteneur, `label` pour « Inventaire ». Les positions des cases, des clics, du livre de recettes restent
-celles du jeu. Ouverture : glissement de 8 px en 160 ms.
+signale une personnalisation et n'est jamais remplacée. Chaque conteneur a **deux dispositions** :
+
+- **Large (celle de la maquette)** quand le panneau tient dans l'écran avec 8 px de marge de chaque côté
+  (`ContainerLayout.fits`) : cases de 20 px au pas de 22 px, titre à (14, 9) en capitales, compteur ou état à droite du titre, outils
+  (recherche, tri, livre) **dans** le panneau, filet entre le conteneur et l'inventaire du joueur, bloc de statistiques dans
+  l'inventaire. Les positions des cases sont déplacées côté client (`ContainerLayout.put`, par réflexion validée) ; le serveur ne les
+  connaît que par leur numéro, rien ne change pour lui.
+- **Compacte** quand l'écran est trop petit : les cases gardent leurs positions du jeu (18 px), le style V2 s'applique et les
+  éléments ajoutés se placent à côté du panneau. La disposition large ne se choisit jamais sur la taille de la fenêtre mais sur celle
+  de l'écran d'interface (`screen.width`, `screen.height`), donc l'échelle d'interface du joueur compte.
+
+Panneaux larges : inventaire 500 x 348, coffre 218 x (300 pour trois rangées), fourneaux 218 x 252, enclume 218 x 330, établi
+218 x 244, entonnoir et distributeur sur le gabarit du coffre. Chaque écran implémente `WideLayout` (`wide()`, `boxOf(slot)`,
+`searchRect()`, `sortRect()`) pour que le halo de survol, le liseré de rareté et les outils sachent où est chaque case.
+`VoidframeDraw.wideBackground` dessine le panneau et un puits par case ; `ContainerLayout.grid` et `playerBlock` placent les cases.
+Ouverture : glissement de 8 px en 160 ms.
 
 ### 6.2 Station (enclume, alambic, balise…)
 
@@ -433,6 +445,8 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D6 | L'écran de mort est une **sous-classe** de `DeathScreen`. | La confirmation, le délai et le mode hardcore restent ceux du jeu. |
 | D7 | Les écrans titre et liste des mondes ne sont **pas refaits**. | Cachés par Astral-launcher. |
 | D8 | Les overlays remplacés (scoreboard, barre d'action) annulent celui du jeu seulement quand ils ont du contenu. | Le message « disque en lecture » du jeu continue de s'afficher. |
+| D10 | Les conteneurs de la maquette ont une **disposition large** (cases déplacées côté client) et une disposition compacte de repli. | La maquette impose ses positions ; les petits écrans ne peuvent pas la contenir. Le repli garde JEI, le livre de recettes et les autres mods intacts. |
+| D11 | Le menu pause remet la ligne Avancements (retirée en 0.1.59) et masque « Donner un avis » et « Signaler un bug » du jeu. | La maquette validée les place ainsi ; les deux liens vers Mojang ne servent pas sur Astral Nexus. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
 Dette connue (à traiter dans l'ordre) :

@@ -54,7 +54,7 @@ avoir la même version : le serveur ne prend le nouveau jar qu'à son redémarra
   `FordixButton` (+ `kind`, `selected`), `VoidframeButtons.StandIn` et `FieldBox` (tous les champs de texte) y mènent : ne plus dessiner un fond, un bouton ou
   un champ à la main avec `BEVEL_*` ou `BUTTON_FILL*`. Menus du jeu : `PauseSkin` (colonne de verre et carte de session, boutons du jeu réarrangés),
   `VoidframeDeathScreen` (sous-classe de `DeathScreen`), `ScreenBackdrop` (fond des écrans du jeu), `VoidframeButtons` (boutons des écrans du jeu et de
-  Forge) ; overlays remplacés : `ScoreboardHud`, `ActionBarHud`, `TitleHud` (champs du `Gui` lus par type et ordre). L'écran titre et la liste des mondes sont cachés par le mod Astral-launcher : situation
+  Forge) ; overlays remplacés : `ScoreboardHud`, `ActionBarHud`, `TitleHud` (champs du `Gui` lus par type et ordre). Conteneurs : disposition large de la maquette (`ContainerLayout`, `WideLayout`, cases déplacées côté client quand l'écran est assez grand, repli compact sinon) ; options (`OptionsSkin`) et pause (`PauseSkin`) en lignes (`RowButtons`). L'écran titre et la liste des mondes sont cachés par le mod Astral-launcher : situation
   normale, ne pas les refaire.
 - `client/gui/vanilla` : écrans de conteneurs redessinés (`VoidframeScreens`, `VoidframeStations`), HUD
   (`VoidframeHud` vie/faim, placement par glisser-deposer dans `HudLayoutScreen` avec aimant `HudSnap`, `VoidframeGauges` XP/armure/air/boss, `VoidframeDurability`), forme commune des
