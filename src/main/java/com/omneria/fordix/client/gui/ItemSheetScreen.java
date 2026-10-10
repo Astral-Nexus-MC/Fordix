@@ -54,6 +54,16 @@ public final class ItemSheetScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return 380;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         panelWidth = Math.min(PANEL_WIDTH, this.width - 10);
         panelHeight = Math.min(PANEL_HEIGHT, this.height - 10);

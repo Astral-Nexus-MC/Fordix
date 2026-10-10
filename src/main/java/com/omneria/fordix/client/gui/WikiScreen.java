@@ -110,6 +110,16 @@ public class WikiScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return 380;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         panelWidth = Math.min(MAX_WIDTH, this.width - 10);
         panelHeight = Math.min(MAX_HEIGHT, this.height - 10);
@@ -265,17 +275,27 @@ public class WikiScreen extends FordixScreen {
         return keys;
     }
 
+    /** Space added around each category label: 12 px when there is room, less (down to 4) when the list is narrow. */
+    private int stripPad(List<String> keys) {
+        int text = 0;
+        for (String each : keys) {
+            text += this.font.width(categoryLabel(each));
+        }
+        return Math.max(4, Math.min(12, (listWidth - 4 - text) / Math.max(1, keys.size())));
+    }
+
     private int[] stripBounds(String key, List<String> keys) {
         int x = left + PADDING;
         int width = listWidth - 4;
+        int pad = stripPad(keys);
         int total = 0;
         for (String each : keys) {
-            total += this.font.width(categoryLabel(each)) + 12;
+            total += this.font.width(categoryLabel(each)) + pad;
         }
         float factor = total > width ? width / (float) total : 1.0F;
         int cursor = x;
         for (String each : keys) {
-            int w = Math.round((this.font.width(categoryLabel(each)) + 12) * factor);
+            int w = Math.round((this.font.width(categoryLabel(each)) + pad) * factor);
             if (each.equals(key)) {
                 return new int[]{cursor, w};
             }
@@ -302,7 +322,7 @@ public class WikiScreen extends FordixScreen {
             } else if (hover) {
                 g.fill(bounds[0], y, bounds[0] + bounds[1], y + 16, 0x14FFFFFF);
             }
-            g.drawString(this.font, this.font.plainSubstrByWidth(categoryLabel(key), bounds[1] - 6), bounds[0] + 6, y + 4,
+            g.drawString(this.font, this.font.plainSubstrByWidth(categoryLabel(key), bounds[1] - stripPad(keys) / 2), bounds[0] + stripPad(keys) / 2, y + 4,
                     on ? FordixPalette.TEXT_BRIGHT : Glass.dim(), false);
         }
     }

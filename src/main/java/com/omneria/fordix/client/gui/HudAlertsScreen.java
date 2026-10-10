@@ -38,6 +38,16 @@ public class HudAlertsScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return PANEL_WIDTH + 10;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         List<Option> options = new ArrayList<>();
         options.add(new Option("=", 0x5ED68A, Tr.s("options.effects"), Tr.s("alerts.desc.effects"), FordixConfig.HUD_EFFECTS_LIST));

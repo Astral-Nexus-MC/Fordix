@@ -130,6 +130,16 @@ public class FordixAdvancementsScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return 380;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         panelWidth = Math.min(this.width - 30, 774);
         panelHeight = Math.min(this.height - 24, 412);

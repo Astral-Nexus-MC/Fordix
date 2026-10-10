@@ -56,7 +56,6 @@ public final class PauseSkin {
         }
         AbstractWidget back = null;
         AbstractWidget guides = null;
-        AbstractWidget advancements = null;
         AbstractWidget stats = null;
         AbstractWidget options = null;
         AbstractWidget lan = null;
@@ -70,7 +69,7 @@ public final class PauseSkin {
             switch (keyOf(button)) {
                 case "menu.returnToGame" -> back = button;
                 case "fordix.guides.button" -> guides = button;
-                case "gui.advancements" -> advancements = button;
+                case "gui.advancements" -> button.visible = false;
                 case "gui.stats" -> stats = button;
                 case "menu.options" -> options = button;
                 case "menu.shareToLan" -> lan = button;
@@ -94,12 +93,6 @@ public final class PauseSkin {
             heights.add(34);
             RowButtons.register((Button) guides, "G", () -> Tr.s("pause.guides.detail"),
                     () -> com.omneria.fordix.client.guide.ServerPages.hasUnread() ? Tr.s("guides.new_badge") : "");
-        }
-        if (advancements != null) {
-            rows.add(List.of(advancements));
-            heights.add(34);
-            RowButtons.register((Button) advancements, "A", () -> minecraft.player == null ? ""
-                    : com.omneria.fordix.client.gui.FordixAdvancementsScreen.summary(minecraft.player.connection.getAdvancements()));
         }
         if (stats != null) {
             rows.add(List.of(stats));

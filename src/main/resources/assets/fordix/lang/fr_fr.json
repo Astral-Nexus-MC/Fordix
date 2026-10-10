@@ -562,5 +562,7 @@
     "fordix.pause.mode.survival": "Survie",
     "fordix.pause.mode.creative": "Créatif",
     "fordix.pause.mode.adventure": "Aventure",
-    "fordix.pause.mode.spectator": "Spectateur"
+    "fordix.pause.mode.spectator": "Spectateur",
+    "fordix.admin.preview.sample_title": "Redémarrage du serveur dans 10 minutes",
+    "fordix.admin.preview.sample_message": "Mettez-vous en sécurité et sauvegardez votre travail."
 }

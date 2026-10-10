@@ -81,6 +81,16 @@ public class FordixSettingsScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return PANEL_WIDTH + 10;
+    }
+
+    @Override
+    protected int minHeight() {
+        return PANEL_HEIGHT + 10;
+    }
+
+    @Override
     protected void init() {
         if (!tabs().contains(tab)) {
             tab = Tab.HUD;

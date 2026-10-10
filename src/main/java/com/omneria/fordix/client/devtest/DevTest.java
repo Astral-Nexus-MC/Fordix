@@ -112,7 +112,13 @@ public final class DevTest {
         }
         String scaleVariable = System.getenv("FORDIX_DEVTEST_SCALE");
         mc.options.guiScale().set(scaleVariable == null ? 3 : Integer.parseInt(scaleVariable));
+        String sizeVariable = System.getenv("FORDIX_DEVTEST_SIZE");
+        if (sizeVariable != null && sizeVariable.contains("x")) {
+            String[] size = sizeVariable.split("x");
+            org.lwjgl.glfw.GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), Integer.parseInt(size[0]), Integer.parseInt(size[1]));
+        }
         mc.resizeDisplay();
+        mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
         steps.add(new Step("00-setup", () -> {
             cmd(mc, "gamemode survival");
             mc.player.getInventory().setItem(10, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPASS));
@@ -650,6 +656,15 @@ public final class DevTest {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
             mc.stop();
         }, 5, false));
+        // FORDIX_DEVTEST_ONLY="14-pause-menu,18-options": only those screens (and the set-up), for size sweeps.
+        String only = System.getenv("FORDIX_DEVTEST_ONLY");
+        if (only != null && !only.isBlank()) {
+            java.util.Set<String> keep = new java.util.HashSet<>(java.util.Arrays.asList(only.split(",")));
+            steps.removeIf(step -> !keep.contains(step.name()) && !step.name().equals("00-setup")
+                    && !step.name().equals("01-hud") && !step.name().equals("99-done"));
+            // Long enough for the toasts of the set-up (recipes, advancements) to leave the screen.
+            steps.replaceAll(step -> step.name().equals("01-hud") ? new Step("01-hud", step.setup(), 700, false) : step);
+        }
     }
 
     private void next(Minecraft mc) {

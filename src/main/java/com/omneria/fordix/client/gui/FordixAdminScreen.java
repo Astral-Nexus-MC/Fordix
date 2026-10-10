@@ -120,13 +120,24 @@ public class FordixAdminScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return 400;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         panelWidth = Math.min(MAX_PANEL_WIDTH, this.width - 10);
         panelHeight = Math.min(MAX_PANEL_HEIGHT, this.height - 10);
         int left = centerX(panelWidth);
         int top = centerY(panelHeight);
         this.panel = new Panel(left, top, panelWidth, panelHeight);
-        rail = panelWidth >= RAIL_FROM;
+        // The rail layout stacks the form, the preview and the history: it needs the mockup's height as well as its width.
+        rail = panelWidth >= RAIL_FROM && panelHeight >= 388;
         int x = left + PADDING;
         int inner = panelWidth - PADDING * 2;
         if (rail) {
@@ -139,14 +150,14 @@ public class FordixAdminScreen extends FordixScreen {
             x = left + PADDING + RAIL_WIDTH + 14;
             inner = panelWidth - (x - left) - PADDING;
         } else {
-            int tabWidth = Math.min(96, (inner - 74) / TAB_NAMES.size() - 4);
+            int tabWidth = Math.min(96, (inner - 24) / TAB_NAMES.size() - 4);
             for (int i = 0; i < TAB_NAMES.size(); i++) {
                 int index = i;
                 FordixButton button = new FordixButton(x + i * (tabWidth + 4), top + 22, tabWidth, 18,
                         Component.literal(Tr.s("admin.tab." + TAB_NAMES.get(i))), () -> switchTab(index)).selected(tab == i);
                 addRenderableWidget(button);
             }
-            addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 70, top + 22, 70, 18, Tr.c("common.close"), this::onClose));
+            addRenderableWidget(new FordixButton(left + panelWidth - PADDING - 18, top + 22, 18, 18, Component.literal("x"), this::onClose));
         }
         contentX = x;
         contentWidth = inner;
@@ -775,10 +786,17 @@ public class FordixAdminScreen extends FordixScreen {
         };
         int y = formTop + 18;
         com.omneria.fordix.client.hud.HudStyle.panel(g, x, y, width, 62, accent, 210);
-        String title = notifTitle.isEmpty() ? Tr.s("common.title") : notifTitle;
+        // Nothing typed yet: an example, in the dim tone, so the card shows what the players will get.
+        String title = notifTitle.isEmpty() ? Tr.s("admin.preview.sample_title") : notifTitle;
+        String message = notifMessage.isEmpty() && notifTitle.isEmpty() ? Tr.s("admin.preview.sample_message") : notifMessage;
         g.drawString(font, font.plainSubstrByWidth(title, width - 24), x + 14, y + 10, notifTitle.isEmpty() ? Glass.dim() : FordixPalette.TEXT_BRIGHT, false);
-        if (!notifMessage.isEmpty()) {
-            g.drawString(font, font.plainSubstrByWidth(notifMessage, width - 24), x + 14, y + 25, Glass.dim(), false);
+        int lineY = y + 25;
+        for (net.minecraft.util.FormattedCharSequence line : font.split(net.minecraft.network.chat.Component.literal(message), width - 24)) {
+            if (lineY > y + 40) {
+                break;
+            }
+            g.drawString(font, line, x + 14, lineY, Glass.dim(), false);
+            lineY += 10;
         }
         com.omneria.fordix.client.hud.HudStyle.bar(g, x + 14, y + 48, width - 28, 3, 0.6F, 0xFF000000 | accent);
     }

@@ -562,5 +562,7 @@
     "fordix.pause.mode.survival": "Survival",
     "fordix.pause.mode.creative": "Creative",
     "fordix.pause.mode.adventure": "Adventure",
-    "fordix.pause.mode.spectator": "Spectator"
+    "fordix.pause.mode.spectator": "Spectator",
+    "fordix.admin.preview.sample_title": "Server restart in 10 minutes",
+    "fordix.admin.preview.sample_message": "Save your work and stay in a safe place."
 }

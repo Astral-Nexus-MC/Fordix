@@ -512,6 +512,14 @@ public final class FordixClient {
             GuideHints.onItemTooltip(event);
         }
 
+        /** Fordix screens that need more room than the interface has shrink it for as long as they are open. */
+        @SubscribeEvent
+        static void onScreenInitFit(ScreenEvent.Init.Pre event) {
+            if (event.getScreen() instanceof com.omneria.fordix.client.gui.FordixScreen screen) {
+                screen.fitInterface(Minecraft.getInstance());
+            }
+        }
+
         /** Operators get a "Guides" button, lit when a server page changed since it was read. */
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {

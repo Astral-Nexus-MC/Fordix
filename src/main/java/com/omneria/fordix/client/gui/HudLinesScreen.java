@@ -40,6 +40,16 @@ public class HudLinesScreen extends FordixScreen {
     }
 
     @Override
+    protected int minWidth() {
+        return PANEL_WIDTH + 10;
+    }
+
+    @Override
+    protected int minHeight() {
+        return 240;
+    }
+
+    @Override
     protected void init() {
         // Lines grouped by the panel they belong to (the word before the first underscore), half of the groups on each side.
         Map<String, List<String>> groups = new LinkedHashMap<>();

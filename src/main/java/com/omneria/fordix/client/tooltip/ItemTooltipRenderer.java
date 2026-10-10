@@ -40,16 +40,16 @@ import java.util.List;
  * Everything is computed from the stack itself, so items and attributes from any mod get bars.
  */
 public final class ItemTooltipRenderer {
-    private static final int PAD = 7;
-    private static final int HEADER_HEIGHT = 30;
-    private static final int ROW_HEIGHT = 11;
-    private static final int SECTION_HEIGHT = 12;
+    private static final int PAD = 9;
+    private static final int HEADER_HEIGHT = 38;
+    private static final int ROW_HEIGHT = 14;
+    private static final int SECTION_HEIGHT = 16;
     private static final int LABEL_WIDTH = 80;
     private static final int VALUE_WIDTH = 46;
     private static final int DELTA_WIDTH = 34;
     private static final int BAR_MIN_WIDTH = 60;
     private static final int COMPACT_HEADER_HEIGHT = 22;
-    private static final int CHIP_ROW_HEIGHT = 13;
+    private static final int CHIP_ROW_HEIGHT = 17;
     private static final int ENCHANT_SECTION = 0xFF8E77C8;
     private static final int ENCHANT_COLOR = 0xFFC9A8FF;
     private static final int UP = 0xFF5ED68A;
@@ -99,27 +99,27 @@ public final class ItemTooltipRenderer {
             width = Math.max(width, LABEL_WIDTH + VALUE_WIDTH + BAR_MIN_WIDTH + DELTA_WIDTH + 12);
         }
         boolean durability = stack.isDamageableItem();
-        int height = headerHeight + 2;
+        int height = headerHeight + 4;
         for (Section section : sections) {
-            height += sectionHeight + section.rows().size() * ROW_HEIGHT + 2;
+            height += sectionHeight + section.rows().size() * ROW_HEIGHT + 4;
         }
         String verdictLine = verdict == null ? null : Tr.s("tooltip.compare." + verdict.name().toLowerCase(java.util.Locale.ROOT), comparedWith[0]);
         if (verdictLine != null) {
-            height += ROW_HEIGHT + 2;
+            height += ROW_HEIGHT + 4;
             width = Math.max(width, font.width(verdictLine) + 12);
         }
         if (!chips.isEmpty()) {
-            height += SECTION_HEIGHT + chips.size() * CHIP_ROW_HEIGHT + 2;
+            height += SECTION_HEIGHT + chips.size() * CHIP_ROW_HEIGHT + 4;
         }
         for (ClientTooltipComponent component : rest) {
             height += component.getHeight();
         }
         if (durability) {
-            height += ROW_HEIGHT + 4;
+            height += ROW_HEIGHT + 6;
         }
-        height += 2;
+        height += 4;
         int totalWidth = width + PAD * 2;
-        int totalHeight = height + PAD - 2;
+        int totalHeight = height + PAD - 4;
 
         Vector2ic position = event.getTooltipPositioner().positionTooltip(event.getScreenWidth(), event.getScreenHeight(),
                 event.getX(), event.getY(), totalWidth, totalHeight);
@@ -134,42 +134,42 @@ public final class ItemTooltipRenderer {
         HudStyle.panel(guiGraphics, x, y, totalWidth, totalHeight, accent & 0xFFFFFF, 246, FordixPalette.PANEL_FILL & 0xFFFFFF);
         Glass.rule(guiGraphics, x + 6, y + headerHeight - 1, totalWidth - 12, accent);
 
-        guiGraphics.renderItem(stack, x + PAD + 4, y + (compact ? 3 : 7));
+        guiGraphics.renderItem(stack, x + PAD + 4, y + (compact ? 3 : 11));
         int textX = x + PAD + 26;
-        title.renderText(font, textX, y + (compact ? 6 : 6), guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
+        title.renderText(font, textX, y + (compact ? 6 : 9), guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
         if (!compact) {
-            guiGraphics.drawString(font, subLine, textX, y + 18, FordixPalette.TEXT, false);
+            guiGraphics.drawString(font, subLine, textX, y + 23, FordixPalette.TEXT, false);
         }
 
-        int cursorY = y + headerHeight + 2;
+        int cursorY = y + headerHeight + 4;
         int contentX = x + PAD + 3;
         int contentWidth = width - 3;
         for (Section section : sections) {
             if (!compact) {
-                Glass.label(guiGraphics, font, section.title().getString(), contentX, cursorY + 2);
+                Glass.label(guiGraphics, font, section.title().getString(), contentX, cursorY + 4);
             }
             cursorY += sectionHeight;
             for (Row row : section.rows()) {
                 drawRow(guiGraphics, font, row, contentX, cursorY, contentWidth);
                 cursorY += ROW_HEIGHT;
             }
-            cursorY += 2;
+            cursorY += 4;
         }
         if (verdictLine != null) {
             int color = verdict == GearCompare.Verdict.BETTER ? UP : verdict == GearCompare.Verdict.WORSE ? DOWN
                     : verdict == GearCompare.Verdict.MIXED ? 0xFFFFB347 : STEADY;
             String mark = verdict == GearCompare.Verdict.BETTER ? "\u25B2 " : verdict == GearCompare.Verdict.WORSE ? "\u25BC " : "\u25C6 ";
             guiGraphics.drawString(font, mark + verdictLine, contentX, cursorY + 1, color, false);
-            cursorY += ROW_HEIGHT + 2;
+            cursorY += ROW_HEIGHT + 4;
         }
         if (!chips.isEmpty()) {
-            guiGraphics.drawString(font, Tr.s("tooltip.enchantments").toUpperCase(java.util.Locale.ROOT), contentX, cursorY + 2, ENCHANT_SECTION, false);
+            guiGraphics.drawString(font, Tr.s("tooltip.enchantments").toUpperCase(java.util.Locale.ROOT), contentX, cursorY + 4, ENCHANT_SECTION, false);
             cursorY += SECTION_HEIGHT;
             for (Chip chip : chips) {
                 drawChip(guiGraphics, font, chip, contentX, cursorY);
                 cursorY += CHIP_ROW_HEIGHT;
             }
-            cursorY += 2;
+            cursorY += 4;
         }
         for (ClientTooltipComponent component : rest) {
             component.renderText(font, contentX, cursorY, guiGraphics.pose().last().pose(), guiGraphics.bufferSource());
@@ -211,30 +211,30 @@ public final class ItemTooltipRenderer {
     }
 
     private static void drawRow(GuiGraphics guiGraphics, Font font, Row row, int x, int y, int width) {
-        guiGraphics.drawString(font, row.label(), x, y + 1, FordixPalette.TEXT, false);
+        guiGraphics.drawString(font, row.label(), x, y + 3, FordixPalette.TEXT, false);
         String value = AttributeMath.number(row.value() + row.enchantBonus());
-        guiGraphics.drawString(font, value, x + LABEL_WIDTH + VALUE_WIDTH - 4 - font.width(value), y + 1,
+        guiGraphics.drawString(font, value, x + LABEL_WIDTH + VALUE_WIDTH - 4 - font.width(value), y + 3,
                 FordixPalette.TEXT_BRIGHT, false);
         int barX = x + LABEL_WIDTH + VALUE_WIDTH;
         int barWidth = width - LABEL_WIDTH - VALUE_WIDTH - DELTA_WIDTH;
-        Chevron.draw(guiGraphics, barX, y + 1, barWidth, 7, true, 3, row.fraction(), row.top(), row.bottom(), false);
+        Chevron.draw(guiGraphics, barX, y + 3, barWidth, 7, true, 3, row.fraction(), row.top(), row.bottom(), false);
         if (row.enchantBonus() > 0) {
             // The enchantment's share, in violet, right after the base part of the bar.
             int inner = barWidth - 2;
             int start = Math.round(inner * row.fraction());
             int length = Math.min(inner - start, Math.max(1, Math.round(inner * row.enchantFraction())));
-            guiGraphics.fill(barX + 1 + start, y + 2, barX + 1 + start + length, y + 7, ENCHANT_COLOR);
+            guiGraphics.fill(barX + 1 + start, y + 4, barX + 1 + start + length, y + 9, ENCHANT_COLOR);
         }
-        guiGraphics.drawString(font, row.delta(), barX + barWidth + 4, y + 1, row.deltaColor(), false);
+        guiGraphics.drawString(font, row.delta(), barX + barWidth + 4, y + 3, row.deltaColor(), false);
     }
 
     private static void drawDurability(GuiGraphics guiGraphics, Font font, ItemStack stack, int x, int y, int width) {
         int max = stack.getMaxDamage();
         int left = max - stack.getDamageValue();
-        guiGraphics.drawString(font, Component.translatable("item.durability", left, max), x, y + 1, FordixPalette.TEXT, false);
+        guiGraphics.drawString(font, Component.translatable("item.durability", left, max), x, y + 3, FordixPalette.TEXT, false);
         int color = 0xFF000000 | stack.getBarColor();
         int barX = x + LABEL_WIDTH + VALUE_WIDTH;
-        Chevron.draw(guiGraphics, barX, y + 1, width - LABEL_WIDTH - VALUE_WIDTH - DELTA_WIDTH, 7, true, 3,
+        Chevron.draw(guiGraphics, barX, y + 3, width - LABEL_WIDTH - VALUE_WIDTH - DELTA_WIDTH, 7, true, 3,
                 (float) left / max, Chevron.brighten(color, 40), color, false);
     }
 

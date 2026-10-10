@@ -266,8 +266,12 @@ public final class OptionsSkin {
             String icon = title.isEmpty() ? "?" : title.substring(0, 1).toUpperCase(Locale.ROOT);
             g.drawString(font, icon, bx + (box - font.width(icon)) / 2, by + (box - 8) / 2 + 1, com.omneria.fordix.client.gui.FordixPalette.ACCENT, false);
             int textX = bx + box + 7;
-            g.drawString(font, title, textX, getY() + getHeight() / 2 - 9, Glass.buttonText(Glass.Kind.NORMAL, true), false);
-            g.drawString(font, detail.get(), textX, getY() + getHeight() / 2 + 1, Glass.dim(), false);
+            String detailText = detail.get();
+            g.drawString(font, title, textX, detailText.isEmpty() ? getY() + (getHeight() - 8) / 2 : getY() + getHeight() / 2 - 9,
+                    Glass.buttonText(Glass.Kind.NORMAL, true), false);
+            if (!detailText.isEmpty()) {
+                g.drawString(font, detailText, textX, getY() + getHeight() / 2 + 1, Glass.dim(), false);
+            }
         }
 
         private <T> T through(java.util.function.Supplier<T> action) {
