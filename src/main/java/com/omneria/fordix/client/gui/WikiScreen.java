@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui;
 
+import com.omneria.fordix.guide.PageOutline;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.wiki.ClientWiki;
 import com.omneria.fordix.client.wiki.WikiMemory;
@@ -34,6 +35,8 @@ public class WikiScreen extends FordixScreen {
     private static final int MAX_HEIGHT = 270;
     private static final int LIST_WIDTH = 150;
     private static final int PADDING = 10;
+    private static final int SIDE_WIDTH = 104;
+    private static final int FOOTER = 12;
     private static final int ROW = 18;
     private static final int SEARCH_DELAY_TICKS = 8;
 
@@ -356,6 +359,49 @@ public class WikiScreen extends FordixScreen {
         }
     }
 
+    /** Right edge of the page text: the table of contents takes a column of its own on a wide enough screen. */
+    private int pageRight() {
+        int right = left + panelWidth - PADDING;
+        int detailX = left + PADDING + LIST_WIDTH + 8;
+        int narrow = right - detailX - SIDE_WIDTH - 10;
+        return narrow >= 200 && !pageView.sideHeadings(narrow).isEmpty() ? right - SIDE_WIDTH - 10 : right;
+    }
+
+    private void drawSideContents(GuiGraphics graphics, int x, int top, int bottom, int mouseX, int mouseY) {
+        int width = SIDE_WIDTH;
+        Glass.panel(graphics, x, top, width, Math.min(bottom - top, 14 + pageView.sideHeadings(pageRight() - (left + PADDING + LIST_WIDTH + 8)).size() * 12 + 8), FordixPalette.ACCENT);
+        Glass.label(graphics, this.font, Tr.s("wiki.contents"), x + 8, top + 7);
+        int active = pageView.activeHeading(detailScroll, pageRight() - (left + PADDING + LIST_WIDTH + 8));
+        int y = top + 20;
+        for (PageOutline.Heading heading : pageView.sideHeadings(pageRight() - (left + PADDING + LIST_WIDTH + 8))) {
+            if (y + 12 > bottom) {
+                break;
+            }
+            boolean hover = mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + 12;
+            Glass.row(graphics, x + 2, y, width - 4, 11, heading.block() == active, hover);
+            int indent = (heading.level() - 1) * 6;
+            graphics.drawString(this.font, this.font.plainSubstrByWidth(heading.text(), width - 14 - indent), x + 7 + indent, y + 2,
+                    heading.block() == active ? FordixPalette.TEXT_BRIGHT : Glass.dim(), false);
+            y += 12;
+        }
+    }
+
+    private int sideContentsHit(double mouseX, double mouseY) {
+        int right = left + panelWidth - PADDING;
+        int x = pageRight();
+        if (x >= right || mouseX < x + 10 || mouseX >= right) {
+            return -1;
+        }
+        int y = top + 26 + 24 + 20;
+        for (PageOutline.Heading heading : pageView.sideHeadings(x - (left + PADDING + LIST_WIDTH + 8))) {
+            if (mouseY >= y && mouseY < y + 12) {
+                return pageView.jump(heading.block(), x - (left + PADDING + LIST_WIDTH + 8));
+            }
+            y += 12;
+        }
+        return -1;
+    }
+
     private void drawDetail(GuiGraphics graphics, int x, int mouseX, int mouseY, WikiAnswers.Info info) {
         int right = left + panelWidth - PADDING;
         int y = top + 26;
@@ -393,10 +439,19 @@ public class WikiScreen extends FordixScreen {
         boolean favorite = memory().isFavorite(selectedWiki, selectedSlug);
         graphics.drawString(this.font, favorite ? "\u2605" : "\u2606", right - 10, y, favorite ? FordixPalette.ACCENT : FordixPalette.TEXT, false);
         graphics.drawString(this.font, this.font.plainSubstrByWidth(page.title(), right - x - 14), x, y, FordixPalette.TEXT_BRIGHT, false);
-        String meta = Tr.s("wiki.source", host(page.source()), page.license().isEmpty() ? "?" : page.license());
-        graphics.drawString(this.font, this.font.plainSubstrByWidth(meta, right - x), x, y + 11, FordixPalette.TEXT, false);
+        String crumb = ((info == null ? "" : info.title() + "  \u203A  ") + page.title()).toUpperCase(Locale.ROOT);
+        graphics.drawString(this.font, this.font.plainSubstrByWidth(crumb, right - x), x, y + 11, Glass.dim(), false);
         int viewTop = y + 24;
-        pageView.render(graphics, x, viewTop, right - x, top + panelHeight - PADDING - viewTop, detailScroll, mouseX, mouseY);
+        int pageRight = pageRight();
+        int viewBottom = top + panelHeight - PADDING - FOOTER;
+        pageView.setSideContents(true);
+        pageView.render(graphics, x, viewTop, pageRight - x, viewBottom - viewTop, detailScroll, mouseX, mouseY);
+        if (pageRight < right) {
+            drawSideContents(graphics, pageRight + 10, viewTop, viewBottom, mouseX, mouseY);
+        }
+        // The source and the license stay visible at the foot of the panel, whatever the page.
+        String meta = Tr.s("wiki.source", host(page.source()), page.license().isEmpty() ? "?" : page.license());
+        graphics.drawString(this.font, this.font.plainSubstrByWidth(meta, right - x), x, top + panelHeight - PADDING - 8, Glass.dim(), false);
     }
 
     /** A titled list of remembered pages on the home page; returns the y under it. */
@@ -463,7 +518,7 @@ public class WikiScreen extends FordixScreen {
             int detailX = left + PADDING + LIST_WIDTH + 8;
             int right = left + panelWidth - PADDING;
             int viewTop = top + 26 + 24;
-            int viewHeight = top + panelHeight - PADDING - viewTop;
+            int viewHeight = top + panelHeight - PADDING - FOOTER - viewTop;
             if (mouseX >= right - 12 && mouseX < right && mouseY >= top + 26 && mouseY < top + 26 + 11) {
                 WikiAnswers.Page current = ClientWiki.page(selectedWiki, selectedSlug);
                 if (current != null) {
@@ -471,23 +526,30 @@ public class WikiScreen extends FordixScreen {
                 }
                 return true;
             }
-            int target = pageView.contentsClick(detailX, viewTop, right - detailX, viewHeight, detailScroll, mouseX, mouseY);
+            int pageRight = pageRight();
+            int sideTarget = sideContentsHit(mouseX, mouseY);
+            if (sideTarget >= 0) {
+                int maxSide = Math.max(0, pageView.contentHeight(pageRight - detailX) - viewHeight);
+                detailScroll = Math.max(0, Math.min(maxSide, sideTarget));
+                return true;
+            }
+            int target = pageView.contentsClick(detailX, viewTop, pageRight - detailX, viewHeight, detailScroll, mouseX, mouseY);
             if (target >= 0) {
-                int max = Math.max(0, pageView.contentHeight(right - detailX) - viewHeight);
+                int max = Math.max(0, pageView.contentHeight(pageRight - detailX) - viewHeight);
                 detailScroll = Math.max(0, Math.min(max, target));
                 return true;
             }
-            if (pageView.toggleAt(detailX, viewTop, right - detailX, viewHeight, detailScroll, mouseX, mouseY)) {
-                int max = Math.max(0, pageView.contentHeight(right - detailX) - viewHeight);
+            if (pageView.toggleAt(detailX, viewTop, pageRight - detailX, viewHeight, detailScroll, mouseX, mouseY)) {
+                int max = Math.max(0, pageView.contentHeight(pageRight - detailX) - viewHeight);
                 detailScroll = Math.max(0, Math.min(max, detailScroll));
                 return true;
             }
-            PageMarkup.Block picture = pageView.imageAt(detailX, viewTop, right - detailX, viewHeight, detailScroll, mouseX, mouseY);
+            PageMarkup.Block picture = pageView.imageAt(detailX, viewTop, pageRight - detailX, viewHeight, detailScroll, mouseX, mouseY);
             if (picture != null) {
                 zoomImage = picture.action();
                 return true;
             }
-            PageMarkup.Block block = pageView.click(detailX, viewTop, right - detailX, top + panelHeight - PADDING - viewTop, detailScroll, mouseX, mouseY);
+            PageMarkup.Block block = pageView.click(detailX, viewTop, pageRight - detailX, viewHeight, detailScroll, mouseX, mouseY);
             if (block != null && block.type() == PageMarkup.Type.LINK) {
                 open(selectedWiki, block.action());
                 return true;
@@ -509,8 +571,8 @@ public class WikiScreen extends FordixScreen {
         }
         if (shownPage != null) {
             int right = left + panelWidth - PADDING;
-            int visible = top + panelHeight - PADDING - (top + 26 + 24);
-            int max = Math.max(0, pageView.contentHeight(right - (detailX + 4)) - visible);
+            int visible = top + panelHeight - PADDING - FOOTER - (top + 26 + 24);
+            int max = Math.max(0, pageView.contentHeight(pageRight() - (detailX + 4)) - visible);
             detailScroll = Math.max(0, Math.min(max, detailScroll - delta * 18));
             return true;
         }

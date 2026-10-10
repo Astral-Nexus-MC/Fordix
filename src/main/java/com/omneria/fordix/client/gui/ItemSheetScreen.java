@@ -137,7 +137,12 @@ public final class ItemSheetScreen extends FordixScreen {
             int valueWidth = this.font.width(value);
             g.drawString(this.font, this.font.plainSubstrByWidth(fact.label(), available - valueWidth - 6), fx, fy, FordixPalette.TEXT, false);
             g.drawString(this.font, value, right - valueWidth, fy, fact.color() == 0 ? FordixPalette.TEXT_BRIGHT : fact.color(), false);
-            fy += 11;
+            if (fact.fraction() >= 0.0F) {
+                com.omneria.fordix.client.hud.HudStyle.bar(g, fx, fy + 10, available, 3, fact.fraction(), fact.barColor());
+                fy += 15;
+            } else {
+                fy += 11;
+            }
         }
 
         if (showWiki) {

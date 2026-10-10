@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import com.omneria.fordix.client.gui.widget.FieldBox;
+import com.omneria.fordix.client.gui.widget.SegmentedControl;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -158,24 +159,36 @@ public class FordixAdminScreen extends FordixScreen {
         rebuildWidgets();
     }
 
-    /** The notification form; returns the y below it. */
+    /** The notification form: the type and the duration as segments, the recipients as segments (and their value), the text fields; returns the y below it. */
     private int initForm(int x, int y, int inner) {
-        addRenderableWidget(cycle(x, y, 90, "", STYLES, () -> styleIndex, value -> styleIndex = value));
-        addRenderableWidget(new FordixButton(x + 96, y, 60, 18, Component.literal(SECONDS[secondsIndex] + " s"), () -> {
-            secondsIndex = (secondsIndex + 1) % SECONDS.length;
-            rebuildWidgets();
-        }));
-        addRenderableWidget(cycle(x + 162, y, 100, "", KINDS, () -> kindIndex, value -> {
+        List<String> styleLabels = new java.util.ArrayList<>();
+        for (String style : STYLES) {
+            styleLabels.add(Tr.s("admin.style." + style));
+        }
+        List<String> secondLabels = new java.util.ArrayList<>();
+        for (int seconds : SECONDS) {
+            secondLabels.add(seconds + " s");
+        }
+        List<String> kindLabels = new java.util.ArrayList<>();
+        for (String kind : KINDS) {
+            kindLabels.add(Tr.s("admin.target." + kind));
+        }
+        SegmentedControl styles = new SegmentedControl(x, y, 18, styleLabels, () -> styleIndex, value -> styleIndex = value);
+        addRenderableWidget(styles);
+        addRenderableWidget(new SegmentedControl(x + styles.getWidth() + 8, y, 18, secondLabels, () -> secondsIndex, value -> secondsIndex = value));
+        SegmentedControl kinds = new SegmentedControl(x, y + 22, 18, kindLabels, () -> kindIndex, value -> {
             kindIndex = value;
             rebuildWidgets();
-        }));
+        });
+        addRenderableWidget(kinds);
         if (kindIndex != 0) {
             String hint = kindIndex == 4 ? Tr.s("admin.hint.level") : KINDS.get(kindIndex);
-            addRenderableWidget(edit(x + 268, y, inner - 268, hint, targetValue, 32, text -> targetValue = text));
+            int fieldX = x + kinds.getWidth() + 8;
+            addRenderableWidget(edit(fieldX, y + 22, Math.max(60, inner - (fieldX - x)), hint, targetValue, 32, text -> targetValue = text));
         }
-        addRenderableWidget(edit(x, y + 24, inner, Tr.s("common.title"), notifTitle, 64, text -> notifTitle = text));
-        addRenderableWidget(edit(x, y + 48, inner, Tr.s("admin.field.message"), notifMessage, 128, text -> notifMessage = text));
-        return y + 72;
+        addRenderableWidget(edit(x, y + 48, inner, Tr.s("common.title"), notifTitle, 64, text -> notifTitle = text));
+        addRenderableWidget(edit(x, y + 72, inner, Tr.s("admin.field.message"), notifMessage, 128, text -> notifMessage = text));
+        return y + 96;
     }
 
     private void sendNotification() {
@@ -616,18 +629,33 @@ public class FordixAdminScreen extends FordixScreen {
         }
         int width = panelWidth - PADDING * 2;
         if (tab == TAB_NOTIFY) {
-            int y = panel.getY() + 48 + 100;
+            int y = panel.getY() + 48 + 124;
+            drawPreview(guiGraphics, font, x, panel.getY() + 48 + 96, width);
             guiGraphics.drawString(font, Tr.s("admin.history"), x, y, FordixPalette.TEXT, false);
             y += 12;
             for (String line : ClientAdminData.history()) {
-                guiGraphics.drawString(font, font.plainSubstrByWidth(line, width), x, y, FordixPalette.TEXT, false);
-                y += 10;
+                java.util.regex.Matcher style = java.util.regex.Pattern.compile("\\[(info|success|warning|error)\\]").matcher(line);
+                if (style.find()) {
+                    int color = switch (style.group(1)) {
+                        case "success" -> 0xFF5ED68A;
+                        case "warning" -> 0xFFE8A64A;
+                        case "error" -> 0xFFE5534B;
+                        default -> 0xFF3FD1C7;
+                    };
+                    int pill = Glass.pill(guiGraphics, font, Tr.s("admin.style." + style.group(1)), x, y - 1, color);
+                    String rest = (line.substring(0, style.start()) + line.substring(style.end())).replace("  ", " ").trim();
+                    guiGraphics.drawString(font, font.plainSubstrByWidth(rest, width - pill - 6), x + pill + 6, y + 1, FordixPalette.TEXT, false);
+                    y += 13;
+                } else {
+                    guiGraphics.drawString(font, font.plainSubstrByWidth(line, width), x, y, FordixPalette.TEXT, false);
+                    y += 10;
+                }
                 if (y > bottom - 12) {
                     break;
                 }
             }
         } else if (tab == TAB_SCHEDULE) {
-            int y = panel.getY() + 48 + 72 + 40 - 12;
+            int y = panel.getY() + 48 + 96 + 40 - 12;
             guiGraphics.drawString(font, Tr.s(scheduleLines.isEmpty() ? "admin.sched.none" : "admin.sched.list"), x, y, FordixPalette.TEXT, false);
             y += 12;
             for (int i = 0; i < scheduleLines.size() && i < SCHEDULE_ROWS; i++) {
@@ -665,6 +693,29 @@ public class FordixAdminScreen extends FordixScreen {
             guiGraphics.drawString(font, Tr.s("admin.panel.pick"), x + 130, panel.getY() + 52, FordixPalette.TEXT, false);
         } else if (editButtons.isEmpty()) {
             guiGraphics.drawString(font, Tr.s("admin.panel.nobutton"), x + 130, panel.getY() + 48 + 56, FordixPalette.TEXT, false);
+        }
+    }
+
+    /** What the players will see, drawn small to the right of the Send button: a glass strip in the color of the type, the title and the message. */
+    private void drawPreview(GuiGraphics g, Font font, int x, int y, int width) {
+        int left = x + 138;
+        int previewWidth = width - 138;
+        if (previewWidth < 80) {
+            return;
+        }
+        int accent = switch (styleIndex) {
+            case 1 -> 0x5ED68A;
+            case 2 -> 0xE8A64A;
+            case 3 -> 0xE5534B;
+            default -> 0x3FD1C7;
+        };
+        com.omneria.fordix.client.hud.HudStyle.panel(g, left, y, previewWidth, 18, accent, 210);
+        String title = notifTitle.isEmpty() ? Tr.s("common.title") : notifTitle;
+        String text = font.plainSubstrByWidth(title, previewWidth - 12);
+        g.drawString(font, text, left + 8, y + 5, notifTitle.isEmpty() ? Glass.dim() : FordixPalette.TEXT_BRIGHT, false);
+        if (!notifMessage.isEmpty()) {
+            int used = font.width(text) + 6;
+            g.drawString(font, font.plainSubstrByWidth(notifMessage, Math.max(0, previewWidth - 12 - used)), left + 8 + used, y + 5, Glass.dim(), false);
         }
     }
 

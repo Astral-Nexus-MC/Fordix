@@ -44,7 +44,10 @@ public final class ItemFacts {
     }
 
     /** A line of figures; {@code color} is an opaque ARGB color or 0 for the default text. */
-    public record Fact(String label, String value, int color) {
+    public record Fact(String label, String value, int color, float fraction, int barColor) {
+        public Fact(String label, String value, int color) {
+            this(label, value, color, -1.0F, 0);
+        }
     }
 
     public record Sheet(ItemStack stack, String name, String id, String mod, List<RecipeView> makes,
@@ -137,7 +140,7 @@ public final class ItemFacts {
         facts.add(new Fact(Tr.s("sheet.fact.rarity"), ItemRarity.label(stack), ItemRarity.color(stack)));
         facts.add(new Fact(Tr.s("sheet.fact.stack"), String.valueOf(stack.getMaxStackSize()), 0));
         if (stack.getMaxDamage() > 0) {
-            facts.add(new Fact(Tr.s("sheet.fact.durability"), String.valueOf(stack.getMaxDamage()), 0));
+            facts.add(new Fact(Tr.s("sheet.fact.durability"), String.valueOf(stack.getMaxDamage()), 0, Math.min(1.0F, stack.getMaxDamage() / 2031.0F), 0xFF5ED68A));
         }
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             for (Map.Entry<Attribute, AttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
@@ -153,7 +156,20 @@ public final class ItemFacts {
                 }
                 String value = entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION
                         ? AttributeMath.number(amount) : AttributeMath.number(amount * 100) + " %";
-                facts.add(new Fact(name + " (" + slotName(slot) + ")", value, 0));
+                float fraction = -1.0F;
+                int bar = 0xFF3FD1C7;
+                if (attribute != null && entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION) {
+                    switch (attribute.getPath()) {
+                        case "generic.attack_damage" -> { fraction = (float) (amount / 16.0); bar = 0xFFE5534B; }
+                        case "generic.attack_speed" -> { fraction = (float) (amount / 4.0); bar = 0xFFE8A64A; }
+                        case "generic.armor" -> { fraction = (float) (amount / 20.0); bar = 0xFFC6D3DC; }
+                        case "generic.armor_toughness" -> { fraction = (float) (amount / 8.0); bar = 0xFF9BE0FF; }
+                        case "generic.knockback_resistance" -> { fraction = (float) amount; bar = 0xFFC9A8FF; }
+                        case "generic.max_health" -> { fraction = (float) (amount / 20.0); bar = 0xFFE5534B; }
+                        default -> { }
+                    }
+                }
+                facts.add(new Fact(name + " (" + slotName(slot) + ")", value, 0, fraction < 0 ? -1.0F : Math.min(1.0F, fraction), bar));
             }
         }
         var player = Minecraft.getInstance().player;
@@ -166,7 +182,7 @@ public final class ItemFacts {
             facts.add(new Fact(Tr.s("sheet.fact.fuel"), Tr.s("sheet.fuel_value", burn / 20, AttributeMath.number(burn / 200.0)), 0));
         }
         if (stack.getEnchantmentValue() > 0) {
-            facts.add(new Fact(Tr.s("sheet.fact.enchantability"), String.valueOf(stack.getEnchantmentValue()), 0));
+            facts.add(new Fact(Tr.s("sheet.fact.enchantability"), String.valueOf(stack.getEnchantmentValue()), 0, Math.min(1.0F, stack.getEnchantmentValue() / 30.0F), 0xFFB45FE0));
         }
         return facts;
     }

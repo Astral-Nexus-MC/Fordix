@@ -40,6 +40,7 @@ public final class PageView {
 
     private final Font font;
     private boolean interactive;
+    private boolean sideContents;
     private final Set<Integer> folded = new HashSet<>();
     private List<PageOutline.Heading> contents = List.of();
     private final List<HeadingSpot> headingSpots = new ArrayList<>();
@@ -57,6 +58,45 @@ public final class PageView {
     public void setInteractive(boolean interactive) {
         this.interactive = interactive;
         this.laidWidth = -1;
+    }
+
+    /** The table of contents is drawn by the screen in a column of its own ({@link #sideHeadings}, {@link #jump}) instead of at the top of the page. */
+    public void setSideContents(boolean side) {
+        this.sideContents = side;
+        this.laidWidth = -1;
+    }
+
+    /** The headings of the table of contents, for a screen that draws it itself. */
+    public List<PageOutline.Heading> sideHeadings(int width) {
+        layout(width);
+        return contents;
+    }
+
+    /** Opens the heading's folded section and returns the scroll position of the heading, or -1. */
+    public int jump(int block, int width) {
+        layout(width);
+        if (folded.remove(block)) {
+            laidWidth = -1;
+            layout(width);
+        }
+        for (HeadingSpot spot : headingSpots) {
+            if (spot.index() == block) {
+                return spot.y();
+            }
+        }
+        return -1;
+    }
+
+    /** The heading (block index) the page is currently reading, or -1 above the first one. */
+    public int activeHeading(double scroll, int width) {
+        layout(width);
+        int active = -1;
+        for (HeadingSpot spot : headingSpots) {
+            if (spot.y() <= scroll + 10) {
+                active = spot.index();
+            }
+        }
+        return active;
     }
 
     public void setBlocks(List<PageMarkup.Block> blocks) {
@@ -81,7 +121,7 @@ public final class PageView {
         boolean[] hidden = interactive ? PageOutline.hidden(blocks, folded) : new boolean[blocks.size()];
         List<PageOutline.Heading> all = PageOutline.headings(blocks);
         contents = interactive && PageOutline.wantsContents(blocks) ? all.subList(0, Math.min(MAX_CONTENTS, all.size())) : List.of();
-        int y = contents.isEmpty() ? 0 : CONTENTS_HEADER + contents.size() * CONTENTS_ROW + 8;
+        int y = contents.isEmpty() || sideContents ? 0 : CONTENTS_HEADER + contents.size() * CONTENTS_ROW + 8;
         int first = y;
         for (int index = 0; index < blocks.size(); index++) {
             PageMarkup.Block block = blocks.get(index);
@@ -136,7 +176,9 @@ public final class PageView {
         layout(width);
         graphics.enableScissor(x, top, x + width, top + height);
         int base = top - (int) scroll;
-        drawContents(graphics, x, base, width, mouseX, mouseY);
+        if (!sideContents) {
+            drawContents(graphics, x, base, width, mouseX, mouseY);
+        }
         for (Placed item : placed) {
             int y = base + item.y();
             if (y + item.height() < top || y > top + height) {
@@ -268,7 +310,7 @@ public final class PageView {
     /** The scroll position of the contents entry under the mouse (it opens the heading's folded section first), or -1. */
     public int contentsClick(int x, int top, int width, int height, double scroll, double mouseX, double mouseY) {
         layout(width);
-        if (contents.isEmpty() || mouseY < top || mouseY >= top + height || mouseX < x || mouseX >= x + width) {
+        if (sideContents || contents.isEmpty() || mouseY < top || mouseY >= top + height || mouseX < x || mouseX >= x + width) {
             return -1;
         }
         int y = top - (int) scroll + CONTENTS_HEADER;

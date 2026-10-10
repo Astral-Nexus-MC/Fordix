@@ -4,6 +4,7 @@ import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.anim.Smoothing;
 import com.omneria.fordix.client.gui.vanilla.Reflect;
 import com.omneria.fordix.client.gui.vanilla.VoidframeDraw;
+import com.omneria.fordix.client.hud.HudStyle;
 import com.omneria.fordix.client.gui.widget.FordixButton;
 import com.omneria.fordix.client.gui.widget.Panel;
 import net.minecraft.advancements.Advancement;
@@ -91,6 +92,11 @@ public class FordixAdvancementsScreen extends FordixScreen {
         }
     }
 
+    /** The column of tabs on the left: one row per mod, with its icon, its name and how far along the player is. */
+    private static final int RAIL_WIDTH = 112;
+    private static final int RAIL_ROW = 30;
+    private static final int RAIL_STEP = 34;
+
     private final ClientAdvancements advancements;
     private final List<Tab> tabs = new ArrayList<>();
     private int builtFor = -1;
@@ -129,10 +135,10 @@ public class FordixAdvancementsScreen extends FordixScreen {
         panelHeight = Math.min(this.height - 24, 250);
         left = centerX(panelWidth);
         top = centerY(panelHeight);
-        tabsY = top + 20;
-        viewX = left + PAD;
-        viewY = tabsY + TAB_HEIGHT + 2;
-        viewWidth = panelWidth - PAD * 2;
+        tabsY = top + 22;
+        viewX = left + PAD + RAIL_WIDTH + 6;
+        viewY = tabsY;
+        viewWidth = panelWidth - PAD * 2 - RAIL_WIDTH - 6;
         viewHeight = top + panelHeight - PAD - 18 - viewY;
         addRenderableWidget(new FordixButton(left + panelWidth - 22, top + 4, 16, 12, Component.literal("x"), this::onClose));
         rebuild();
@@ -274,32 +280,34 @@ public class FordixAdvancementsScreen extends FordixScreen {
         if (tabs.isEmpty()) {
             return;
         }
-        int available = panelWidth - PAD * 2;
-        tabStarts = new int[tabs.size()];
-        tabWidths = new int[tabs.size()];
-        int total = 0;
-        for (int i = 0; i < tabs.size(); i++) {
-            tabStarts[i] = total;
-            tabWidths[i] = Math.max(64, this.font.width(ModNames.of(tabs.get(i).root.getId().getNamespace())) + 32);
-            total += tabWidths[i];
-        }
-        double maxScroll = Math.max(0, total - available);
+        int x = left + PAD;
+        int railHeight = top + panelHeight - PAD - 18 - tabsY;
+        double maxScroll = Math.max(0, tabs.size() * RAIL_STEP - railHeight);
         tabScroll = Math.max(0, Math.min(maxScroll, tabScroll));
-        guiGraphics.enableScissor(left + PAD, tabsY, left + PAD + available, tabsY + TAB_HEIGHT);
+        guiGraphics.enableScissor(x, tabsY, x + RAIL_WIDTH, tabsY + railHeight);
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
-            int x = left + PAD + tabStarts[i] - (int) tabScroll;
-            int width = tabWidths[i];
+            int y = tabsY + i * RAIL_STEP - (int) tabScroll;
             boolean active = tab == selected;
-            boolean hover = mouseX >= x && mouseX < x + width && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT;
-            Glass.row(guiGraphics, x, tabsY, width - 2, TAB_HEIGHT, active, hover);
-            if (active) {
-                guiGraphics.fill(x, tabsY + TAB_HEIGHT - 2, x + width - 2, tabsY + TAB_HEIGHT, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
-            }
-            guiGraphics.renderFakeItem(tab.root.getDisplay().getIcon(), x + 4, tabsY + 3);
+            boolean hover = mouseX >= x && mouseX < x + RAIL_WIDTH && mouseY >= y && mouseY < y + RAIL_ROW;
+            Glass.card(guiGraphics, x, y, RAIL_WIDTH, RAIL_ROW);
+            Glass.row(guiGraphics, x, y, RAIL_WIDTH, RAIL_ROW, active, hover);
+            guiGraphics.renderFakeItem(tab.root.getDisplay().getIcon(), x + 6, y + 7);
             String title = ModNames.of(tab.root.getId().getNamespace());
-            guiGraphics.drawString(this.font, title, x + 23, tabsY + 7,
+            guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(title, RAIL_WIDTH - 32), x + 28, y + 5,
                     active ? FordixPalette.TEXT_BRIGHT : FordixPalette.TEXT, false);
+            int done = 0;
+            int total = 0;
+            for (Node node : tab.nodes) {
+                if (isShown(node)) {
+                    total++;
+                    if (isDone(node)) {
+                        done++;
+                    }
+                }
+            }
+            guiGraphics.drawString(this.font, done + " / " + total, x + 28, y + 16, Glass.dim(), false);
+            HudStyle.bar(guiGraphics, x + 28, y + RAIL_ROW - 5, RAIL_WIDTH - 36, 2, total == 0 ? 0.0F : done / (float) total, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
         }
         guiGraphics.disableScissor();
     }
@@ -447,18 +455,34 @@ public class FordixAdvancementsScreen extends FordixScreen {
         }
     }
 
+    /** The detail card of a node under the mouse: title in its frame color, description, and whether it is done or how far it is. */
     private void drawTooltip(GuiGraphics guiGraphics, Node node, int mouseX, int mouseY) {
-        List<FormattedCharSequence> lines = new ArrayList<>();
         DisplayInfo display = node.display();
-        lines.add(display.getTitle().getVisualOrderText());
-        lines.addAll(this.font.split(display.getDescription(), 200));
+        int accent = frameColor(display.getFrame());
+        List<FormattedCharSequence> description = this.font.split(display.getDescription(), 190);
         AdvancementProgress progress = progressOf(node.advancement());
-        if (progress != null && progress.isDone()) {
-            lines.add(Tr.c("advancements.done").getVisualOrderText());
-        } else if (progress != null && progress.getProgressText() != null) {
-            lines.add(Component.literal(progress.getProgressText()).getVisualOrderText());
+        boolean done = progress != null && progress.isDone();
+        String state = done ? Tr.s("advancements.done") : progress != null && progress.getProgressText() != null ? progress.getProgressText() : "";
+        String title = display.getTitle().getString();
+        int width = Math.max(this.font.width(title), 150);
+        int height = 12 + 12 + description.size() * 10 + (state.isEmpty() ? 0 : 16) + 8;
+        int w = width + 20;
+        int x = Math.min(mouseX + 12, this.width - w - 4);
+        int y = Math.min(mouseY + 12, this.height - height - 4);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0F, 0.0F, 400.0F);
+        HudStyle.panel(guiGraphics, x, y, w, height, accent & 0xFFFFFF, 246, FordixPalette.PANEL_FILL & 0xFFFFFF);
+        guiGraphics.drawString(this.font, title, x + 10, y + 8, 0xFF000000 | accent, false);
+        int line = y + 22;
+        for (FormattedCharSequence text : description) {
+            guiGraphics.drawString(this.font, text, x + 10, line, FordixPalette.TEXT, false);
+            line += 10;
         }
-        guiGraphics.renderTooltip(this.font, lines, mouseX, mouseY);
+        if (!state.isEmpty()) {
+            Glass.pill(guiGraphics, this.font, state, x + 10, line + 3, done ? 0xFF5ED68A : FordixPalette.ACCENT);
+        }
+        guiGraphics.flush();
+        guiGraphics.pose().popPose();
     }
 
     @Override
@@ -466,15 +490,8 @@ public class FordixAdvancementsScreen extends FordixScreen {
         if (super.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
-        if (button == 0 && mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT
-                && mouseX >= left + PAD && mouseX < left + panelWidth - PAD) {
-            double at = mouseX - left - PAD + tabScroll;
-            int index = -1;
-            for (int i = 0; i < tabStarts.length; i++) {
-                if (at >= tabStarts[i] && at < tabStarts[i] + tabWidths[i]) {
-                    index = i;
-                }
-            }
+        if (button == 0 && mouseX >= left + PAD && mouseX < left + PAD + RAIL_WIDTH && mouseY >= tabsY) {
+            int index = (int) ((mouseY - tabsY + tabScroll) / RAIL_STEP);
             if (index >= 0 && index < tabs.size() && tabs.get(index) != selected) {
                 select(tabs.get(index));
             }
@@ -526,7 +543,7 @@ public class FordixAdvancementsScreen extends FordixScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (mouseY >= tabsY && mouseY < tabsY + TAB_HEIGHT) {
+        if (mouseX < viewX - 3 && mouseY >= tabsY) {
             tabScroll -= delta * 30;
             return true;
         }
