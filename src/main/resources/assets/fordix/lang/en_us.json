@@ -573,5 +573,9 @@
     "fordix.inv.slot.chest": "Chest",
     "fordix.inv.slot.legs": "Legs",
     "fordix.inv.slot.feet": "Feet",
-    "fordix.inv.slot.offhand": "Off hand"
+    "fordix.inv.slot.offhand": "Off hand",
+    "fordix.inv.book.title": "Recipes",
+    "fordix.inv.book.craftable": "Craftable",
+    "fordix.inv.book.all": "All",
+    "fordix.inv.book.empty": "No recipes"
 }

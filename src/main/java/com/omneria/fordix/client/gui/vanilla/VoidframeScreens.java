@@ -313,6 +313,7 @@ public final class VoidframeScreens {
 
         public Crafting(CraftingMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
+            GlassBook.install(this, new GlassBook.Plain());
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
@@ -353,6 +354,7 @@ public final class VoidframeScreens {
             if (wide) {
                 placeWide();
             }
+            GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
@@ -425,6 +427,7 @@ public final class VoidframeScreens {
          */
         public PlayerInventory(Player player) {
             super(player);
+            GlassBook.install(this, new GlassBook.Plain());
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
@@ -492,6 +495,7 @@ public final class VoidframeScreens {
             if (wide) {
                 placeWide();
             }
+            GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
@@ -695,6 +699,7 @@ public final class VoidframeScreens {
 
         public Furnace(FurnaceMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
+            GlassBook.install(this, new GlassBook.Smelting());
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
@@ -732,6 +737,7 @@ public final class VoidframeScreens {
             if (wide) {
                 placeWide();
             }
+            GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
@@ -766,6 +772,7 @@ public final class VoidframeScreens {
 
         public BlastFurnace(BlastFurnaceMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
+            GlassBook.install(this, new GlassBook.Blasting());
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
@@ -803,6 +810,7 @@ public final class VoidframeScreens {
             if (wide) {
                 placeWide();
             }
+            GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 
@@ -837,6 +845,7 @@ public final class VoidframeScreens {
 
         public Smoker(SmokerMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
+            GlassBook.install(this, new GlassBook.Smoking());
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
@@ -874,6 +883,7 @@ public final class VoidframeScreens {
             if (wide) {
                 placeWide();
             }
+            GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
         }
 

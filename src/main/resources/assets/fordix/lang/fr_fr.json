@@ -573,5 +573,9 @@
     "fordix.inv.slot.chest": "Torse",
     "fordix.inv.slot.legs": "Jambes",
     "fordix.inv.slot.feet": "Pieds",
-    "fordix.inv.slot.offhand": "Main gauche"
+    "fordix.inv.slot.offhand": "Main gauche",
+    "fordix.inv.book.title": "Recettes",
+    "fordix.inv.book.craftable": "Faisables",
+    "fordix.inv.book.all": "Tout",
+    "fordix.inv.book.empty": "Aucune recette"
 }
