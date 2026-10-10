@@ -341,12 +341,7 @@ public final class VoidframeScreens {
                 lastBook = open;
                 book.init(at[1], this.height, minecraft, false, menu);
             }
-            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
-                    button.setX(leftPos + 176);
-                    button.setY(topPos + 40);
-                }
-            }
+            VoidframeButtons.pinBookButton(this, leftPos + 176, topPos + 40, -1, -1);
         }
 
         @Override
@@ -485,14 +480,7 @@ public final class VoidframeScreens {
                 lastBook = open;
                 book.init(at[1], this.height, minecraft, false, menu);
             }
-            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
-                    button.setX(leftPos + 506);
-                    button.setY(topPos + 290);
-                    button.setWidth(66);
-                    button.setHeight(22);
-                }
-            }
+            VoidframeButtons.pinBookButton(this, leftPos + 506, topPos + 290, 66, 22);
         }
 
         @Override
@@ -695,6 +683,9 @@ public final class VoidframeScreens {
                 button.setX(left + 176);
                 button.setY(top + 52);
             }
+        }
+        if (screen instanceof net.minecraft.client.gui.screens.Screen real) {
+            VoidframeButtons.pinBookButton(real, left + 176, top + 52, -1, -1);
         }
     }
 

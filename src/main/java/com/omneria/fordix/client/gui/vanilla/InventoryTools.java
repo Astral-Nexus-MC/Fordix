@@ -99,24 +99,40 @@ public final class InventoryTools {
         }
         AbstractContainerScreen<?> container = (AbstractContainerScreen<?>) screen;
         current = screen;
-        int right = container.getGuiLeft() + container.getXSize();
-        int y = Math.max(2, container.getGuiTop() - HEIGHT - 2);
         Minecraft minecraft = Minecraft.getInstance();
         int[] inside = screen instanceof WideLayout layout && layout.wide() ? layout.searchRect() : null;
         int[] insideSort = screen instanceof WideLayout layout && layout.wide() ? layout.sortRect() : null;
-        int searchX = inside != null ? container.getGuiLeft() + inside[0] : right - SORT_WIDTH - 4 - SEARCH_WIDTH;
-        int searchY = inside != null ? container.getGuiTop() + inside[1] : y;
         int searchW = inside != null ? inside[2] : SEARCH_WIDTH;
         int searchH = inside != null ? inside[3] : HEIGHT;
         searchWidth = searchW;
-        search = new FieldBox(minecraft.font, searchX, searchY, searchW, searchH, Tr.c("inventory.search"));
+        search = new FieldBox(minecraft.font, 0, 0, searchW, searchH, Tr.c("inventory.search"));
         search.setMaxLength(40);
         search.setHint(Tr.c("inventory.search").withStyle(style -> style.withColor(0x8AA0AD)));
         search.setResponder(text -> query = text);
-        sortButton = insideSort != null
-                ? new FordixButton(container.getGuiLeft() + insideSort[0], container.getGuiTop() + insideSort[1], insideSort[2], insideSort[3],
-                        Tr.c("inventory.sort"), InventoryTools::sortClicked)
-                : new FordixButton(right - SORT_WIDTH, y, SORT_WIDTH, HEIGHT, Tr.c("inventory.sort"), InventoryTools::sortClicked);
+        sortButton = new FordixButton(0, 0, insideSort != null ? insideSort[2] : SORT_WIDTH, insideSort != null ? insideSort[3] : HEIGHT,
+                Tr.c("inventory.sort"), InventoryTools::sortClicked);
+        place(container);
+    }
+
+    /** Puts the two widgets against the panel as it is now: the recipe book moves the panel sideways when it opens. */
+    private static void place(AbstractContainerScreen<?> container) {
+        int right = container.getGuiLeft() + container.getXSize();
+        int y = Math.max(2, container.getGuiTop() - HEIGHT - 2);
+        boolean wide = container instanceof WideLayout layout && layout.wide();
+        if (wide) {
+            WideLayout layout = (WideLayout) container;
+            int[] inside = layout.searchRect();
+            int[] insideSort = layout.sortRect();
+            search.setX(container.getGuiLeft() + inside[0]);
+            search.setY(container.getGuiTop() + inside[1]);
+            sortButton.setX(container.getGuiLeft() + insideSort[0]);
+            sortButton.setY(container.getGuiTop() + insideSort[1]);
+        } else {
+            search.setX(right - SORT_WIDTH - 4 - SEARCH_WIDTH);
+            search.setY(y);
+            sortButton.setX(right - SORT_WIDTH);
+            sortButton.setY(y);
+        }
     }
 
     // ---- drawing: the widgets, and the dimming of stacks that don't match
@@ -125,6 +141,7 @@ public final class InventoryTools {
         if (!active(event.getScreen())) {
             return;
         }
+        place((AbstractContainerScreen<?>) event.getScreen());
         GuiGraphics graphics = event.getGuiGraphics();
         search.render(graphics, event.getMouseX(), event.getMouseY(), event.getPartialTick());
         sortButton.render(graphics, event.getMouseX(), event.getMouseY(), event.getPartialTick());

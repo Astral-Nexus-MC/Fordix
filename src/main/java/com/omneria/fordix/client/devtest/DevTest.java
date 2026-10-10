@@ -99,6 +99,20 @@ public final class DevTest {
                 registries -> registries.registryOrThrow(Registries.WORLD_PRESET).getHolderOrThrow(WorldPresets.FLAT).value().createWorldDimensions());
     }
 
+    /** A real click on the recipe book toggle, as a player would do it. */
+    private static void clickBook(Minecraft mc) {
+        for (net.minecraft.client.gui.components.events.GuiEventListener child : mc.screen.children()) {
+            if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && child.getClass().getSimpleName().equals("StandIn")) {
+                child.mouseClicked(w.getX() + 3, w.getY() + 3, 0);
+                if (!((net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener) mc.screen).getRecipeBookComponent().isVisible()) {
+                    // The book setting is shared by the inventory and the crafting table: open it either way.
+                    child.mouseClicked(w.getX() + 3, w.getY() + 3, 0);
+                }
+                return;
+            }
+        }
+    }
+
     private void cmd(Minecraft mc, String command) {
         mc.player.connection.sendCommand(command);
     }
@@ -150,7 +164,19 @@ public final class DevTest {
         steps.add(new Step("03-inventory", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, false));
         steps.add(new Step("03b-inventory-book", () -> {
             mc.setScreen(new InventoryScreen(mc.player));
-            ((net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener) mc.screen).getRecipeBookComponent().toggleVisibility();
+            clickBook(mc);
+        }, 40, false));
+        steps.add(new Step("03d-crafting-book", () -> {
+            mc.setScreen(new net.minecraft.client.gui.screens.inventory.CraftingScreen(
+                    new net.minecraft.world.inventory.CraftingMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                    Component.translatable("container.crafting")));
+            clickBook(mc);
+        }, 40, false));
+        steps.add(new Step("03e-furnace-book", () -> {
+            mc.setScreen(new net.minecraft.client.gui.screens.inventory.FurnaceScreen(
+                    new net.minecraft.world.inventory.FurnaceMenu(1, mc.player.getInventory()), mc.player.getInventory(),
+                    Component.translatable("container.furnace")));
+            clickBook(mc);
         }, 40, false));
         steps.add(new Step("03c-inventory-book-closed", () -> {
             mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);

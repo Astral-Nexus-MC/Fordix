@@ -78,6 +78,26 @@ public final class VoidframeButtons {
         }
     }
 
+    /** Puts the recipe book toggle of {@code screen} at a place: the game moves it itself on every click, the stand-in follows the original. */
+    static void pinBookButton(net.minecraft.client.gui.screens.Screen screen, int x, int y, int w, int h) {
+        for (GuiEventListener child : screen.children()) {
+            if (child instanceof StandIn standIn && standIn.original instanceof ImageButton button) {
+                button.setX(x);
+                button.setY(y);
+                if (w > 0) {
+                    button.setWidth(w);
+                }
+                if (h > 0) {
+                    button.setHeight(h);
+                }
+                standIn.setWidth(button.getWidth());
+                standIn.setHeight(button.getHeight());
+                standIn.setX(x);
+                standIn.setY(y);
+            }
+        }
+    }
+
     /** A trophy button beside the recipe book toggle, opening the advancements screen. */
     static final class AdvancementsButton extends AbstractWidget {
         private static final int BEVEL_WIDTH = 1;

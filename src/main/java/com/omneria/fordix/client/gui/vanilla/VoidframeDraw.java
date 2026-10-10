@@ -44,6 +44,11 @@ public final class VoidframeDraw {
     /** The wide layout: a panel, a box under every slot (the screen says how big each one is), no band under the title. */
     public static void wideBackground(GuiGraphics guiGraphics, AbstractContainerMenu menu, WideLayout screen,
                                       int left, int top, int width, int height) {
+        if (screen instanceof net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener listener
+                && listener.getRecipeBookComponent().isVisible()) {
+            // The recipe book opens at the left of the panel: its glass is as tall as the panel, the list drawn by the game sits inside.
+            Panel.draw(guiGraphics, left - ContainerLayout.BOOK_ROOM, top, 147, height);
+        }
         Panel.draw(guiGraphics, left, top, width, height);
         for (Slot slot : menu.slots) {
             if (!slot.isActive()) {
