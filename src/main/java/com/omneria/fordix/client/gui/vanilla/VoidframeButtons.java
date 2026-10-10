@@ -162,8 +162,9 @@ public final class VoidframeButtons {
             int w = getWidth();
             int h = getHeight();
             Glass.Kind kind = VoidframeButtons.kindOf(original);
-            if (OptionsSkin.isRow(original)) {
-                OptionsSkin.draw(guiGraphics, Minecraft.getInstance().font, original, x, y, w, h, fade.update(active && isHoveredOrFocused()), active);
+            if (RowButtons.isRow(original)) {
+                RowButtons.draw(guiGraphics, Minecraft.getInstance().font, original, getMessage().getString().replace("...", "").replace("\u2026", ""),
+                        x, y, w, h, fade.update(active && isHoveredOrFocused()), active);
                 return;
             }
             Glass.button(guiGraphics, x, y, w, h, kind, fade.update(active && isHoveredOrFocused()), active);

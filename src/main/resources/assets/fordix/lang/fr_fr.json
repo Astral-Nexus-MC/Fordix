@@ -546,5 +546,9 @@
     "fordix.inv.craft": "Fabrication",
     "fordix.inv.bag": "Sac",
     "fordix.inv.hotbar": "Barre d'objets",
-    "fordix.inv.book": "Livre"
+    "fordix.inv.book": "Livre",
+    "fordix.options.title": "Options",
+    "fordix.options.search": "Chercher un réglage…",
+    "fordix.pause.guides.detail": "Wikis du serveur",
+    "fordix.pause.options.detail": "Vidéo, sons, contrôles"
 }

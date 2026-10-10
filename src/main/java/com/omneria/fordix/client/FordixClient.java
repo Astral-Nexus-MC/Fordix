@@ -348,6 +348,7 @@ public final class FordixClient {
         static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
             com.omneria.fordix.client.gui.vanilla.ScreenBackdrop.onBackgroundRendered(event);
             PauseSkin.onBackgroundRendered(event);
+            com.omneria.fordix.client.gui.vanilla.OptionsSkin.onBackgroundRendered(event);
             VoidframeChrome.onBackgroundRendered(event);
         }
 
@@ -510,7 +511,7 @@ public final class FordixClient {
             GuideHints.onItemTooltip(event);
         }
 
-        /** The pause menu loses its Advancements button; operators get a "Guides" button, lit when a server page changed since it was read. */
+        /** Operators get a "Guides" button, lit when a server page changed since it was read. */
         @SubscribeEvent
         static void onPauseMenuInit(ScreenEvent.Init.Post event) {
             Minecraft minecraft = Minecraft.getInstance();
@@ -537,23 +538,14 @@ public final class FordixClient {
                     return;
                 }
                 int step = back.getHeight() + 4;
-                // The Advancements button goes for everyone (Statistics takes its row); the Guides row is for operators.
-                event.removeListener(advancements);
+                // Operators get a Guides row under the first button (the pause skin lays everything out again when it is on).
                 if (!operator) {
-                    if (advancements != null && stats != null) {
-                        stats.setX(back.getX());
-                        stats.setWidth(back.getWidth());
-                    }
                     return;
                 }
                 for (net.minecraft.client.gui.components.AbstractWidget widget : widgets) {
-                    if (widget != back && widget != advancements) {
+                    if (widget != back) {
                         widget.setY(widget.getY() + step);
                     }
-                }
-                if (advancements != null && stats != null) {
-                    stats.setX(back.getX());
-                    stats.setWidth(back.getWidth());
                 }
                 event.addListener(new GuidesPauseButton(back.getX(), back.getY() + step, back.getWidth(),
                         ServerPages.hasUnread(), () -> Minecraft.getInstance().setScreen(new GuidesScreen(screen))));
@@ -595,16 +587,8 @@ public final class FordixClient {
         @Override
         public void renderWidget(net.minecraft.client.gui.GuiGraphics g, int mx, int my, float pt) {
             var font = Minecraft.getInstance().font;
-            com.omneria.fordix.client.gui.Glass.button(g, getX(), getY(), getWidth(), getHeight(),
-                    com.omneria.fordix.client.gui.Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
-            g.drawCenteredString(font, getMessage(), getX() + getWidth() / 2, getY() + (getHeight() - 8) / 2,
-                    com.omneria.fordix.client.gui.Glass.buttonText(com.omneria.fordix.client.gui.Glass.Kind.NORMAL, true));
-            if (unread) {
-                String badge = Tr.s("guides.new_badge");
-                int w = font.width(badge) + 10;
-                com.omneria.fordix.client.gui.Glass.pill(g, font, badge, getX() + getWidth() - w - 4, getY() + (getHeight() - 11) / 2,
-                        com.omneria.fordix.client.gui.FordixPalette.ACCENT);
-            }
+            com.omneria.fordix.client.gui.vanilla.RowButtons.draw(g, font, this, getMessage().getString(), getX(), getY(), getWidth(), getHeight(),
+                    fade.update(isHoveredOrFocused()), true);
         }
     }
 }

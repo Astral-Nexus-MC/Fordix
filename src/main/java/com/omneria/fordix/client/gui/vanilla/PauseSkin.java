@@ -29,10 +29,10 @@ import java.util.List;
  * itself is blanked, the column carries a larger one.
  */
 public final class PauseSkin {
-    private static final int COLUMN_X = 32;
-    private static final int COLUMN_WIDTH = 214;
+    private static final int COLUMN_X = 40;
+    private static final int COLUMN_WIDTH = 240;
     private static final int PAD = 12;
-    private static final int ROOMY_TOP = 84;
+    private static final int ROOMY_TOP = 98;
     private static final int TIGHT_TOP = 54;
     private static final int CARD_WIDTH = 190;
     private static final int CARD_HEIGHT = 96;
@@ -44,61 +44,107 @@ public final class PauseSkin {
     private PauseSkin() {
     }
 
-    private static int needed(int rows, int first, int other, int gap, int separation) {
-        return first + (rows - 1) * other + (rows - 1) * gap + (rows > 2 ? separation : 0);
+    private static String keyOf(AbstractWidget widget) {
+        return widget.getMessage().getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents translatable
+                ? translatable.getKey() : "";
     }
 
     public static void onScreenInit(ScreenEvent.Init.Post event) {
+        RowButtons.clear();
+        laidOut = null;
         if (!FordixConfig.VOIDFRAME_VANILLA_SCREENS.get() || event.getScreen().getClass() != PauseScreen.class) {
             return;
         }
-        List<AbstractWidget> widgets = new ArrayList<>();
+        AbstractWidget back = null;
+        AbstractWidget guides = null;
+        AbstractWidget advancements = null;
+        AbstractWidget stats = null;
+        AbstractWidget options = null;
+        AbstractWidget lan = null;
+        AbstractWidget reporting = null;
+        AbstractWidget quit = null;
+        List<AbstractWidget> extra = new ArrayList<>();
         for (GuiEventListener listener : event.getListenersList()) {
-            if (listener instanceof Button button && button.visible) {
-                widgets.add(button);
+            if (!(listener instanceof Button button) || !button.visible) {
+                continue;
+            }
+            switch (keyOf(button)) {
+                case "menu.returnToGame" -> back = button;
+                case "fordix.guides.button" -> guides = button;
+                case "gui.advancements" -> advancements = button;
+                case "gui.stats" -> stats = button;
+                case "menu.options" -> options = button;
+                case "menu.shareToLan" -> lan = button;
+                case "menu.playerReporting" -> reporting = button;
+                case "menu.returnToMenu", "menu.disconnect" -> quit = button;
+                case "menu.sendFeedback", "menu.reportBugs" -> button.visible = false;
+                default -> extra.add(button);
             }
         }
-        if (widgets.isEmpty()) {
+        if (back == null) {
             return;
         }
-        // Rows as the game laid them out: same y means the same row (Options and Open to LAN sit side by side).
-        widgets.sort(Comparator.<AbstractWidget>comparingInt(AbstractWidget::getY).thenComparingInt(AbstractWidget::getX));
+        Minecraft minecraft = Minecraft.getInstance();
+        // The rows of the mockup, in its order: the main action, the four rows with a value line, the pair, the way out.
         List<List<AbstractWidget>> rows = new ArrayList<>();
-        for (AbstractWidget widget : widgets) {
-            List<AbstractWidget> last = rows.isEmpty() ? null : rows.get(rows.size() - 1);
-            if (last != null && Math.abs(last.get(0).getY() - widget.getY()) < 4) {
-                last.add(widget);
-            } else {
-                List<AbstractWidget> row = new ArrayList<>();
-                row.add(widget);
-                rows.add(row);
+        List<Integer> heights = new ArrayList<>();
+        rows.add(List.of(back));
+        heights.add(30);
+        if (guides != null) {
+            rows.add(List.of(guides));
+            heights.add(34);
+            RowButtons.register((Button) guides, "G", () -> Tr.s("pause.guides.detail"),
+                    () -> com.omneria.fordix.client.guide.ServerPages.hasUnread() ? Tr.s("guides.new_badge") : "");
+        }
+        if (advancements != null) {
+            rows.add(List.of(advancements));
+            heights.add(34);
+            RowButtons.register((Button) advancements, "A", () -> minecraft.player == null ? ""
+                    : com.omneria.fordix.client.gui.FordixAdvancementsScreen.summary(minecraft.player.connection.getAdvancements()));
+        }
+        if (stats != null) {
+            rows.add(List.of(stats));
+            heights.add(34);
+            RowButtons.register((Button) stats, "S", () -> "");
+        }
+        if (options != null) {
+            rows.add(List.of(options));
+            heights.add(34);
+            RowButtons.register((Button) options, "O", () -> Tr.s("pause.options.detail"));
+        }
+        for (AbstractWidget other : extra) {
+            rows.add(List.of(other));
+            heights.add(26);
+        }
+        if (lan != null || reporting != null) {
+            List<AbstractWidget> pair = new ArrayList<>();
+            if (lan != null) {
+                pair.add(lan);
             }
+            if (reporting != null) {
+                pair.add(reporting);
+            }
+            rows.add(pair);
+            heights.add(24);
+        }
+        if (quit != null) {
+            rows.add(List.of(quit));
+            heights.add(28);
         }
         int inner = COLUMN_WIDTH - PAD * 2;
         int screenHeight = event.getScreen().height;
-        // Roomy on a tall screen, tight (smaller buttons, closer heading) on a small one, so the whole menu always fits.
-        int top = screenHeight >= 300 ? ROOMY_TOP : TIGHT_TOP;
+        // Roomy on a tall screen, tight (smaller rows, closer heading) on a small one, so the whole menu always fits.
+        int top = screenHeight >= 400 ? ROOMY_TOP : TIGHT_TOP;
         int available = screenHeight - top - 8 - PAD * 2;
-        int first = 28;
-        int other = 24;
-        int gap = 6;
-        int separation = 8;
-        while (needed(rows.size(), first, other, gap, separation) > available && other > 14) {
-            first = Math.max(18, first - 2);
-            other -= 2;
-            gap = Math.max(2, gap - 1);
-            separation = Math.max(2, separation - 1);
+        int shrink = 0;
+        while (needed(heights, shrink) > available && shrink < 14) {
+            shrink++;
         }
         panelTop = top;
         int y = top + PAD;
         for (int i = 0; i < rows.size(); i++) {
             List<AbstractWidget> row = rows.get(i);
-            boolean isFirst = i == 0;
-            boolean isLast = i == rows.size() - 1;
-            if (isLast && rows.size() > 2) {
-                y += separation;
-            }
-            int height = isFirst ? first : other;
+            int height = Math.max(18, heights.get(i) - shrink);
             int each = (inner - (row.size() - 1) * 4) / row.size();
             for (int k = 0; k < row.size(); k++) {
                 AbstractWidget widget = row.get(k);
@@ -107,9 +153,9 @@ public final class PauseSkin {
                 widget.setWidth(each);
                 widget.setHeight(height);
             }
-            y += height + gap;
+            y += height + gapAfter(i, rows.size(), heights, shrink);
         }
-        panelHeight = y - top + PAD - gap;
+        panelHeight = y - top + PAD - 4;
         // The game's "Game Menu" caption is a text widget of its own: the column carries a larger heading.
         for (GuiEventListener listener : event.getListenersList()) {
             if (listener instanceof net.minecraft.client.gui.components.StringWidget caption) {
@@ -117,6 +163,25 @@ public final class PauseSkin {
             }
         }
         laidOut = (PauseScreen) event.getScreen();
+    }
+
+    /** Space under a row: wide after the main action and before the way out, narrow between rows. */
+    private static int gapAfter(int index, int count, List<Integer> heights, int shrink) {
+        if (index == 0) {
+            return Math.max(4, 10 - shrink);
+        }
+        if (index == count - 2) {
+            return Math.max(4, 22 - shrink * 2);
+        }
+        return heights.get(index) >= 30 ? Math.max(2, 4 - shrink / 4) : Math.max(2, 8 - shrink / 2);
+    }
+
+    private static int needed(List<Integer> heights, int shrink) {
+        int total = 0;
+        for (int i = 0; i < heights.size(); i++) {
+            total += Math.max(18, heights.get(i) - shrink) + gapAfter(i, heights.size(), heights, shrink);
+        }
+        return total;
     }
 
     /** Drawn right after the dimmed world and before the buttons: the shade, the column, the heading and the session card. */
@@ -136,11 +201,11 @@ public final class PauseSkin {
         }
         Glass.panel(g, COLUMN_X, panelTop, COLUMN_WIDTH, panelHeight);
         boolean tight = panelTop < ROOMY_TOP;
-        int headingY = tight ? 8 : 30;
+        int headingY = tight ? 8 : 34;
         Glass.label(g, font, Tr.s("pause.heading"), COLUMN_X + 2, headingY);
-        float scale = tight ? 1.4F : 1.8F;
+        float scale = tight ? 1.4F : 3.0F;
         g.pose().pushPose();
-        g.pose().translate(COLUMN_X + 2, headingY + 11, 0);
+        g.pose().translate(COLUMN_X + 2, headingY + (tight ? 11 : 13), 0);
         g.pose().scale(scale, scale, 1.0F);
         g.drawString(font, font.plainSubstrByWidth(worldName(minecraft), (int) ((COLUMN_WIDTH - 4) / scale)), 0, 0, FordixPalette.TEXT_BRIGHT, true);
         g.pose().popPose();

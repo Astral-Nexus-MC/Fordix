@@ -546,5 +546,9 @@
     "fordix.inv.craft": "Crafting",
     "fordix.inv.bag": "Bag",
     "fordix.inv.hotbar": "Hotbar",
-    "fordix.inv.book": "Book"
+    "fordix.inv.book": "Book",
+    "fordix.options.title": "Options",
+    "fordix.options.search": "Search a setting…",
+    "fordix.pause.guides.detail": "Server wikis",
+    "fordix.pause.options.detail": "Video, sound, controls"
 }

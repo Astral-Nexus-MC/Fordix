@@ -224,6 +224,28 @@ public class FordixAdvancementsScreen extends FordixScreen {
         targetY = Math.max(ys[0], Math.min(ys[1], targetY));
     }
 
+    /** "5 / 17": advancements done out of those shown, for the pause menu. */
+    public static String summary(ClientAdvancements advancements) {
+        int done = 0;
+        int total = 0;
+        Object map = Reflect.get(PROGRESS_FIELD, advancements);
+        for (Advancement advancement : advancements.getAdvancements().getAllAdvancements()) {
+            DisplayInfo display = advancement.getDisplay();
+            if (display == null) {
+                continue;
+            }
+            boolean complete = map instanceof Map<?, ?> progress && progress.get(advancement) instanceof AdvancementProgress p && p.isDone();
+            if (display.isHidden() && !complete) {
+                continue;
+            }
+            total++;
+            if (complete) {
+                done++;
+            }
+        }
+        return done + " / " + total;
+    }
+
     private AdvancementProgress progressOf(Advancement advancement) {
         if (Reflect.get(PROGRESS_FIELD, advancements) instanceof Map<?, ?> map
                 && map.get(advancement) instanceof AdvancementProgress progress) {

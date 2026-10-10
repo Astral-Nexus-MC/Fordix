@@ -110,7 +110,8 @@ public final class DevTest {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        mc.options.guiScale().set(3);
+        String scaleVariable = System.getenv("FORDIX_DEVTEST_SCALE");
+        mc.options.guiScale().set(scaleVariable == null ? 3 : Integer.parseInt(scaleVariable));
         mc.resizeDisplay();
         steps.add(new Step("00-setup", () -> {
             cmd(mc, "gamemode survival");
