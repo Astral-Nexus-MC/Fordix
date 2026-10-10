@@ -342,6 +342,7 @@ public final class FordixClient {
             com.omneria.fordix.client.gui.vanilla.RowButtons.clear();
             PauseSkin.onScreenInit(event);
             com.omneria.fordix.client.gui.vanilla.OptionsSkin.onScreenInit(event);
+            com.omneria.fordix.client.gui.vanilla.SubOptionsSkin.onScreenInit(event);
             VoidframeButtons.onScreenInit(event);
         }
 
@@ -350,6 +351,7 @@ public final class FordixClient {
             com.omneria.fordix.client.gui.vanilla.ScreenBackdrop.onBackgroundRendered(event);
             PauseSkin.onBackgroundRendered(event);
             com.omneria.fordix.client.gui.vanilla.OptionsSkin.onBackgroundRendered(event);
+            com.omneria.fordix.client.gui.vanilla.SubOptionsSkin.onBackgroundRendered(event);
             VoidframeChrome.onBackgroundRendered(event);
         }
 

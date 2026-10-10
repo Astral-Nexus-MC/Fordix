@@ -603,6 +603,12 @@ public final class DevTest {
             hoverIndex = 0;
             mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements()));
         }, 40, false));
+        steps.add(new Step("17c2-advancement-card", () -> {
+            com.omneria.fordix.client.gui.FordixAdvancementsScreen screen = new com.omneria.fordix.client.gui.FordixAdvancementsScreen(
+                    mc.player.connection.getAdvancements());
+            screen.setTestHover(3);
+            mc.setScreen(screen);
+        }, 40, false));
         steps.add(new Step("17d-item-sheet", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
                 new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE))), 40, false));
         steps.add(new Step("17e-item-sheet-stick", () -> mc.setScreen(new com.omneria.fordix.client.gui.ItemSheetScreen(null,
@@ -643,8 +649,14 @@ public final class DevTest {
             mc.setScreen(null);
         }, 5, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
-        steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(mc.screen, mc.options)), 30, false));
-        steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(mc.screen, mc.options)), 30, false));
+        steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(optionsParent(mc), mc.options)), 30, false));
+        steps.add(new Step("19b-language", () -> mc.setScreen(new net.minecraft.client.gui.screens.LanguageSelectScreen(null, mc.options, mc.getLanguageManager())), 30, false));
+        steps.add(new Step("19c-accessibility", () -> mc.setScreen(new net.minecraft.client.gui.screens.AccessibilityOptionsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("19d-chat-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatOptionsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("19e-mouse", () -> mc.setScreen(new net.minecraft.client.gui.screens.MouseSettingsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("19f-skin", () -> mc.setScreen(new net.minecraft.client.gui.screens.SkinCustomizationScreen(null, mc.options)), 30, false));
+        steps.add(new Step("19g-keybinds", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.KeyBindsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("20-controls", () -> mc.setScreen(new net.minecraft.client.gui.screens.controls.ControlsScreen(optionsParent(mc), mc.options)), 30, false));
         steps.add(new Step("21-singleplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(null)), 40, false));
         steps.add(new Step("22-stats", () -> mc.setScreen(new net.minecraft.client.gui.screens.achievement.StatsScreen(null, mc.player.getStats())), 30, false));
         steps.add(new Step("23-multiplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen(null)), 30, false));
@@ -665,6 +677,13 @@ public final class DevTest {
             // Long enough for the toasts of the set-up (recipes, advancements) to leave the screen.
             steps.replaceAll(step -> step.name().equals("01-hud") ? new Step("01-hud", step.setup(), 700, false) : step);
         }
+    }
+
+    /** An options screen that has been laid out once: the sub-screens read the game from their parent. */
+    private static net.minecraft.client.gui.screens.Screen optionsParent(Minecraft mc) {
+        net.minecraft.client.gui.screens.Screen parent = new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options);
+        parent.init(mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+        return parent;
     }
 
     private void next(Minecraft mc) {

@@ -129,6 +129,8 @@ public class FordixAdvancementsScreen extends FordixScreen {
         this.advancements = advancements;
     }
 
+    private int testHoverIndex = -1;
+
     @Override
     protected int minWidth() {
         return 380;
@@ -303,9 +305,26 @@ public class FordixAdvancementsScreen extends FordixScreen {
             drawInfoBar(guiGraphics);
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        if (hovered == null && testHoverIndex >= 0 && selected != null) {
+            // In-game test only: the card of the n-th shown node, as if the pointer were on it.
+            int n = 0;
+            for (Node node : selected.nodes) {
+                if (isShown(node) && n++ == testHoverIndex) {
+                    hovered = node;
+                    mouseX = viewX + viewWidth / 3;
+                    mouseY = viewY + viewHeight / 3;
+                    break;
+                }
+            }
+        }
         if (hovered != null) {
             drawTooltip(guiGraphics, hovered, mouseX, mouseY);
         }
+    }
+
+    /** For the in-game test: shows the detail card of the n-th shown node without a pointer on it (-1 = off). */
+    public void setTestHover(int index) {
+        this.testHoverIndex = index;
     }
 
     private void drawTabs(GuiGraphics guiGraphics, int mouseX, int mouseY) {
