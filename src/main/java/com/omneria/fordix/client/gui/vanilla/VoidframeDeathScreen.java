@@ -68,7 +68,7 @@ public final class VoidframeDeathScreen extends DeathScreen implements Voidframe
     @Override
     protected void init() {
         super.init();
-        int y = Math.round(this.height * 0.66F);
+        int y = Math.max(Math.round(this.height * 0.66F), 168);
         int index = 0;
         for (GuiEventListener child : children()) {
             if (child instanceof AbstractWidget widget) {
@@ -111,7 +111,7 @@ public final class VoidframeDeathScreen extends DeathScreen implements Voidframe
             return;
         }
         int width = 260;
-        int height = 62;
+        int height = 58;
         int x = centerX - width / 2;
         int y = 98;
         Glass.panel(g, x, y, width, height, 0xE5534B);
@@ -124,6 +124,6 @@ public final class VoidframeDeathScreen extends DeathScreen implements Voidframe
         g.drawString(this.font, String.format("%d  %d  %d", player.getBlockX(), player.getBlockY(), player.getBlockZ()), column + 124, y + 22,
                 FordixPalette.TEXT_BRIGHT, false);
         String dimension = minecraft.level == null ? "" : minecraft.level.dimension().location().getPath().replace('_', ' ');
-        Glass.pill(g, this.font, dimension, column, y + 42, FordixPalette.ACCENT);
+        Glass.pill(g, this.font, dimension, column, y + 38, FordixPalette.ACCENT);
     }
 }

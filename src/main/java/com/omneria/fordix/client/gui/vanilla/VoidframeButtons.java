@@ -167,7 +167,7 @@ public final class VoidframeButtons {
                 drawBook(guiGraphics, x + w / 2, y + h / 2, isHoveredOrFocused());
             } else {
                 Font font = Minecraft.getInstance().font;
-                guiGraphics.drawCenteredString(font, getMessage(), x + w / 2, y + (h - 8) / 2, Glass.buttonText(kind, active));
+                guiGraphics.drawString(font, getMessage(), x + (w - font.width(getMessage())) / 2, y + (h - 8) / 2, Glass.buttonText(kind, active), false);
             }
         }
 
