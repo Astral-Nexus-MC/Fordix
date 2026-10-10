@@ -30,7 +30,8 @@ public final class RarityFrames {
         GuiGraphics guiGraphics = event.getGuiGraphics();
         for (Slot slot : screen.getMenu().slots) {
             if (slot.isActive() && ItemRarity.isNotable(slot.getItem())) {
-                frame(guiGraphics, slot.x - 1, slot.y - 1, 18, ItemRarity.color(slot.getItem()));
+                int[] box = screen instanceof WideLayout wideScreen ? wideScreen.boxOf(slot) : new int[]{1, 18};
+                frame(guiGraphics, slot.x - box[0], slot.y - box[0], box[1], ItemRarity.color(slot.getItem()));
             }
         }
     }

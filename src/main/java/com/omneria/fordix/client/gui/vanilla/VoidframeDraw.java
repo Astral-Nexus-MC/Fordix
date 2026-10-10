@@ -41,6 +41,19 @@ public final class VoidframeDraw {
         }
     }
 
+    /** The wide layout: a panel, a box under every slot (the screen says how big each one is), no band under the title. */
+    public static void wideBackground(GuiGraphics guiGraphics, AbstractContainerMenu menu, WideLayout screen,
+                                      int left, int top, int width, int height) {
+        Panel.draw(guiGraphics, left, top, width, height);
+        for (Slot slot : menu.slots) {
+            if (!slot.isActive()) {
+                continue;
+            }
+            int[] box = screen.boxOf(slot);
+            well(guiGraphics, left + slot.x - box[0], top + slot.y - box[0], box[1], box[1]);
+        }
+    }
+
     /** The accent rule under the title row, fading to the right: container titles sit on the glass, not on a band. */
     public static void titleBand(GuiGraphics guiGraphics, int left, int top, int width) {
         Glass.rule(guiGraphics, left + 6, top + 15, width - 12);

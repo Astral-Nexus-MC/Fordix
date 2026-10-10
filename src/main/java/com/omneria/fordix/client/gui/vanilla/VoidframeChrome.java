@@ -84,20 +84,22 @@ public final class VoidframeChrome {
         float alpha = Easing.progress(now - hoveredSince, HOVER_FADE_MS);
         int rgb = FordixPalette.ACCENT & 0xFFFFFF;
         GuiGraphics guiGraphics = event.getGuiGraphics();
-        int x = slot.x - 1;
-        int y = slot.y - 1;
+        int[] boxSpec = screen instanceof WideLayout wideScreen ? wideScreen.boxOf(slot) : new int[]{1, 18};
+        int size = boxSpec[1];
+        int x = slot.x - boxSpec[0];
+        int y = slot.y - boxSpec[0];
         int soft = Easing.withAlpha(rgb | 0xFF000000, alpha * 0.16F);
         int glow = Easing.withAlpha(rgb | 0xFF000000, alpha * 0.22F);
         int line = Easing.withAlpha(rgb | 0xFF000000, alpha);
-        guiGraphics.fill(x + 1, y + 1, x + 17, y + 17, soft);
-        guiGraphics.fill(x - 1, y - 1, x + 19, y, glow);
-        guiGraphics.fill(x - 1, y + 18, x + 19, y + 19, glow);
-        guiGraphics.fill(x - 1, y, x, y + 18, glow);
-        guiGraphics.fill(x + 18, y, x + 19, y + 18, glow);
-        guiGraphics.fill(x, y, x + 18, y + 1, line);
-        guiGraphics.fill(x, y + 17, x + 18, y + 18, line);
-        guiGraphics.fill(x, y + 1, x + 1, y + 17, line);
-        guiGraphics.fill(x + 17, y + 1, x + 18, y + 17, line);
+        guiGraphics.fill(x + 1, y + 1, x + size - 1, y + size - 1, soft);
+        guiGraphics.fill(x - 1, y - 1, x + size + 1, y, glow);
+        guiGraphics.fill(x - 1, y + size, x + size + 1, y + size + 1, glow);
+        guiGraphics.fill(x - 1, y, x, y + size, glow);
+        guiGraphics.fill(x + size, y, x + size + 1, y + size, glow);
+        guiGraphics.fill(x, y, x + size, y + 1, line);
+        guiGraphics.fill(x, y + size - 1, x + size, y + size, line);
+        guiGraphics.fill(x, y + 1, x + 1, y + size - 1, line);
+        guiGraphics.fill(x + size - 1, y + 1, x + size, y + size - 1, line);
     }
 
     public static void onTooltipColor(RenderTooltipEvent.Color event) {

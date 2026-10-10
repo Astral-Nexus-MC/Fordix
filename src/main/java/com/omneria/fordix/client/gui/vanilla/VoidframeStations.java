@@ -84,14 +84,73 @@ public final class VoidframeStations {
         }
     }
 
-    public static class Anvil extends AnvilScreen implements VoidframeScreen {
+    private static final int ANVIL_W = 218;
+    private static final int ANVIL_H = 330;
+
+    public static class Anvil extends AnvilScreen implements VoidframeScreen, WideLayout {
+        private boolean wide;
+
         public Anvil(AnvilMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
         }
 
         @Override
+        public boolean wide() {
+            return wide;
+        }
+
+        @Override
+        public int[] boxOf(net.minecraft.world.inventory.Slot slot) {
+            if (!wide) {
+                return new int[]{1, 18};
+            }
+            return slot.index == 2 ? new int[]{5, 26} : new int[]{2, 20};
+        }
+
+        @Override
+        protected void init() {
+            wide = ContainerLayout.fits(this, ANVIL_W, ANVIL_H) && ContainerLayout.ready(menu);
+            imageWidth = wide ? ANVIL_W : 176;
+            imageHeight = wide ? ANVIL_H : 166;
+            super.init();
+            if (!wide) {
+                ContainerLayout.restore(menu);
+                return;
+            }
+            ContainerLayout.put(menu.getSlot(0), 16, 56, ContainerLayout.BOX);
+            ContainerLayout.put(menu.getSlot(1), 56, 56, ContainerLayout.BOX);
+            ContainerLayout.put(menu.getSlot(2), 130, 52, ContainerLayout.BIG);
+            ContainerLayout.playerBlock(menu, 10, 204, 278);
+            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                if (child instanceof net.minecraft.client.gui.components.EditBox box) {
+                    box.setX(leftPos + 15);
+                    box.setY(topPos + 101);
+                    box.setWidth(186);
+                }
+            }
+        }
+
+        @Override
         protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+            if (wide) {
+                VoidframeDraw.wideBackground(guiGraphics, menu, this, leftPos, topPos, imageWidth, imageHeight);
+                boolean focused = false;
+                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                    if (child instanceof net.minecraft.client.gui.components.EditBox box) {
+                        focused = box.isFocused();
+                    }
+                }
+                Glass.field(guiGraphics, leftPos + 10, topPos + 96, 196, 22, focused);
+                Glass.rule(guiGraphics, leftPos + 10, topPos + 180, ANVIL_W - 20);
+                VoidframeDraw.plus(guiGraphics, leftPos + 46, topPos + 66, 10, FordixPalette.TEXT);
+                VoidframeDraw.arrow(guiGraphics, leftPos + 90, topPos + 59, 28, 14, 28);
+                boolean hasInput = menu.getSlot(0).hasItem() || menu.getSlot(1).hasItem();
+                if (hasInput && !menu.getSlot(2).hasItem()) {
+                    VoidframeDraw.cross(guiGraphics, leftPos + 96, topPos + 58, 16, FordixPalette.ERROR);
+                }
+                return;
+            }
             VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
             VoidframeDraw.titleBand(guiGraphics, leftPos, topPos, imageWidth);
             // Behind the rename field, which vanilla draws borderless on top.
@@ -104,11 +163,16 @@ public final class VoidframeStations {
             }
         }
 
-        /** Same cost line as vanilla (red when too expensive or unaffordable), with Voidframe titles. */
+        /** The cost as a pill (green when it can be paid, red when not) and the player's levels next to it. */
         @Override
         protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
-            VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            if (wide) {
+                VoidframeDraw.title(guiGraphics, font, title, 14, 9);
+                VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, 12, 190);
+            } else {
+                VoidframeDraw.title(guiGraphics, font, title, titleLabelX, titleLabelY);
+                VoidframeDraw.label(guiGraphics, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
+            }
             int cost = menu.getCost();
             if (cost <= 0) {
                 return;
@@ -127,12 +191,13 @@ public final class VoidframeStations {
                     color = VANILLA_RED;
                 }
             }
-            // The cost as a pill (green when it can be paid, red when not) and the player's levels next to it.
             int pillColor = color == VANILLA_RED ? FordixPalette.ERROR : 0xFF5ED68A;
-            int pillWidth = Glass.pill(guiGraphics, font, text.getString(), 8, 67, pillColor);
+            int pillX = wide ? 10 : 8;
+            int pillY = wide ? 128 : 67;
+            int pillWidth = Glass.pill(guiGraphics, font, text.getString(), pillX, pillY, pillColor);
             if (!player.getAbilities().instabuild) {
                 Glass.pill(guiGraphics, font, Component.translatable("fordix.anvil.levels", player.experienceLevel).getString(),
-                        8 + pillWidth + 4, 67, FordixPalette.TEXT);
+                        pillX + pillWidth + 4, pillY, FordixPalette.TEXT);
             }
         }
     }

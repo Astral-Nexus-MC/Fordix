@@ -535,5 +535,16 @@
     "fordix.death.items.gone": "Items gone",
     "fordix.inv.armor": "Armor",
     "fordix.inv.xp": "XP",
-    "fordix.inv.level": "level %s"
+    "fordix.inv.level": "level %s",
+    "fordix.container.hint": "Shift + click: move everything",
+    "fordix.furnace.on": "Burning",
+    "fordix.furnace.off": "Off",
+    "fordix.furnace.input": "Input",
+    "fordix.furnace.result": "Result",
+    "fordix.inv.title": "Inventory",
+    "fordix.inv.equipment": "Equipment",
+    "fordix.inv.craft": "Crafting",
+    "fordix.inv.bag": "Bag",
+    "fordix.inv.hotbar": "Hotbar",
+    "fordix.inv.book": "Book"
 }

@@ -55,6 +55,7 @@ public final class InventoryTools {
     private static EditBox search;
     private static FordixButton sortButton;
     private static String query = "";
+    private static int searchWidth = SEARCH_WIDTH;
     private static final Deque<Click> QUEUE = new ArrayDeque<>();
     private static int queueMenu = -1;
 
@@ -101,12 +102,21 @@ public final class InventoryTools {
         int right = container.getGuiLeft() + container.getXSize();
         int y = Math.max(2, container.getGuiTop() - HEIGHT - 2);
         Minecraft minecraft = Minecraft.getInstance();
-        search = new FieldBox(minecraft.font, right - SORT_WIDTH - 4 - SEARCH_WIDTH, y, SEARCH_WIDTH, HEIGHT, Tr.c("inventory.search"));
+        int[] inside = screen instanceof WideLayout layout && layout.wide() ? layout.searchRect() : null;
+        int[] insideSort = screen instanceof WideLayout layout && layout.wide() ? layout.sortRect() : null;
+        int searchX = inside != null ? container.getGuiLeft() + inside[0] : right - SORT_WIDTH - 4 - SEARCH_WIDTH;
+        int searchY = inside != null ? container.getGuiTop() + inside[1] : y;
+        int searchW = inside != null ? inside[2] : SEARCH_WIDTH;
+        int searchH = inside != null ? inside[3] : HEIGHT;
+        searchWidth = searchW;
+        search = new FieldBox(minecraft.font, searchX, searchY, searchW, searchH, Tr.c("inventory.search"));
         search.setMaxLength(40);
-        search.setBordered(false);
         search.setHint(Tr.c("inventory.search").withStyle(style -> style.withColor(0x8AA0AD)));
         search.setResponder(text -> query = text);
-        sortButton = new FordixButton(right - SORT_WIDTH, y, SORT_WIDTH, HEIGHT, Tr.c("inventory.sort"), InventoryTools::sortClicked);
+        sortButton = insideSort != null
+                ? new FordixButton(container.getGuiLeft() + insideSort[0], container.getGuiTop() + insideSort[1], insideSort[2], insideSort[3],
+                        Tr.c("inventory.sort"), InventoryTools::sortClicked)
+                : new FordixButton(right - SORT_WIDTH, y, SORT_WIDTH, HEIGHT, Tr.c("inventory.sort"), InventoryTools::sortClicked);
     }
 
     // ---- drawing: the widgets, and the dimming of stacks that don't match
@@ -116,20 +126,7 @@ public final class InventoryTools {
             return;
         }
         GuiGraphics graphics = event.getGuiGraphics();
-        graphics.fill(search.getX(), search.getY(), search.getX() + search.getWidth(), search.getY() + search.getHeight(), TAB_FILL);
-        if (search.isFocused()) {
-            graphics.fill(search.getX(), search.getY() + search.getHeight() - 1, search.getX() + search.getWidth(),
-                    search.getY() + search.getHeight(), 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
-        }
-        int x = search.getX();
-        int y = search.getY();
-        search.setX(x + 4);
-        search.setY(y + 3);
-        search.setWidth(SEARCH_WIDTH - 8);
         search.render(graphics, event.getMouseX(), event.getMouseY(), event.getPartialTick());
-        search.setX(x);
-        search.setY(y);
-        search.setWidth(SEARCH_WIDTH);
         sortButton.render(graphics, event.getMouseX(), event.getMouseY(), event.getPartialTick());
     }
 

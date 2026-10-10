@@ -1,5 +1,6 @@
 package com.omneria.fordix.client.gui.vanilla;
 
+import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Glass;
 import net.minecraft.client.Minecraft;
@@ -70,7 +71,7 @@ public final class VoidframeButtons {
             StandIn standIn = new StandIn(original);
             event.addListener(standIn);
             // Room next to the recipe book toggle on the inventory: a shortcut to the advancements.
-            if (original instanceof ImageButton && event.getScreen() instanceof VoidframeScreens.PlayerInventory) {
+            if (original instanceof ImageButton && event.getScreen() instanceof VoidframeScreens.PlayerInventory inventory && !inventory.wide()) {
                 event.addListener(new AdvancementsButton(standIn));
             }
         }
@@ -167,8 +168,13 @@ public final class VoidframeButtons {
             }
             Glass.button(guiGraphics, x, y, w, h, kind, fade.update(active && isHoveredOrFocused()), active);
             if (original instanceof ImageButton) {
-                // Image buttons in these screens are the recipe book toggle: draw a small book glyph.
-                drawBook(guiGraphics, x + w / 2, y + h / 2, isHoveredOrFocused());
+                // Image buttons in these screens are the recipe book toggle: a book glyph, or its name when the button is wide.
+                if (w > 30) {
+                    guiGraphics.drawString(Minecraft.getInstance().font, Tr.s("inv.book"),
+                            x + (w - Minecraft.getInstance().font.width(Tr.s("inv.book"))) / 2, y + (h - 8) / 2, Glass.buttonText(kind, active), false);
+                } else {
+                    drawBook(guiGraphics, x + w / 2, y + h / 2, isHoveredOrFocused());
+                }
             } else {
                 Font font = Minecraft.getInstance().font;
                 guiGraphics.drawString(font, getMessage(), x + (w - font.width(getMessage())) / 2, y + (h - 8) / 2, Glass.buttonText(kind, active), false);
