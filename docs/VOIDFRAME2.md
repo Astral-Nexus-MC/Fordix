@@ -513,7 +513,7 @@ sont repris qu'écran par écran, avec leur capture avant et après, jamais en b
 
 ## Annexe B. État des écrans
 
-Validé en jeu par l'utilisateur sur la version 0.1.77 (tailles d'écran et d'interface comprises) : tous les écrans ci-dessous marqués « fait » sont conformes. Restent hors de la validation : les écrans seulement recolorés ou habillés, et la dette listée plus haut.
+Validé en jeu par l'utilisateur sur la version 0.1.78 (tailles d'écran et d'interface comprises), publiée sur `main` : tous les écrans ci-dessous marqués « fait » sont conformes, y compris l'éditeur de HUD (visite guidée, aperçu multi-tailles) et le métier à tisser, la cartographie et le créatif en verre. Restent hors de la validation : les écrans seulement recolorés ou habillés, et la dette listée plus haut.
 
 | Écran | État Voidframe 2 |
 |---|---|
