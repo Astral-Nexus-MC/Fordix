@@ -144,6 +144,25 @@ public final class Glass {
         g.fill(x + 1, y + 1, x + width - 1, y + 3, 0x40000000);
     }
 
+    /**
+     * A stat bar of an item sheet: the bar itself, a white trait at the best figure of the game ({@code best}, 0..1 or -1 for none)
+     * and a small triangle under it at the figure of the item in hand ({@code held}, same).
+     */
+    public static void statBar(GuiGraphics g, int x, int y, int width, int height, float fraction, int color, float best, float held) {
+        HudStyle.bar(g, x, y, width, height, fraction, color);
+        if (best >= 0.0F) {
+            int bx = x + Math.round(best * (width - 1));
+            g.fill(bx, y - 2, bx + 1, y + height + 2, 0x99FFFFFF);
+        }
+        if (held >= 0.0F) {
+            int hx = x + Math.round(held * (width - 1));
+            int tip = FordixPalette.TEXT_BRIGHT;
+            g.fill(hx, y + height + 1, hx + 1, y + height + 2, tip);
+            g.fill(hx - 1, y + height + 2, hx + 2, y + height + 3, tip);
+            g.fill(hx - 2, y + height + 3, hx + 3, y + height + 4, tip);
+        }
+    }
+
     /** A list row: a faint wash on hover, an accent wash with an accent edge when selected. */
     public static void row(GuiGraphics g, int x, int y, int width, int height, boolean selected, boolean hovered) {
         if (selected) {

@@ -3,7 +3,6 @@ package com.omneria.fordix.client.guide;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.ModNames;
 import com.omneria.fordix.client.tooltip.AttributeMath;
-import com.omneria.fordix.client.tooltip.ItemRarity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
@@ -43,10 +42,15 @@ public final class ItemFacts {
     public record RecipeView(String station, int columns, int rows, List<List<ItemStack>> cells, ItemStack result, String note) {
     }
 
-    /** A line of figures; {@code color} is an opaque ARGB color or 0 for the default text. */
-    public record Fact(String label, String value, int color, float fraction, int barColor) {
+    /**
+     * A line of figures; {@code color} is an opaque ARGB color or 0 for the default text. A line with a {@code fraction} (0..1, or
+     * -1 for none) gets a bar; {@code best} and {@code held} are marks on it (the best item of the game, the item in hand, -1
+     * for none), {@code delta} the written gap to the held item. {@code group} puts it under a heading: 0 none, 1 combat, 2 sturdiness.
+     */
+    public record Fact(String label, String value, int color, float fraction, int barColor, float best, float held,
+                       String delta, int deltaColor, int group) {
         public Fact(String label, String value, int color) {
-            this(label, value, color, -1.0F, 0);
+            this(label, value, color, -1.0F, 0, -1.0F, -1.0F, "", 0, 0);
         }
     }
 
@@ -135,55 +139,141 @@ public final class ItemFacts {
         return list;
     }
 
+    private static final int GOOD = 0xFF5ED68A;
+    private static final int BAD = 0xFFE5534B;
+
+    /** The best figures among every item of the game (mods included), found once, on first use. */
+    private static final class Bests {
+        private static Map<String, Double> byKey;
+        private static double durability;
+        private static double enchantability;
+
+        static synchronized void load() {
+            if (byKey != null) {
+                return;
+            }
+            Map<String, Double> found = new LinkedHashMap<>();
+            for (net.minecraft.world.item.Item item : ForgeRegistries.ITEMS) {
+                ItemStack stack = new ItemStack(item);
+                durability = Math.max(durability, stack.getMaxDamage());
+                enchantability = Math.max(enchantability, stack.getEnchantmentValue());
+                for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    for (Map.Entry<Attribute, AttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
+                        if (entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION) {
+                            found.merge(key(entry.getKey(), slot), amount(entry.getKey(), entry.getValue()), Math::max);
+                        }
+                    }
+                }
+            }
+            byKey = found;
+        }
+
+        static double of(Attribute attribute, EquipmentSlot slot) {
+            return byKey == null ? -1.0 : byKey.getOrDefault(key(attribute, slot), -1.0);
+        }
+    }
+
+    private static String key(Attribute attribute, EquipmentSlot slot) {
+        return attribute.getDescriptionId() + "/" + slot.name();
+    }
+
+    /** An attribute's figure as the player reads it: the base attack damage (1) and speed (4) are added to the item's own. */
+    private static double amount(Attribute attribute, AttributeModifier modifier) {
+        double amount = modifier.getAmount();
+        ResourceLocation id = ForgeRegistries.ATTRIBUTES.getKey(attribute);
+        if (modifier.getOperation() == AttributeModifier.Operation.ADDITION && id != null) {
+            if (id.getPath().equals("generic.attack_damage")) {
+                amount += 1;
+            } else if (id.getPath().equals("generic.attack_speed")) {
+                amount += 4;
+            }
+        }
+        return amount;
+    }
+
+    /** The figure of {@code attribute} on {@code stack} in {@code slot}, or -1 when it has none there. */
+    private static double figure(ItemStack stack, EquipmentSlot slot, Attribute attribute) {
+        if (stack.isEmpty()) {
+            return -1.0;
+        }
+        for (Map.Entry<Attribute, AttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
+            if (entry.getKey() == attribute && entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION) {
+                return amount(attribute, entry.getValue());
+            }
+        }
+        return -1.0;
+    }
+
+    private static Fact bar(String label, double value, double bestOfGame, double held, int barColor, int group) {
+        double best = bestOfGame > 0.0 ? bestOfGame : -1.0;
+        double full = StatScale.full(value, best, held);
+        String delta = "";
+        int deltaColor = 0;
+        if (held >= 0.0 && Math.abs(value - held) >= 0.005) {
+            delta = AttributeMath.delta(value - held);
+            deltaColor = value > held ? GOOD : BAD;
+        }
+        return new Fact(label, AttributeMath.number(value), 0, StatScale.fraction(value, full), barColor,
+                StatScale.fraction(best, full), StatScale.fraction(held, full), delta, deltaColor, group);
+    }
+
     private static List<Fact> facts(ItemStack stack) {
-        List<Fact> facts = new ArrayList<>();
-        facts.add(new Fact(Tr.s("sheet.fact.rarity"), ItemRarity.label(stack), ItemRarity.color(stack)));
-        facts.add(new Fact(Tr.s("sheet.fact.stack"), String.valueOf(stack.getMaxStackSize()), 0));
+        List<Fact> general = new ArrayList<>();
+        List<Fact> combat = new ArrayList<>();
+        List<Fact> sturdy = new ArrayList<>();
+        var player = Minecraft.getInstance().player;
+        ItemStack hand = player == null ? ItemStack.EMPTY : player.getMainHandItem();
+        boolean sameAsHand = hand.isEmpty() || hand.is(stack.getItem());
+        try {
+            Bests.load();
+        } catch (RuntimeException e) {
+            // A mod item that breaks on a default stack: the bars simply have no best mark.
+        }
+        general.add(new Fact(Tr.s("sheet.fact.stack"), String.valueOf(stack.getMaxStackSize()), 0));
         if (stack.getMaxDamage() > 0) {
-            facts.add(new Fact(Tr.s("sheet.fact.durability"), String.valueOf(stack.getMaxDamage()), 0, Math.min(1.0F, stack.getMaxDamage() / 2031.0F), 0xFF5ED68A));
+            sturdy.add(bar(Tr.s("sheet.fact.durability"), stack.getMaxDamage(), Bests.durability,
+                    sameAsHand || hand.getMaxDamage() <= 0 ? -1.0 : hand.getMaxDamage(), 0xFF5ED68A, 2));
         }
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             for (Map.Entry<Attribute, AttributeModifier> entry : stack.getAttributeModifiers(slot).entries()) {
-                double amount = entry.getValue().getAmount();
-                String name = Component.translatable(entry.getKey().getDescriptionId()).getString();
+                String name = Component.translatable(entry.getKey().getDescriptionId()).getString() + " (" + slotName(slot) + ")";
                 ResourceLocation attribute = ForgeRegistries.ATTRIBUTES.getKey(entry.getKey());
-                if (entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION && attribute != null) {
-                    if (attribute.getPath().equals("generic.attack_damage")) {
-                        amount += 1;
-                    } else if (attribute.getPath().equals("generic.attack_speed")) {
-                        amount += 4;
-                    }
+                if (entry.getValue().getOperation() != AttributeModifier.Operation.ADDITION || attribute == null) {
+                    double value = entry.getValue().getAmount();
+                    general.add(new Fact(name, entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION
+                            ? AttributeMath.number(value) : AttributeMath.number(value * 100) + " %", 0));
+                    continue;
                 }
-                String value = entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION
-                        ? AttributeMath.number(amount) : AttributeMath.number(amount * 100) + " %";
-                float fraction = -1.0F;
-                int bar = 0xFF3FD1C7;
-                if (attribute != null && entry.getValue().getOperation() == AttributeModifier.Operation.ADDITION) {
-                    switch (attribute.getPath()) {
-                        case "generic.attack_damage" -> { fraction = (float) (amount / 16.0); bar = 0xFFE5534B; }
-                        case "generic.attack_speed" -> { fraction = (float) (amount / 4.0); bar = 0xFFE8A64A; }
-                        case "generic.armor" -> { fraction = (float) (amount / 20.0); bar = 0xFFC6D3DC; }
-                        case "generic.armor_toughness" -> { fraction = (float) (amount / 8.0); bar = 0xFF9BE0FF; }
-                        case "generic.knockback_resistance" -> { fraction = (float) amount; bar = 0xFFC9A8FF; }
-                        case "generic.max_health" -> { fraction = (float) (amount / 20.0); bar = 0xFFE5534B; }
-                        default -> { }
-                    }
+                double value = amount(entry.getKey(), entry.getValue());
+                ItemStack worn = slot == EquipmentSlot.MAINHAND ? hand : player == null ? ItemStack.EMPTY : player.getItemBySlot(slot);
+                double held = worn.is(stack.getItem()) ? -1.0 : figure(worn, slot, entry.getKey());
+                double best = Bests.of(entry.getKey(), slot);
+                switch (attribute.getPath()) {
+                    case "generic.attack_damage" -> combat.add(bar(name, value, best, held, 0xFFE5534B, 1));
+                    case "generic.attack_speed" -> combat.add(bar(name, value, best, held, 0xFFE8A64A, 1));
+                    case "generic.armor" -> sturdy.add(bar(name, value, best, held, 0xFFC6D3DC, 2));
+                    case "generic.armor_toughness" -> sturdy.add(bar(name, value, best, held, 0xFF9BE0FF, 2));
+                    case "generic.knockback_resistance" -> sturdy.add(bar(name, value, best, held, 0xFFC9A8FF, 2));
+                    case "generic.max_health" -> sturdy.add(bar(name, value, best, held, 0xFFE5534B, 2));
+                    default -> general.add(new Fact(name, AttributeMath.number(value), 0));
                 }
-                facts.add(new Fact(name + " (" + slotName(slot) + ")", value, 0, fraction < 0 ? -1.0F : Math.min(1.0F, fraction), bar));
             }
         }
-        var player = Minecraft.getInstance().player;
         FoodProperties food = player == null ? null : stack.getFoodProperties(player);
         if (food != null) {
-            facts.add(new Fact(Tr.s("sheet.fact.food"), Tr.s("sheet.food_value", food.getNutrition(), AttributeMath.number(food.getSaturationModifier() * food.getNutrition() * 2)), 0));
+            general.add(new Fact(Tr.s("sheet.fact.food"), Tr.s("sheet.food_value", food.getNutrition(), AttributeMath.number(food.getSaturationModifier() * food.getNutrition() * 2)), 0));
         }
         int burn = ForgeHooks.getBurnTime(stack, RecipeType.SMELTING);
         if (burn > 0) {
-            facts.add(new Fact(Tr.s("sheet.fact.fuel"), Tr.s("sheet.fuel_value", burn / 20, AttributeMath.number(burn / 200.0)), 0));
+            general.add(new Fact(Tr.s("sheet.fact.fuel"), Tr.s("sheet.fuel_value", burn / 20, AttributeMath.number(burn / 200.0)), 0));
         }
         if (stack.getEnchantmentValue() > 0) {
-            facts.add(new Fact(Tr.s("sheet.fact.enchantability"), String.valueOf(stack.getEnchantmentValue()), 0, Math.min(1.0F, stack.getEnchantmentValue() / 30.0F), 0xFFB45FE0));
+            sturdy.add(bar(Tr.s("sheet.fact.enchantability"), stack.getEnchantmentValue(), Bests.enchantability,
+                    sameAsHand || hand.getEnchantmentValue() <= 0 ? -1.0 : hand.getEnchantmentValue(), 0xFFB45FE0, 2));
         }
+        List<Fact> facts = new ArrayList<>(general);
+        facts.addAll(combat);
+        facts.addAll(sturdy);
         return facts;
     }
 
