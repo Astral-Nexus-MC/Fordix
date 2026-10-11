@@ -647,5 +647,7 @@
     "fordix.options.controls.press": "Appuyez sur une touche...",
     "fordix.options.controls.conflict": "Conflit : %s",
     "fordix.chat.cmd.suggestions": "Suggestions (%s)",
-    "fordix.chat.cmd.history": "Historique"
+    "fordix.chat.cmd.history": "Historique",
+    "fordix.options.video.advanced": "Rendu avancé (%s)",
+    "fordix.options.video.desc.advanced": "Les réglages du moteur de rendu : chunks, threads, optimisations"
 }

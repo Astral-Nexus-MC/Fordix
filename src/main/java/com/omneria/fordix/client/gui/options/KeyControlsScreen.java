@@ -341,8 +341,8 @@ public final class KeyControlsScreen extends OptionsPageScreen {
         }
     }
 
-    /** True when the screen is the game's own controls screen and none of the mods that replace it is installed. */
+    /** True when the screen is the game's own controls screen (the one that leads to the key list and the mouse settings). */
     public static boolean replaces(Screen next) {
-        return next.getClass() == ControlsScreen.class && !net.minecraftforge.fml.ModList.get().isLoaded("controlling");
+        return next.getClass() == ControlsScreen.class;
     }
 }

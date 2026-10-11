@@ -35,6 +35,14 @@ public final class VideoScreen extends OptionsPageScreen {
         super(Component.translatable("options.videoTitle"), parent);
     }
 
+    /** The rendering mod's own video screen (Sodium, Embeddium), reached from a row of the display tab; null without such a mod. */
+    private Screen advanced;
+
+    public VideoScreen(Screen parent, Screen advanced) {
+        this(parent);
+        this.advanced = advanced;
+    }
+
     /** For the in-game test: opens on a given tab (0 display, 1 quality, 2 interface). */
     public VideoScreen(Screen parent, int tab) {
         this(parent);
@@ -105,6 +113,14 @@ public final class VideoScreen extends OptionsPageScreen {
                     FordixClient.applyConfig();
                 });
                 rowY += rowHeight() + rowGap();
+                if (advanced != null) {
+                    String mod = advanced.getClass().getName().toLowerCase(java.util.Locale.ROOT).contains("embeddium") ? "Embeddium"
+                            : advanced.getClass().getName().toLowerCase(java.util.Locale.ROOT).contains("rubidium") ? "Rubidium" : "Sodium";
+                    NavRow more = new NavRow(rowX, rowY, rowW, rowHeight(), "R", 0xE8A64A, Tr.s("options.video.advanced", mod),
+                            text("options.video.desc.advanced"), null, () -> OptionsScreens.openAdvanced(this.minecraft, advanced));
+                    addRow(more, null);
+                    rowY += rowHeight() + rowGap();
+                }
             }
             case 1 -> {
                 pick("G", "options.graphics", "options.video.desc.graphics", 2,

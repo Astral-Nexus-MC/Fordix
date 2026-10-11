@@ -647,5 +647,7 @@
     "fordix.options.controls.press": "Press a key...",
     "fordix.options.controls.conflict": "Conflict: %s",
     "fordix.chat.cmd.suggestions": "Suggestions (%s)",
-    "fordix.chat.cmd.history": "History"
+    "fordix.chat.cmd.history": "History",
+    "fordix.options.video.advanced": "Advanced rendering (%s)",
+    "fordix.options.video.desc.advanced": "The rendering engine's own settings: chunks, threads, optimizations"
 }
