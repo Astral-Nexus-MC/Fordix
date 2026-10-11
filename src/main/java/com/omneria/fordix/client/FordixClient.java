@@ -331,6 +331,16 @@ public final class FordixClient {
         }
 
         @SubscribeEvent
+        static void onScreenOpening(ScreenEvent.Opening event) {
+            com.omneria.fordix.client.gui.options.OptionsScreens.onOpening(event);
+        }
+
+        @SubscribeEvent
+        static void onPlaySound(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
+            MusicToast.onPlaySound(event);
+        }
+
+        @SubscribeEvent
         static void onScreenInit(ScreenEvent.Init.Post event) {
             InventoryTools.onScreenInit(event);
             GuideTabs.onScreenInit(event);

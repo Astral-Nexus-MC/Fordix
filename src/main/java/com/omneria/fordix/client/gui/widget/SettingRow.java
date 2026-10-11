@@ -20,6 +20,8 @@ public abstract class SettingRow extends AbstractWidget {
     protected final String title;
     protected final String description;
     protected final boolean compact;
+    /** How much a setting costs in frames per second: 0 not shown, 1 low, 2 medium, 3 high. */
+    protected int cost;
 
     protected SettingRow(int x, int y, int width, int height, String icon, int tint, String title, String description, boolean compact) {
         super(x, y, width, height, Component.literal(title));
@@ -28,6 +30,12 @@ public abstract class SettingRow extends AbstractWidget {
         this.title = title;
         this.description = description;
         this.compact = compact;
+    }
+
+    /** Shows a three-bar frame cost mark left of the control (video settings). */
+    public SettingRow cost(int level) {
+        this.cost = level;
+        return this;
     }
 
     /** Width the control takes on the right, so the text knows where to stop. */
@@ -57,14 +65,26 @@ public abstract class SettingRow extends AbstractWidget {
             g.drawString(font, icon, x + 13 - font.width(icon) / 2, boxY + 5, 0xFF000000 | tint, false);
             textX = x + 28;
         }
-        int room = w - (textX - x) - controlWidth() - 10;
+        int room = w - (textX - x) - controlWidth() - 10 - (cost > 0 ? 14 : 0);
         boolean hasDescription = !compact && description != null && !description.isEmpty();
         int titleY = hasDescription ? y + 5 : y + (h - 8) / 2;
         g.drawString(font, fit(font, title, room), textX, titleY, this.active ? 0xFFEAF6F8 : 0xFF7D93A3, false);
         if (hasDescription) {
             g.drawString(font, fit(font, description, room), textX, y + 16, 0xFF7D93A3, false);
         }
+        if (cost > 0) {
+            drawCost(g, x + w - 6 - controlWidth() - 12, y + (h - 8) / 2, cost);
+        }
         renderControl(g, x, y, w, h, mouseX, mouseY);
+    }
+
+    /** Three bars of rising height; the first {@code level} are lit green, amber or red. */
+    private static void drawCost(GuiGraphics g, int x, int y, int level) {
+        int color = level == 1 ? 0xFF5ED68A : level == 2 ? 0xFFE8A64A : 0xFFE5534B;
+        int[] heights = {3, 5, 8};
+        for (int i = 0; i < 3; i++) {
+            g.fill(x + i * 3, y + 8 - heights[i], x + i * 3 + 2, y + 8, i < level ? color : 0x24FFFFFF);
+        }
     }
 
     private static String fit(Font font, String text, int room) {

@@ -43,6 +43,7 @@ public final class FordixConfig {
     public static final ForgeConfigSpec.BooleanValue HUD_COMPACT;
     public static final ForgeConfigSpec.BooleanValue HUD_EFFECTS_LIST;
     public static final ForgeConfigSpec.BooleanValue BORDERLESS_FULLSCREEN;
+    public static final ForgeConfigSpec.BooleanValue MUSIC_TOAST;
     public static final ForgeConfigSpec.BooleanValue INVENTORY_TOOLS;
     public static final ForgeConfigSpec.IntValue ALERT_DURABILITY_PERCENT;
     public static final ForgeConfigSpec.BooleanValue CHAT_MENTION_SOUND;
@@ -98,6 +99,8 @@ public final class FordixConfig {
                 .define("hudEffectsList", true);
         BORDERLESS_FULLSCREEN = builder.comment("F11 (the game's Toggle Fullscreen key) gives a borderless window over the whole monitor instead of a video mode change: Alt-Tab is instant.")
                 .define("borderlessFullscreen", false);
+        MUSIC_TOAST = builder.comment("Show a short notice each time a new piece of music starts.")
+                .define("musicToast", true);
         INVENTORY_TOOLS = builder.comment("Add a search field and a sort button to the inventory and to chests, barrels and shulker boxes.")
                 .define("inventoryTools", true);
         CHAT_MENTION_SOUND = builder
