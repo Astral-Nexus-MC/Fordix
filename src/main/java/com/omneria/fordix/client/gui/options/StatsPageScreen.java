@@ -133,7 +133,7 @@ public final class StatsPageScreen extends FordixScreen implements StatsUpdateLi
         lines.clear();
         switch (tab) {
             case 0 -> {
-                for (ResourceLocation id : BuiltInRegistries.CUSTOM_STAT.keySet()) {
+                for (ResourceLocation id : BuiltInRegistries.CUSTOM_STAT) {
                     Stat<ResourceLocation> stat = Stats.CUSTOM.get(id);
                     int value = stats.getValue(stat);
                     if (value > 0) {
