@@ -277,6 +277,7 @@ public final class FordixClient {
         @SubscribeEvent
         static void onScreenOpening(ScreenEvent.Opening event) {
             VanillaScreens.onScreenOpening(event);
+            com.omneria.fordix.client.gui.options.OptionsScreens.onOpening(event);
             ContainerMemory.onScreenOpening(event);
         }
 
@@ -328,11 +329,6 @@ public final class FordixClient {
             com.omneria.fordix.client.hud.ScoreboardHud.onOverlayPre(event);
             com.omneria.fordix.client.hud.TitleHud.onOverlayPre(event);
             com.omneria.fordix.client.hud.ActionBarHud.onOverlayPre(event);
-        }
-
-        @SubscribeEvent
-        static void onScreenOpening(ScreenEvent.Opening event) {
-            com.omneria.fordix.client.gui.options.OptionsScreens.onOpening(event);
         }
 
         @SubscribeEvent
