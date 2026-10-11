@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 import java.lang.reflect.Method;
@@ -68,14 +69,14 @@ public final class DebugHud {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        if (!minecraft.options.renderDebug || minecraft.gui == null) {
+        if (!minecraft.options.renderDebug || !(minecraft.gui instanceof ForgeGui forgeGui)) {
             return;
         }
         resolve();
         if (sources.isEmpty()) {
             return;
         }
-        DebugScreenOverlay overlay = minecraft.gui.getDebugOverlay();
+        DebugScreenOverlay overlay = forgeGui.getDebugOverlay();
         try {
             List<String> left = null;
             List<String> right = null;

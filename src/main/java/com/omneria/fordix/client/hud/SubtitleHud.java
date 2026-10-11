@@ -38,7 +38,7 @@ public final class SubtitleHud implements SoundEventListener {
     }
 
     @Override
-    public void onPlaySound(SoundInstance sound, WeighedSoundEvents accessor, float range) {
+    public void onPlaySound(SoundInstance sound, WeighedSoundEvents accessor) {
         Component subtitle = accessor.getSubtitle();
         if (subtitle == null || !Minecraft.getInstance().options.showSubtitles().get()) {
             return;
