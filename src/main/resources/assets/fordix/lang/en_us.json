@@ -645,5 +645,7 @@
     "fordix.options.controls.reset_all": "Reset all",
     "fordix.options.controls.waiting": "Press the key for: %s",
     "fordix.options.controls.press": "Press a key...",
-    "fordix.options.controls.conflict": "Conflict: %s"
+    "fordix.options.controls.conflict": "Conflict: %s",
+    "fordix.chat.cmd.suggestions": "Suggestions (%s)",
+    "fordix.chat.cmd.history": "History"
 }

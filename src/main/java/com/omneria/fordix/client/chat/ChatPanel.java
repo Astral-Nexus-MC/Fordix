@@ -313,14 +313,16 @@ public final class ChatPanel {
         double mouseX = frame.toBlockX(event.getMouseX());
         double mouseY = frame.toBlockY(event.getMouseY());
         HudSnap.Rect input = ChatLayout.input(screen.width, screen.height, panelWidth(screen.width));
-        int accent = withAlpha(FordixPalette.ACCENT, 255);
+        CommandSuggestions suggestions = suggestions(screen);
+        EditBox box = input(screen);
+        boolean wrong = CommandLineSkin.hasError(suggestions, box);
+        int accent = wrong ? 0xFFE0524A : withAlpha(FordixPalette.ACCENT, 255);
         graphics.fill(input.x(), input.y(), input.right(), input.bottom(), 0xF00B1118);
         graphics.fill(input.x(), input.y(), input.right(), input.y() + 1, accent);
         graphics.fill(input.x(), input.bottom() - 1, input.right(), input.bottom(), accent);
         graphics.fill(input.x(), input.y(), input.x() + 1, input.bottom(), accent);
         graphics.fill(input.right() - 1, input.y(), input.right(), input.bottom(), accent);
         graphics.drawString(minecraft.font, "›", input.x() + 5, input.y() + 2, accent, false);
-        EditBox box = input(screen);
         if (box != null) {
             box.render(graphics, (int) mouseX, (int) mouseY, event.getPartialTick());
         }
@@ -335,10 +337,10 @@ public final class ChatPanel {
             search.setWidth(field.w() - 8);
             search.render(graphics, (int) mouseX, (int) mouseY, event.getPartialTick());
         }
-        CommandSuggestions suggestions = suggestions(screen);
-        if (suggestions != null) {
+        if (suggestions != null && !CommandLineSkin.render(graphics, suggestions, box, input, (int) mouseX, (int) mouseY)) {
             suggestions.render(graphics, (int) mouseX, (int) mouseY);
         }
+        CommandLineSkin.renderHistory(graphics, box, screen, input);
         for (Hit hit : HITS) {
             if (mouseY >= hit.top() && mouseY < hit.bottom() && mouseX >= hit.x()) {
                 Style style = minecraft.font.getSplitter().componentStyleAtWidth(hit.line(), (int) (mouseX - hit.x()));
