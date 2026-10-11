@@ -2,7 +2,14 @@ package com.omneria.fordix.client.gui.options;
 
 import com.omneria.fordix.FordixConfig;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.AccessibilityOptionsScreen;
+import net.minecraft.client.gui.screens.ChatOptionsScreen;
+import net.minecraft.client.gui.screens.LanguageSelectScreen;
+import net.minecraft.client.gui.screens.MouseSettingsScreen;
+import net.minecraft.client.gui.screens.SkinCustomizationScreen;
 import net.minecraft.client.gui.screens.SoundOptionsScreen;
+import net.minecraft.client.gui.screens.achievement.StatsScreen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import net.minecraftforge.client.event.ScreenEvent;
 
@@ -51,6 +58,18 @@ public final class OptionsScreens {
             event.setNewScreen(new SoundScreen(from));
         } else if (KeyControlsScreen.replaces(next)) {
             event.setNewScreen(new KeyControlsScreen(from));
+        } else if (type == MouseSettingsScreen.class) {
+            event.setNewScreen(new MouseScreen(from));
+        } else if (type == ChatOptionsScreen.class) {
+            event.setNewScreen(new ChatSettingsScreen(from));
+        } else if (type == AccessibilityOptionsScreen.class) {
+            event.setNewScreen(new AccessibilityScreen(from));
+        } else if (type == SkinCustomizationScreen.class) {
+            event.setNewScreen(new SkinScreen(from));
+        } else if (type == LanguageSelectScreen.class) {
+            event.setNewScreen(new LanguageScreen(from));
+        } else if (type == StatsScreen.class && Minecraft.getInstance().player != null) {
+            event.setNewScreen(new StatsPageScreen(from, Minecraft.getInstance().player.getStats()));
         }
     }
 }

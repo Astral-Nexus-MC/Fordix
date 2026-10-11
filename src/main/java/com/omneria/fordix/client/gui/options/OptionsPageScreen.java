@@ -4,9 +4,13 @@ import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.FordixScreen;
 import com.omneria.fordix.client.gui.Glass;
+import com.omneria.fordix.client.gui.widget.FlagRow;
 import com.omneria.fordix.client.gui.widget.FordixButton;
+import com.omneria.fordix.client.gui.widget.PickRow;
+import com.omneria.fordix.client.gui.widget.SliderRow;
 import com.omneria.fordix.client.gui.widget.TabButton;
 import com.omneria.fordix.client.hud.HudTokens;
+import net.minecraft.client.OptionInstance;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -20,6 +24,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.DoubleFunction;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 
 /**
  * The common page of the Voidframe options screens (video, sound): a glass panel as tall as the screen, a title, optional tabs,
@@ -192,6 +199,93 @@ public abstract class OptionsPageScreen extends FordixScreen {
             row.setY(base.get(row) - (int) scroll);
             row.visible = !hidden.contains(row) && row.getY() + row.getHeight() > listTop && row.getY() < listBottom;
         }
+    }
+
+
+    // ----- one-line settings rows over the game's options, for the pages without explanations -----
+
+    protected int rowX;
+    protected int rowW;
+    protected int rowY;
+
+    protected static String vanillaText(String key) {
+        return Component.translatable(key).getString();
+    }
+
+    /** A title: the game's own translation of {@code key}, or Fordix's when it starts with "~". */
+    protected static String titleOf(String key) {
+        return key.startsWith("~") ? Tr.s(key.substring(1)) : vanillaText(key);
+    }
+
+    /** Starts a column of rows at the top of the list. */
+    protected void startRows(int left, int width) {
+        rowX = left;
+        rowW = width;
+        rowY = listTop + 2;
+    }
+
+    private String iconOf(String title) {
+        return title.isEmpty() ? "?" : title.substring(0, 1).toUpperCase(java.util.Locale.ROOT);
+    }
+
+    private void advance() {
+        rowY += rowHeight() + rowGap();
+    }
+
+    /** A 0..1 option shown as a percentage (opacity, scale, speed). */
+    protected void addPercent(OptionInstance<Double> option, String titleKey, double def) {
+        addValue(option, titleKey, 0.0, 1.0, 0.01, def, v -> Math.round(v * 100) + " %");
+    }
+
+    /** A decimal option with its own range and label. */
+    protected void addValue(OptionInstance<Double> option, String titleKey, double min, double max, double step, double def, DoubleFunction<String> format) {
+        String title = titleOf(titleKey);
+        SliderRow row = new SliderRow(rowX, rowY, rowW, rowHeight(), iconOf(title), 0x3FD1C7, title, "", false, min, max, step, def,
+                small ? 80 : 130, () -> option.get(), v -> option.set(v), format);
+        addRow(row, () -> option.set(def));
+        advance();
+    }
+
+    /** A whole-number option. */
+    protected void addNumber(OptionInstance<Integer> option, String titleKey, int min, int max, int def, DoubleFunction<String> format) {
+        String title = titleOf(titleKey);
+        SliderRow row = new SliderRow(rowX, rowY, rowW, rowHeight(), iconOf(title), 0x3FD1C7, title, "", false, min, max, 1, def,
+                small ? 80 : 130, () -> option.get(), v -> option.set((int) Math.round(v)), format);
+        addRow(row, () -> option.set(def));
+        advance();
+    }
+
+    protected void addFlag(OptionInstance<Boolean> option, String titleKey, boolean def) {
+        addFlagTitled(option, titleOf(titleKey), def);
+    }
+
+    protected void addFlagTitled(OptionInstance<Boolean> option, String title, boolean def) {
+        FlagRow row = new FlagRow(rowX, rowY, rowW, rowHeight(), iconOf(title), 0x3FD1C7, title, "", false, () -> option.get(), v -> option.set(v));
+        addRow(row, () -> option.set(def));
+        advance();
+    }
+
+    /** A choice among a few labelled values. */
+    protected void addPick(String title, java.util.List<String> labels, IntSupplier get, IntConsumer set, int def) {
+        PickRow row = new PickRow(rowX, rowY, rowW, rowHeight(), iconOf(title), 0x3FD1C7, title, "", false, labels, get, set);
+        addRow(row, () -> set.accept(def));
+        advance();
+    }
+
+    /** A small capitals heading between two groups of rows. */
+    protected void addHeading(String text) {
+        rowY += 4;
+        addRow(new Heading(rowX, rowY, rowW, text), null);
+        rowY += 14;
+    }
+
+    /** For a click test: the middle of tab {@code index}, in screen coordinates; null when there is no such tab. */
+    public int[] tabPoint(int index) {
+        if (index < 0 || index >= tabButtons.size()) {
+            return null;
+        }
+        TabButton button = tabButtons.get(index);
+        return new int[]{button.getX() + button.getWidth() / 2, button.getY() + button.getHeight() / 2};
     }
 
     @Override

@@ -649,5 +649,18 @@
     "fordix.chat.cmd.suggestions": "Suggestions (%s)",
     "fordix.chat.cmd.history": "Historique",
     "fordix.options.video.advanced": "Rendu avancé (%s)",
-    "fordix.options.video.desc.advanced": "Les réglages du moteur de rendu : chunks, threads, optimisations"
+    "fordix.options.video.desc.advanced": "Les réglages du moteur de rendu : chunks, threads, optimisations",
+    "fordix.options.page.chat_delay": "Délai du chat",
+    "fordix.options.page.heading.play": "Jeu",
+    "fordix.options.language.search": "Rechercher une langue",
+    "fordix.options.language.current": "actuelle",
+    "fordix.options.stats.mined": "miné",
+    "fordix.options.stats.crafted": "fabriqué",
+    "fordix.options.stats.used": "utilisé",
+    "fordix.options.stats.broken": "cassé",
+    "fordix.options.stats.picked": "ramassé",
+    "fordix.options.stats.dropped": "jeté",
+    "fordix.options.stats.killed": "tué",
+    "fordix.options.stats.killed_by": "tué par",
+    "fordix.options.stats.empty": "Rien à afficher pour l'instant."
 }

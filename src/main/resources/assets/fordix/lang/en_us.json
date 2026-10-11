@@ -649,5 +649,18 @@
     "fordix.chat.cmd.suggestions": "Suggestions (%s)",
     "fordix.chat.cmd.history": "History",
     "fordix.options.video.advanced": "Advanced rendering (%s)",
-    "fordix.options.video.desc.advanced": "The rendering engine's own settings: chunks, threads, optimizations"
+    "fordix.options.video.desc.advanced": "The rendering engine's own settings: chunks, threads, optimizations",
+    "fordix.options.page.chat_delay": "Chat delay",
+    "fordix.options.page.heading.play": "Gameplay",
+    "fordix.options.language.search": "Search a language",
+    "fordix.options.language.current": "current",
+    "fordix.options.stats.mined": "mined",
+    "fordix.options.stats.crafted": "crafted",
+    "fordix.options.stats.used": "used",
+    "fordix.options.stats.broken": "broken",
+    "fordix.options.stats.picked": "picked up",
+    "fordix.options.stats.dropped": "dropped",
+    "fordix.options.stats.killed": "killed",
+    "fordix.options.stats.killed_by": "killed by",
+    "fordix.options.stats.empty": "Nothing to show yet."
 }
