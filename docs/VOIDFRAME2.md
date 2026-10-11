@@ -216,7 +216,10 @@ lueur. Texte inséré de 5 px. Tout champ du mod DOIT être un `FieldBox`.
 
 ### 5.4 Lignes de réglage
 
-`SettingRow` et ses trois formes : `ToggleRow` (interrupteur), `ChoiceRow` (sélecteur par segments), `NavRow` (chevron ou mot).
+`SettingRow` et ses formes : `ToggleRow` (interrupteur), `ChoiceRow` (sélecteur par segments), `NavRow` (chevron ou mot), et, sur une valeur du jeu
+plutôt que sur un réglage Fordix, `FlagRow` (interrupteur), `PickRow` (segments) et `SliderRow` (curseur : piste en creux remplie d'accent, trait à la
+valeur par défaut, valeur écrite à droite, glisser, clic ou flèches ; arithmétique pure dans `SliderMath`). Une ligne peut porter la pastille de coût en
+images par seconde (`SettingRow.cost`, trois barres verte, ambre, rouge).
 Anatomie : icône dans un carré teinté d'accent, titre en Chakra-style capitales douces, explication courte en dessous, contrôle
 à droite. Hauteur 28. Ce sont les seules lignes à utiliser pour un réglage, un choix de mode ou une navigation.
 
@@ -454,16 +457,19 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D16 | Métier à tisser, cartographie et inventaire créatif sont en verre : on vide le corps de leur texture et on dessine le panneau, les puits et les onglets ; les sprites utiles (motifs, icônes, curseur) restent ceux du jeu. | Ces écrans mêlent logique et dessin du jeu (motifs de bannière, carte, onglets) qu'on ne peut pas refaire sans les réécrire ; vider le fond suffit à les mettre en verre. |
 | D17 | L'éditeur de HUD offre un aperçu de la disposition à huit tailles d'interface (320 x 240 à 1920 x 1080), avec les chevauchements et les débordements marqués. | Un joueur voit la disposition à sa taille d'écran, pas à celle de l'admin. |
 | D18 | L'éditeur de HUD s'ouvre la première fois sur une visite guidée de 7 étapes, qu'on rouvre avec le bouton Visite guidée. | Un joueur qui ne connaît pas l'éditeur comprend le glisser-déposer, les panneaux et les outils sans lire de documentation. |
+| D19 | Les pages Options > Vidéo, Sons et Contrôles du jeu sont remplacées par les nôtres (`OptionsPageScreen`, `VideoScreen`, `SoundScreen`, `KeyControlsScreen`, installées par `OptionsScreens` sur `ScreenEvent.Opening`) : mêmes `OptionInstance` et mêmes `KeyMapping`, fichier d'options du jeu enregistré à la fermeture. L'écran du mod Controlling n'est pas remplacé. | Les listes de réglages du jeu ne pouvaient pas recevoir les lignes de §5.4. |
+| D20 | La fiche d'objet dessine ses caractéristiques en barres avec le trait du meilleur objet du jeu (mods compris, `ItemFacts.Bests`) et le repère de l'objet en main (`StatScale`, pur et testé) ; en petite taille, trois onglets remplacent les deux colonnes. | Voir d'un coup d'œil si l'objet vaut ce qu'on porte. |
+| D21 | La ligne de commande du chat (`CommandLineSkin`, `HistoryView`) dessine les suggestions en verre, l'usage en carte ambre, l'erreur en carte rouge avec bord rouge du champ, et l'historique des messages avec les flèches ; tout est lu par type dans `CommandSuggestions`, repli sur le dessin du jeu. | La commande tapée doit dire où elle se trompe. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
 Dette connue (à traiter dans l'ordre) :
 
 1. Sous-titres sonores (`SUBTITLES`) : la liste est privée à `SubtitleOverlay` ; elle reste vanilla. F3 reste vanilla (outil de diagnostic).
 2. Titre à l'écran : lu par type et ordre de déclaration dans `Gui` (`TitleHud`, repli sur le titre du jeu si la disposition diffère) ; à revérifier à chaque version du jeu.
-3. Options > Contrôles, Vidéo, Sons : seuls les boutons et le fond sont habillés ; les listes de réglages gardent leur forme.
+3. (Soldée en 0.1.79 : Vidéo, Sons et Contrôles ont leurs pages Voidframe. Restent habillées seulement : Souris, Chat, Accessibilité, Skin, Langue, Statistiques.)
 4. (Soldée en 0.1.78 : l'éditeur de HUD a une visite guidée à la première ouverture, `HudTour`, et un aperçu multi-résolutions, `HudPreview`.)
-5. Champs `EditBox` du chat et des commandes : le chat de Voidframe a le sien, la ligne de commande du jeu garde le champ vanilla.
-6. Fiche d'objet : les barres de caractéristiques de la maquette ne sont pas encore dessinées (liste de chiffres alignés).
+5. (Soldée en 0.1.79 : la ligne de commande a son rendu, voir D21.)
+6. (Soldée en 0.1.79 : barres de la fiche d'objet, voir D20.)
 7. (Soldée en 0.1.78 : créatif, métier à tisser et cartographie sont en verre.)
 
 ## 15. Voidframe 3 : ce qu'on prépare
@@ -527,7 +533,8 @@ Validé en jeu par l'utilisateur sur la version 0.1.78 (tailles d'écran et d'in
 | Administration, guides, wiki, fiches d'objet et de créature, livre de bienvenue, avancements, panels générés | fait |
 | Roue des animaux | fait |
 | Menu pause, écran de mort | fait |
-| Autres écrans du jeu (options, statistiques, multijoueur, packs…) | boutons et fond habillés |
+| Options Vidéo, Sons, Contrôles ; fiche d'objet ; ligne de commande | fait en 0.1.79 (à valider en jeu) |
+| Autres écrans du jeu (souris, chat, accessibilité, statistiques, multijoueur, packs…) | boutons et fond habillés |
 | Écran titre, liste des mondes | **hors périmètre** (Astral-launcher) |
 | Titre à l'écran | fait (`TitleHud`) |
 | Sous-titres sonores, F3 | vanilla (dette 1) |
