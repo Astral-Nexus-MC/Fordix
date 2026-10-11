@@ -222,6 +222,26 @@ public final class DevTest {
             cmd(mc, "gamemode creative");
             mc.setScreen(new CreativeModeInventoryScreen(mc.player, mc.player.connection.enabledFeatures(), false));
         }, 40, false));
+        for (String[] tab : new String[][]{{"08b-creative-inventory", "inventory"}, {"08c-creative-search", "search"}}) {
+            steps.add(new Step(tab[0], () -> {
+                cmd(mc, "gamemode creative");
+                mc.setScreen(new CreativeModeInventoryScreen(mc.player, mc.player.connection.enabledFeatures(), false));
+                try {
+                    net.minecraft.world.item.CreativeModeTab target = net.minecraft.core.registries.BuiltInRegistries.CREATIVE_MODE_TAB.get(
+                            tab[1].equals("search") ? net.minecraft.world.item.CreativeModeTabs.SEARCH : net.minecraft.world.item.CreativeModeTabs.INVENTORY);
+                    for (java.lang.reflect.Method m : CreativeModeInventoryScreen.class.getDeclaredMethods()) {
+                        if (m.getParameterCount() == 1 && m.getParameterTypes()[0] == net.minecraft.world.item.CreativeModeTab.class
+                                && m.getReturnType() == void.class) {
+                            m.setAccessible(true);
+                            m.invoke(mc.screen, target);
+                            break;
+                        }
+                    }
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }, 40, false));
+        }
         steps.add(new Step("09-settings", () -> {
             cmd(mc, "gamemode survival");
             mc.setScreen(new FordixSettingsScreen(null));

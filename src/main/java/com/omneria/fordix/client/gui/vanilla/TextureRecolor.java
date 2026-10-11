@@ -25,13 +25,42 @@ import java.util.Optional;
  */
 public final class TextureRecolor {
     /** A texture and the rows of it to recolor (the rest is left as vanilla drew it). */
-    private record Target(ResourceLocation location, int fromRow, int toRow, boolean flat) {
+    private record Target(ResourceLocation location, int fromRow, int toRow, boolean flat,
+                          java.util.function.Consumer<NativeImage> after) {
         Target(String path) {
-            this(new ResourceLocation(path), 0, Integer.MAX_VALUE, false);
+            this(new ResourceLocation(path), 0, Integer.MAX_VALUE, false, null);
+        }
+
+        Target(ResourceLocation location, int fromRow, int toRow, boolean flat) {
+            this(location, fromRow, toRow, flat, null);
         }
 
         Target(ResourceLocation location, int fromRow, int toRow) {
-            this(location, fromRow, toRow, false);
+            this(location, fromRow, toRow, false, null);
+        }
+    }
+
+    /** Makes a rectangle of a texture transparent: the screen draws that part of its body in glass instead. */
+    private static void clear(NativeImage image, int x, int y, int width, int height) {
+        for (int py = y; py < Math.min(image.getHeight(), y + height); py++) {
+            for (int px = x; px < Math.min(image.getWidth(), x + width); px++) {
+                image.setPixelRGBA(px, py, 0);
+            }
+        }
+    }
+
+    /** Pixels that are neutral grey (the vanilla panel color around a sprite) become transparent. */
+    private static void greyToClear(NativeImage image, int x, int y, int width, int height) {
+        for (int py = y; py < Math.min(image.getHeight(), y + height); py++) {
+            for (int px = x; px < Math.min(image.getWidth(), x + width); px++) {
+                int abgr = image.getPixelRGBA(px, py);
+                int r = abgr & 0xFF;
+                int g = (abgr >> 8) & 0xFF;
+                int b = (abgr >> 16) & 0xFF;
+                if (Math.abs(r - g) < 10 && Math.abs(g - b) < 10) {
+                    image.setPixelRGBA(px, py, 0);
+                }
+            }
         }
     }
 
@@ -43,12 +72,19 @@ public final class TextureRecolor {
             new Target(new ResourceLocation("textures/gui/options_background.png"), 0, Integer.MAX_VALUE, true),
             // Header behind the tabs of the create-world screen, and the tab buttons themselves.
             new Target("textures/gui/tab_button.png"),
-            new Target("textures/gui/container/loom.png"),
-            new Target("textures/gui/container/cartography_table.png"),
-            new Target("textures/gui/container/creative_inventory/tab_items.png"),
-            new Target("textures/gui/container/creative_inventory/tab_inventory.png"),
-            new Target("textures/gui/container/creative_inventory/tab_item_search.png"),
-            new Target("textures/gui/container/creative_inventory/tabs.png"),
+            // The loom and cartography table draw their body in glass: the 176 x 166 body is cleared, the sprites stay.
+            new Target(new ResourceLocation("textures/gui/container/loom.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 176, 166)),
+            new Target(new ResourceLocation("textures/gui/container/cartography_table.png"), 0, 0, false, image -> {
+                clear(image, 0, 0, 176, 166);
+                // The empty-map backdrop: the glass well shows instead.
+                clear(image, 176, 0, 66, 66);
+                greyToClear(image, 226, 132, 28, 21);
+            }),
+            new Target(new ResourceLocation("textures/gui/container/creative_inventory/tab_items.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 195, 136)),
+            new Target(new ResourceLocation("textures/gui/container/creative_inventory/tab_inventory.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 195, 136)),
+            new Target(new ResourceLocation("textures/gui/container/creative_inventory/tab_item_search.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 195, 136)),
+            // The tab buttons are drawn in glass; only the scroller sprites (x >= 232) stay.
+            new Target(new ResourceLocation("textures/gui/container/creative_inventory/tabs.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 230, 130)),
             // Only the button rows of widgets.png: the hotbar and its selection frame share the file.
             new Target(new ResourceLocation("textures/gui/widgets.png"), 46, 106));
 
@@ -114,6 +150,9 @@ public final class TextureRecolor {
                     try (InputStream stream = resource.get().open()) {
                         NativeImage image = NativeImage.read(stream);
                         recolor(image, ramp, target.fromRow(), target.toRow(), target.flat());
+                        if (target.after() != null) {
+                            target.after().accept(image);
+                        }
                         textures.register(location, new DynamicTexture(image));
                     }
                 } else {

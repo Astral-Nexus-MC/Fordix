@@ -497,13 +497,23 @@ public final class VoidframeStations {
     }
 
     /**
-     * The loom keeps vanilla's layout (pattern grid, banner preview); its texture is recolored
-     * by {@link TextureRecolor}, so only the labels, drawn dark grey by vanilla, are redone.
+     * The loom keeps vanilla's logic, pattern buttons and banner preview, but its body is glass: the texture
+     * body is cleared by {@link TextureRecolor} and the panel, the wells under the slots, the pattern grid, the scroll track
+     * and the banner preview frame are drawn here.
      */
     public static class Loom extends LoomScreen implements VoidframeScreen {
         public Loom(LoomMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
+        }
+
+        @Override
+        protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            VoidframeDraw.well(guiGraphics, leftPos + 59, topPos + 12, 58, 58);
+            VoidframeDraw.well(guiGraphics, leftPos + 118, topPos + 12, 14, 58);
+            VoidframeDraw.well(guiGraphics, leftPos + 141, topPos + 8, 20, 40);
+            super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         }
 
         @Override
@@ -513,11 +523,23 @@ public final class VoidframeStations {
         }
     }
 
-    /** Same approach as {@link Loom}: recolored texture, light labels. */
+    /** Same approach as {@link Loom}: glass body, the map preview and its frame sprites stay the game's. */
     public static class Cartography extends CartographyTableScreen implements VoidframeScreen {
         public Cartography(CartographyTableMenu menu, Inventory inventory, Component title) {
             super(menu, inventory, title);
             slotColor = FordixPalette.SLOT_HOVER;
+        }
+
+        @Override
+        protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            VoidframeDraw.well(guiGraphics, leftPos + 67, topPos + 13, 66, 66);
+            // The plus between the two inputs and the arrow to the result.
+            int plus = FordixPalette.PROGRESS_TRACK;
+            guiGraphics.fill(leftPos + 20, topPos + 36, leftPos + 24, topPos + 46, plus);
+            guiGraphics.fill(leftPos + 17, topPos + 39, leftPos + 27, topPos + 43, plus);
+            VoidframeDraw.arrow(guiGraphics, leftPos + 38, topPos + 33, 22, 15, menu.getSlot(2).hasItem() ? 22 : 0);
+            super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
         }
 
         @Override
@@ -538,6 +560,53 @@ public final class VoidframeStations {
         public Creative(Player player, FeatureFlagSet features, boolean operatorTab) {
             super(player, features, operatorTab);
             slotColor = FordixPalette.SLOT_HOVER;
+        }
+
+        /** The panel, the wells and the tabs are glass; the texture bodies are cleared, so vanilla only draws the icons, items and scroller. */
+        @Override
+        protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+            CreativeModeTab selected = SELECTED_TAB != null && Reflect.get(SELECTED_TAB, null) instanceof CreativeModeTab tab ? tab : null;
+            net.minecraftforge.client.gui.CreativeTabsScreenPage page = getCurrentPage();
+            if (page != null) {
+                for (CreativeModeTab tab : page.getVisibleTabs()) {
+                    if (tab != selected) {
+                        tabGlass(guiGraphics, page, tab, false, mouseX, mouseY);
+                    }
+                }
+            }
+            VoidframeDraw.containerBackground(guiGraphics, menu, leftPos, topPos, imageWidth, imageHeight);
+            if (selected != null) {
+                if (selected.getType() == CreativeModeTab.Type.INVENTORY) {
+                    VoidframeDraw.well(guiGraphics, leftPos + 72, topPos + 5, 34, 44);
+                    guiGraphics.drawString(font, "x", leftPos + 173 + 6, topPos + 112 + 5, FordixPalette.ERROR, false);
+                } else {
+                    VoidframeDraw.well(guiGraphics, leftPos + 174, topPos + 17, 14, 114);
+                }
+                if (selected.hasSearchBar()) {
+                    Glass.field(guiGraphics, leftPos + 80, topPos + 4, 84, 13, true);
+                }
+                if (page != null && page.getVisibleTabs().contains(selected)) {
+                    tabGlass(guiGraphics, page, selected, true, mouseX, mouseY);
+                }
+            }
+            super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
+        }
+
+        /** One tab, 26 x 29 at vanilla's place (its click box is the game's): dim glass, or the panel's own color with an accent edge when selected. */
+        private void tabGlass(GuiGraphics g, net.minecraftforge.client.gui.CreativeTabsScreenPage page, CreativeModeTab tab, boolean on, int mouseX, int mouseY) {
+            int column = page.getColumn(tab);
+            int x = leftPos + (tab.isAlignedRight() ? imageWidth - 27 * (7 - column) + 1 : 27 * column);
+            boolean top = page.isTop(tab);
+            int y = topPos + (top ? -32 + 3 : imageHeight);
+            boolean over = mouseX >= x && mouseX < x + 26 && mouseY >= y - (top ? 3 : 0) && mouseY < y - (top ? 3 : 0) + 32;
+            if (on) {
+                g.fill(x, y, x + 26, y + 29, 0xF2000000 | (FordixPalette.PANEL_FILL & 0xFFFFFF));
+                int accent = 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF);
+                g.fill(x, top ? y : y + 27, x + 26, top ? y + 2 : y + 29, accent);
+                g.fill(x, y, x + 1, y + 29, accent & 0x60FFFFFF);
+            } else {
+                Glass.button(g, x, y, 26, 29, Glass.Kind.NORMAL, over ? 1.0F : 0.0F, true);
+            }
         }
 
         @Override
