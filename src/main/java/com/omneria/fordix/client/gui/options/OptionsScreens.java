@@ -26,6 +26,8 @@ public final class OptionsScreens {
             event.setNewScreen(new VideoScreen(from));
         } else if (type == SoundOptionsScreen.class) {
             event.setNewScreen(new SoundScreen(from));
+        } else if (KeyControlsScreen.replaces(next)) {
+            event.setNewScreen(new KeyControlsScreen(from));
         }
     }
 }

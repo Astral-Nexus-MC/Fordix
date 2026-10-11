@@ -636,5 +636,14 @@
     "fordix.options.sound.desc.subtitles": "Writes the sounds on screen",
     "fordix.options.sound.music_toast": "Current track title",
     "fordix.options.sound.desc.music_toast": "A notice each time new music starts",
-    "fordix.hud.toast.music": "Music"
+    "fordix.hud.toast.music": "Music",
+    "fordix.options.controls.mouse": "Mouse...",
+    "fordix.options.controls.all": "All",
+    "fordix.options.controls.conflicts": "Conflicts %s",
+    "fordix.options.controls.changed": "Changed %s",
+    "fordix.options.controls.search": "Search an action or a key",
+    "fordix.options.controls.reset_all": "Reset all",
+    "fordix.options.controls.waiting": "Press the key for: %s",
+    "fordix.options.controls.press": "Press a key...",
+    "fordix.options.controls.conflict": "Conflict: %s"
 }

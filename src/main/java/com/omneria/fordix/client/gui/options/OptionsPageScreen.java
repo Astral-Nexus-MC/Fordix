@@ -15,9 +15,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The common page of the Voidframe options screens (video, sound): a glass panel as tall as the screen, a title, optional tabs,
@@ -32,6 +34,7 @@ public abstract class OptionsPageScreen extends FordixScreen {
     protected final Screen parent;
     private final List<AbstractWidget> rows = new ArrayList<>();
     private final Map<AbstractWidget, Integer> base = new IdentityHashMap<>();
+    private final Set<AbstractWidget> hidden = Collections.newSetFromMap(new IdentityHashMap<>());
     private final List<Runnable> resets = new ArrayList<>();
     private final List<TabButton> tabButtons = new ArrayList<>();
     protected int tab;
@@ -58,6 +61,47 @@ public abstract class OptionsPageScreen extends FordixScreen {
 
     /** Adds the rows of the open tab with {@link #addRow}, the first one {@code listTop} pixels from the screen's top; returns the y after the last. */
     protected abstract int buildRows(int left, int width);
+
+    /** Space between the panel's top and the list: the title, and the tabs when there are some. A page with a search field makes it taller. */
+    protected int listOffset() {
+        return tabNames().isEmpty() ? 26 : 44;
+    }
+
+    /** Adds the widgets of the header (a search field, a filter) once the tabs are in place. */
+    protected void buildHeader() {
+    }
+
+    protected String defaultsLabel() {
+        return Tr.s("options.page.defaults");
+    }
+
+    /** What the "defaults" button does: by default every row that gave a reset puts its value back. */
+    protected void onDefaults() {
+        for (Runnable reset : resets) {
+            reset.run();
+        }
+    }
+
+    /** Moves a row to {@code y} (screen coordinates at no scroll), for a page that filters and re-flows its rows. */
+    protected void setRowBase(AbstractWidget row, int y) {
+        base.put(row, y);
+    }
+
+    /** Shows or hides a row for good (a filter), whatever the scroll. */
+    protected void hideRow(AbstractWidget row, boolean hide) {
+        if (hide) {
+            hidden.add(row);
+        } else {
+            hidden.remove(row);
+        }
+    }
+
+    /** After the rows were moved: the list now ends at {@code end}. */
+    protected void rowsMoved(int end) {
+        contentHeight = Math.max(0, end - listTop);
+        clampScroll();
+        applyScroll();
+    }
 
     /** Drawn in the header, right of the title. */
     protected void renderHeader(GuiGraphics g, int x, int y, int right) {
@@ -92,7 +136,7 @@ public abstract class OptionsPageScreen extends FordixScreen {
         panelH = this.height - (small ? 10 : 12);
         panelX = centerX(panelW);
         panelY = (this.height - panelH) / 2;
-        listTop = panelY + (tabNames().isEmpty() ? 26 : 44);
+        listTop = panelY + listOffset();
         listBottom = panelY + panelH - FOOT;
         rows.clear();
         base.clear();
@@ -116,6 +160,7 @@ public abstract class OptionsPageScreen extends FordixScreen {
             addRenderableWidget(button);
             tx += width + 2;
         }
+        buildHeader();
         int end = buildRows(panelX + 8, panelW - 16);
         contentHeight = Math.max(0, end - listTop);
         for (AbstractWidget row : rows) {
@@ -124,11 +169,7 @@ public abstract class OptionsPageScreen extends FordixScreen {
         clampScroll();
         applyScroll();
         int by = panelY + panelH - FOOT + 8;
-        addRenderableWidget(new FordixButton(panelX + 12, by, small ? 76 : 100, 18, Tr.c("options.page.defaults"), () -> {
-            for (Runnable reset : resets) {
-                reset.run();
-            }
-        }));
+        addRenderableWidget(new FordixButton(panelX + 12, by, Math.max(small ? 76 : 100, this.font.width(defaultsLabel()) + 16), 18, Component.literal(defaultsLabel()), this::onDefaults));
         addRenderableWidget(new FordixButton(panelX + panelW - 12 - 80, by, 80, 18, Tr.c("options.page.done"), this::onClose).kind(Glass.Kind.PRIMARY));
     }
 
@@ -149,7 +190,7 @@ public abstract class OptionsPageScreen extends FordixScreen {
     private void applyScroll() {
         for (AbstractWidget row : rows) {
             row.setY(base.get(row) - (int) scroll);
-            row.visible = row.getY() + row.getHeight() > listTop && row.getY() < listBottom;
+            row.visible = !hidden.contains(row) && row.getY() + row.getHeight() > listTop && row.getY() < listBottom;
         }
     }
 

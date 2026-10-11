@@ -636,5 +636,14 @@
     "fordix.options.sound.desc.subtitles": "Écrit les sons à l'écran",
     "fordix.options.sound.music_toast": "Titre du morceau en cours",
     "fordix.options.sound.desc.music_toast": "Une notification à chaque nouvelle musique",
-    "fordix.hud.toast.music": "Musique"
+    "fordix.hud.toast.music": "Musique",
+    "fordix.options.controls.mouse": "Souris...",
+    "fordix.options.controls.all": "Toutes",
+    "fordix.options.controls.conflicts": "Conflits %s",
+    "fordix.options.controls.changed": "Modifiées %s",
+    "fordix.options.controls.search": "Rechercher une action ou une touche",
+    "fordix.options.controls.reset_all": "Tout réinitialiser",
+    "fordix.options.controls.waiting": "Appuyez sur la touche de : %s",
+    "fordix.options.controls.press": "Appuyez sur une touche...",
+    "fordix.options.controls.conflict": "Conflit : %s"
 }
