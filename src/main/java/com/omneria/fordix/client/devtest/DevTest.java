@@ -743,8 +743,23 @@ public final class DevTest {
             com.omneria.fordix.client.pet.PetWheelScreen.testKeepOpen = false;
             mc.setScreen(null);
         }, 5, false));
+        steps.add(new Step("12g-chat-error", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen("/fordix wiki improt minecraft")), 30, false));
+        steps.add(new Step("12h-chat-history-open", () -> {
+            mc.gui.getChat().addRecentChat("/fordix notify all Redemarrage dans 5 minutes");
+            mc.gui.getChat().addRecentChat("/fordix panel list");
+            mc.gui.getChat().addRecentChat("/fordix wiki import minecraft https://fr.minecraft.wiki");
+            mc.setScreen(new net.minecraft.client.gui.screens.ChatScreen(""));
+        }, 15, false));
+        steps.add(new Step("12i-chat-history", () -> {
+            if (mc.screen instanceof net.minecraft.client.gui.screens.ChatScreen chat) {
+                chat.keyPressed(org.lwjgl.glfw.GLFW.GLFW_KEY_UP, 0, 0);
+            }
+        }, 20, false));
+        steps.add(new Step("12j-chat-close", () -> mc.setScreen(null), 5, false));
         steps.add(new Step("18-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.OptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(optionsParent(mc), mc.options)), 30, false));
+        steps.add(new Step("19a-video-quality", () -> mc.setScreen(new com.omneria.fordix.client.gui.options.VideoScreen(optionsParent(mc), 1)), 30, false));
+        steps.add(new Step("19a2-video-interface", () -> mc.setScreen(new com.omneria.fordix.client.gui.options.VideoScreen(optionsParent(mc), 2)), 30, false));
         steps.add(new Step("19b-language", () -> mc.setScreen(new net.minecraft.client.gui.screens.LanguageSelectScreen(null, mc.options, mc.getLanguageManager())), 30, false));
         steps.add(new Step("19c-accessibility", () -> mc.setScreen(new net.minecraft.client.gui.screens.AccessibilityOptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19d-chat-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatOptionsScreen(null, mc.options)), 30, false));
@@ -755,7 +770,7 @@ public final class DevTest {
         steps.add(new Step("21-singleplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.worldselection.SelectWorldScreen(null)), 40, false));
         steps.add(new Step("22-stats", () -> mc.setScreen(new net.minecraft.client.gui.screens.achievement.StatsScreen(null, mc.player.getStats())), 30, false));
         steps.add(new Step("23-multiplayer", () -> mc.setScreen(new net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen(null)), 30, false));
-        steps.add(new Step("24-sounds", () -> mc.setScreen(new net.minecraft.client.gui.screens.SoundOptionsScreen(null, mc.options)), 30, false));
+        steps.add(new Step("24-sounds", () -> mc.setScreen(new net.minecraft.client.gui.screens.SoundOptionsScreen(optionsParent(mc), mc.options)), 30, false));
         steps.add(new Step("25-death", () -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(net.minecraft.network.chat.Component.literal("Tu es tombe de haut"), false)), 30, false));
         steps.add(new Step("26-title", () -> mc.setScreen(new net.minecraft.client.gui.screens.TitleScreen()), 40, false));
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));

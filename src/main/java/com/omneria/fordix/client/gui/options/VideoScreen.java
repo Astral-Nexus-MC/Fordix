@@ -35,6 +35,12 @@ public final class VideoScreen extends OptionsPageScreen {
         super(Component.translatable("options.videoTitle"), parent);
     }
 
+    /** For the in-game test: opens on a given tab (0 display, 1 quality, 2 interface). */
+    public VideoScreen(Screen parent, int tab) {
+        this(parent);
+        this.tab = Math.max(0, Math.min(2, tab));
+    }
+
     @Override
     protected List<String> tabNames() {
         return List.of(Tr.s("options.video.tab.display"), Tr.s("options.video.tab.quality"), Tr.s("options.video.tab.interface"));
