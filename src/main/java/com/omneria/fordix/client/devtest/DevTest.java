@@ -134,6 +134,12 @@ public final class DevTest {
         mc.resizeDisplay();
         mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
         steps.add(new Step("00-setup", () -> {
+            // The guided tour of the HUD editor starts by itself on a first open: the other steps need the editor free.
+            try {
+                java.nio.file.Files.writeString(net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("fordix-hud-editor-seen.txt"), "1");
+            } catch (java.io.IOException ignored) {
+                // The steps below would then start with the tour on: only the HUD editor ones are affected.
+            }
             cmd(mc, "gamemode survival");
             mc.player.getInventory().setItem(10, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.COMPASS));
             mc.player.getInventory().setItem(11, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CLOCK));
@@ -241,6 +247,19 @@ public final class DevTest {
                     throw new IllegalStateException(e);
                 }
             }, 40, false));
+        }
+        for (int tourStep : new int[]{0, 1, 2, 4}) {
+            steps.add(new Step("10t" + tourStep + "-hud-tour", () -> {
+                HudLayoutScreen layout = new HudLayoutScreen(null);
+                mc.setScreen(layout);
+                try {
+                    java.lang.reflect.Field f = HudLayoutScreen.class.getDeclaredField("tour");
+                    f.setAccessible(true);
+                    f.setInt(layout, tourStep);
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }, 30, false));
         }
         for (int[] pv : new int[][]{{0, 0}, {3, 3}, {7, 7}}) {
             steps.add(new Step("10p" + pv[0] + "-hud-preview", () -> {

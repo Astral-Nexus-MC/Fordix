@@ -453,6 +453,7 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D15 | Le livre de recettes est dessiné en verre (`GlassBook` : sous-classes du livre du jeu installées dans les écrans par réflexion), aussi haut que le conteneur voisin ; le jeu garde la logique (recettes, onglets, pages, clics, recette fantôme). | Le livre vanilla a une taille fixe de 147 x 166 et ne peut pas s'aligner sur le panneau ; seul le menu des variantes de recette garde le dessin du jeu. |
 | D16 | Métier à tisser, cartographie et inventaire créatif sont en verre : on vide le corps de leur texture et on dessine le panneau, les puits et les onglets ; les sprites utiles (motifs, icônes, curseur) restent ceux du jeu. | Ces écrans mêlent logique et dessin du jeu (motifs de bannière, carte, onglets) qu'on ne peut pas refaire sans les réécrire ; vider le fond suffit à les mettre en verre. |
 | D17 | L'éditeur de HUD offre un aperçu de la disposition à huit tailles d'interface (320 x 240 à 1920 x 1080), avec les chevauchements et les débordements marqués. | Un joueur voit la disposition à sa taille d'écran, pas à celle de l'admin. |
+| D18 | L'éditeur de HUD s'ouvre la première fois sur une visite guidée de 7 étapes, qu'on rouvre avec le bouton Visite guidée. | Un joueur qui ne connaît pas l'éditeur comprend le glisser-déposer, les panneaux et les outils sans lire de documentation. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
 Dette connue (à traiter dans l'ordre) :
@@ -460,7 +461,7 @@ Dette connue (à traiter dans l'ordre) :
 1. Sous-titres sonores (`SUBTITLES`) : la liste est privée à `SubtitleOverlay` ; elle reste vanilla. F3 reste vanilla (outil de diagnostic).
 2. Titre à l'écran : lu par type et ordre de déclaration dans `Gui` (`TitleHud`, repli sur le titre du jeu si la disposition diffère) ; à revérifier à chaque version du jeu.
 3. Options > Contrôles, Vidéo, Sons : seuls les boutons et le fond sont habillés ; les listes de réglages gardent leur forme.
-4. Éditeur de HUD : une notice à la première ouverture (`firstOpenHint`) mais pas d'assistant pas à pas. La prévisualisation multi-résolutions existe depuis la 0.1.78 (`HudPreview`, bouton Aperçu).
+4. (Soldée en 0.1.78 : l'éditeur de HUD a une visite guidée à la première ouverture, `HudTour`, et un aperçu multi-résolutions, `HudPreview`.)
 5. Champs `EditBox` du chat et des commandes : le chat de Voidframe a le sien, la ligne de commande du jeu garde le champ vanilla.
 6. Fiche d'objet : les barres de caractéristiques de la maquette ne sont pas encore dessinées (liste de chiffres alignés).
 7. (Soldée en 0.1.78 : créatif, métier à tisser et cartographie sont en verre.)

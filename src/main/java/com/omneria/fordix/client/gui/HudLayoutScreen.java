@@ -8,6 +8,7 @@ import com.omneria.fordix.client.gui.layout.HudChecks;
 import com.omneria.fordix.client.gui.layout.HudLayout;
 import com.omneria.fordix.client.gui.layout.HudPreview;
 import com.omneria.fordix.client.gui.layout.HudSnap;
+import com.omneria.fordix.client.gui.layout.HudTour;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
 import com.omneria.fordix.client.gui.vanilla.HudSlots;
@@ -79,6 +80,12 @@ public class HudLayoutScreen extends FordixScreen {
     /** The preview at another interface size: -1 when off, else an index of {@link HudPreview#SIZES}. */
     private int preview = -1;
     private final List<FordixButton> previewWidgets = new ArrayList<>();
+    /** The guided tour: -1 when off, else the step ({@link HudTour}). It starts by itself the first time the editor opens. */
+    private int tour = -1;
+    private boolean tourChecked;
+    private FordixButton tourBack;
+    private FordixButton tourNext;
+    private FordixButton tourSkip;
     private static final int HEADER = 16;
     /** Kept for the session: the panels fold to their title so the whole screen stays free to drag the elements. */
     private static boolean leftOpen = true;
@@ -97,26 +104,32 @@ public class HudLayoutScreen extends FordixScreen {
         this.parent = parent;
     }
 
-    /** The first time the editor opens, a notice says how it works; a marker file remembers that it was shown. */
-    private static void firstOpenHint() {
+    /** True the first time the editor opens (a marker file remembers it): the guided tour starts by itself then. */
+    private static boolean firstOpen() {
         java.nio.file.Path marker = net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("fordix-hud-editor-seen.txt");
         if (java.nio.file.Files.exists(marker)) {
-            return;
+            return false;
         }
-        HudToast.show(Tr.s("hud.editor.first.title"), Tr.s("hud.editor.first.detail"), 0x3FD1C7);
         try {
             java.nio.file.Files.writeString(marker, "1");
         } catch (java.io.IOException ignored) {
             // Shown again next time: harmless.
         }
+        return true;
     }
 
     @Override
     protected void init() {
-        firstOpenHint();
+        if (!tourChecked) {
+            tourChecked = true;
+            if (firstOpen()) {
+                tour = 0;
+            }
+        }
         propertyButtons.clear();
         leftWidgets.clear();
         previewWidgets.clear();
+        tourBack = null;
         int x = PANEL_MARGIN + 6;
         int half = (PANEL_WIDTH - 16) / 2;
         int y = PANEL_MARGIN + 16;
@@ -159,8 +172,14 @@ public class HudLayoutScreen extends FordixScreen {
         }));
         y += 15;
         left(new FordixButton(x, y, PANEL_WIDTH - 12, 13, Tr.c("hud.preview"), () -> preview = Math.max(0, Math.min(HudPreview.SIZES.length - 1, 3))));
+        y += 15;
+        left(new FordixButton(x, y, PANEL_WIDTH - 12, 13, Tr.c("hud.tour.open"), () -> tour = 0));
         y += 17;
         listTop = y + 12;
+        // The tour's own buttons are drawn above its dimming layer by hand, so they are children but not renderables.
+        tourBack = addWidget(new FordixButton(0, 0, 60, 14, Tr.c("hud.tour.back"), () -> tour = HudTour.previous(tour)));
+        tourNext = addWidget(new FordixButton(0, 0, 70, 14, Tr.c("hud.tour.next"), () -> tour = HudTour.next(tour)));
+        tourSkip = addWidget(new FordixButton(0, 0, 50, 14, Tr.c("hud.tour.skip"), () -> tour = -1));
         // The preview's own controls: previous and next size, and back to editing.
         int mid = this.width / 2;
         previewWidgets.add(addRenderableWidget(new FordixButton(mid - 120, 8, 22, 14, Component.literal("<"), () -> preview = HudPreview.step(preview, -1))));
@@ -430,6 +449,97 @@ public class HudLayoutScreen extends FordixScreen {
         redoButton.active = !redo.isEmpty();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.pose().popPose();
+        if (tour >= 0) {
+            renderTour(guiGraphics, mouseX, mouseY, partialTick);
+        }
+    }
+
+    /** The rectangle (x, y, w, h) a tour step lights up, or null. */
+    private int[] tourFocus() {
+        switch (HudTour.focus(tour)) {
+            case ELEMENT -> {
+                int hotbar = elements.indexOf("minecraft:hotbar");
+                int index = hotbar >= 0 ? hotbar : 0;
+                HudSnap.Rect r = rectOf(index);
+                return new int[]{r.x() - 3, r.y() - 3, r.w() + 6, r.h() + 6};
+            }
+            case LIST -> {
+                return new int[]{PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, leftHeight()};
+            }
+            case PROPERTIES -> {
+                return new int[]{this.width - PANEL_MARGIN - PANEL_WIDTH, PANEL_MARGIN, PANEL_WIDTH, rightHeight()};
+            }
+            case TOOLS -> {
+                return new int[]{PANEL_MARGIN, PANEL_MARGIN + 14, PANEL_WIDTH, 15 * 5 + 6};
+            }
+            case PREVIEW -> {
+                return new int[]{PANEL_MARGIN, PANEL_MARGIN + 14 + 15 * 5, PANEL_WIDTH, 15 * 2 + 4};
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
+
+    /** The guided tour: the screen dims except for what the step talks about, and a card explains it. */
+    private void renderTour(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        g.flush();
+        g.pose().pushPose();
+        g.pose().translate(0.0F, 0.0F, 400.0F);
+        int[] focus = tourFocus();
+        int dim = 0xC0050A10;
+        if (focus == null) {
+            g.fill(0, 0, this.width, this.height, dim);
+        } else {
+            int fx = Math.max(0, focus[0]);
+            int fy = Math.max(0, focus[1]);
+            int fr = Math.min(this.width, focus[0] + focus[2]);
+            int fb = Math.min(this.height, focus[1] + focus[3]);
+            g.fill(0, 0, this.width, fy, dim);
+            g.fill(0, fb, this.width, this.height, dim);
+            g.fill(0, fy, fx, fb, dim);
+            g.fill(fr, fy, this.width, fb, dim);
+            g.renderOutline(fx - 1, fy - 1, fr - fx + 2, fb - fy + 2, 0xFF000000 | (FordixPalette.ACCENT & 0xFFFFFF));
+        }
+        int cardW = Math.min(230, this.width - 16);
+        List<FormattedCharSequence> lines = this.font.split(Tr.c("hud.tour." + tour + ".body"), cardW - 20);
+        int cardH = 14 + 12 + lines.size() * 10 + 8 + 14 + 10;
+        int cx = (this.width - cardW) / 2;
+        int cy = (this.height - cardH) / 2;
+        if (focus != null) {
+            // Beside what is lit, on the side with room; the middle of the screen when the lit part is a side panel.
+            boolean leftSide = focus[0] + focus[2] / 2 < this.width / 2;
+            cx = Math.max(8, Math.min(this.width - cardW - 8, leftSide ? focus[0] + focus[2] + 12 : focus[0] - cardW - 12));
+            if (focus[2] > this.width / 2) {
+                cx = (this.width - cardW) / 2;
+            }
+            cy = Math.max(8, Math.min(this.height - cardH - 8, focus[1] + 8));
+            if (HudTour.focus(tour) == HudTour.Focus.ELEMENT) {
+                cy = Math.max(8, focus[1] - cardH - 12);
+                cx = (this.width - cardW) / 2;
+            }
+        }
+        HudStyle.panel(g, cx, cy, cardW, cardH, FordixPalette.ACCENT & 0xFFFFFF, 0xF2);
+        g.drawString(this.font, Tr.s("hud.tour." + tour + ".title"), cx + 10, cy + 8, FordixPalette.ACCENT, false);
+        g.drawString(this.font, HudTour.counter(tour), cx + cardW - 10 - this.font.width(HudTour.counter(tour)), cy + 8, 0xFF8AA0AD, false);
+        int ty = cy + 24;
+        for (FormattedCharSequence line : lines) {
+            g.drawString(this.font, line, cx + 10, ty, FordixPalette.TEXT_BRIGHT, false);
+            ty += 10;
+        }
+        int by = cy + cardH - 20;
+        tourSkip.setX(cx + 10);
+        tourSkip.setY(by);
+        tourBack.setX(cx + cardW - 10 - 70 - 4 - 60);
+        tourBack.setY(by);
+        tourBack.active = tour > 0;
+        tourNext.setX(cx + cardW - 10 - 70);
+        tourNext.setY(by);
+        tourNext.setMessage(Tr.c(HudTour.last(tour) ? "hud.tour.done" : "hud.tour.next"));
+        tourSkip.render(g, mouseX, mouseY, partialTick);
+        tourBack.render(g, mouseX, mouseY, partialTick);
+        tourNext.render(g, mouseX, mouseY, partialTick);
+        g.pose().popPose();
     }
 
     /** The layout as a player on a {@code width} x {@code height} interface would get it: a miniature, with the problems marked. */
@@ -744,10 +854,19 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (tour >= 0) {
+            for (FordixButton b : new FordixButton[]{tourNext, tourBack, tourSkip}) {
+                if (b.active && b.isMouseOver(mouseX, mouseY)) {
+                    b.onClick(mouseX, mouseY);
+                    return true;
+                }
+            }
+            return true;
+        }
         if (super.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
-        if (preview >= 0) {
+        if (preview >= 0 || tour >= 0) {
             return true;
         }
         if (button != 0) {
@@ -836,7 +955,7 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (preview >= 0) {
+        if (preview >= 0 || tour >= 0) {
             return false;
         }
         if (resizing && selected >= 0 && button == 0) {
@@ -896,6 +1015,9 @@ public class HudLayoutScreen extends FordixScreen {
     /** The wheel resizes the element under the pointer (Shift: bigger steps). */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (tour >= 0) {
+            return true;
+        }
         if (preview >= 0) {
             preview = HudPreview.step(preview, delta > 0 ? -1 : 1);
             return true;
@@ -921,6 +1043,16 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (tour >= 0) {
+            if (keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_SPACE) {
+                tour = HudTour.next(tour);
+            } else if (keyCode == GLFW.GLFW_KEY_LEFT) {
+                tour = HudTour.previous(tour);
+            } else if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                tour = -1;
+            }
+            return true;
+        }
         if (preview >= 0) {
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
                 preview = HudPreview.step(preview, -1);
@@ -993,6 +1125,10 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public void onClose() {
+        if (tour >= 0) {
+            tour = -1;
+            return;
+        }
         if (preview >= 0) {
             preview = -1;
             return;
