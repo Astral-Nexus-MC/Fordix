@@ -577,5 +577,10 @@
     "fordix.inv.book.title": "Recipes",
     "fordix.inv.book.craftable": "Craftable",
     "fordix.inv.book.all": "All",
-    "fordix.inv.book.empty": "No recipes"
+    "fordix.inv.book.empty": "No recipes",
+    "fordix.hud.preview": "Preview at other sizes",
+    "fordix.hud.preview.exit": "Back to editing",
+    "fordix.hud.preview.size": "Interface %s",
+    "fordix.hud.preview.ok": "No overlap, everything on screen",
+    "fordix.hud.preview.problems": "%s overlaps, %s outside the screen"
 }

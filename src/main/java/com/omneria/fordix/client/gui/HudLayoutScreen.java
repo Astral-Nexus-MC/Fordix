@@ -6,6 +6,7 @@ import com.omneria.fordix.client.gui.layout.HudAnchors;
 import com.omneria.fordix.client.gui.layout.HudBounds;
 import com.omneria.fordix.client.gui.layout.HudChecks;
 import com.omneria.fordix.client.gui.layout.HudLayout;
+import com.omneria.fordix.client.gui.layout.HudPreview;
 import com.omneria.fordix.client.gui.layout.HudSnap;
 import com.omneria.fordix.client.gui.vanilla.ExtraHud;
 import com.omneria.fordix.client.gui.vanilla.HudProfileActions;
@@ -75,6 +76,9 @@ public class HudLayoutScreen extends FordixScreen {
     private FordixButton redoButton;
     private final List<FordixButton> propertyButtons = new ArrayList<>();
     private final List<FordixButton> leftWidgets = new ArrayList<>();
+    /** The preview at another interface size: -1 when off, else an index of {@link HudPreview#SIZES}. */
+    private int preview = -1;
+    private final List<FordixButton> previewWidgets = new ArrayList<>();
     private static final int HEADER = 16;
     /** Kept for the session: the panels fold to their title so the whole screen stays free to drag the elements. */
     private static boolean leftOpen = true;
@@ -112,6 +116,7 @@ public class HudLayoutScreen extends FordixScreen {
         firstOpenHint();
         propertyButtons.clear();
         leftWidgets.clear();
+        previewWidgets.clear();
         int x = PANEL_MARGIN + 6;
         int half = (PANEL_WIDTH - 16) / 2;
         int y = PANEL_MARGIN + 16;
@@ -152,8 +157,15 @@ public class HudLayoutScreen extends FordixScreen {
             boolean ok = HudProfileActions.importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
             HudToast.show(Tr.s("hud.toast.share"), Tr.s(ok ? "hud.profile.pasted" : "hud.profile.bad_code"), ok ? 0x5ED68A : 0xE5534B);
         }));
+        y += 15;
+        left(new FordixButton(x, y, PANEL_WIDTH - 12, 13, Tr.c("hud.preview"), () -> preview = Math.max(0, Math.min(HudPreview.SIZES.length - 1, 3))));
         y += 17;
         listTop = y + 12;
+        // The preview's own controls: previous and next size, and back to editing.
+        int mid = this.width / 2;
+        previewWidgets.add(addRenderableWidget(new FordixButton(mid - 120, 8, 22, 14, Component.literal("<"), () -> preview = HudPreview.step(preview, -1))));
+        previewWidgets.add(addRenderableWidget(new FordixButton(mid + 98, 8, 22, 14, Component.literal(">"), () -> preview = HudPreview.step(preview, 1))));
+        previewWidgets.add(addRenderableWidget(new FordixButton(mid - 60, this.height - 24, 120, 16, Tr.c("hud.preview.exit"), () -> preview = -1)));
         listBottom = this.height - PANEL_MARGIN - 18;
         left(new FordixButton(PANEL_MARGIN + 6, this.height - PANEL_MARGIN - 17, PANEL_WIDTH - 12, 13,
                 Tr.c("common.close"), this::onClose));
@@ -356,6 +368,20 @@ public class HudLayoutScreen extends FordixScreen {
             discovered = true;
             discover(guiGraphics);
         }
+        for (FordixButton button : previewWidgets) {
+            button.visible = preview >= 0;
+        }
+        if (preview >= 0) {
+            for (FordixButton button : leftWidgets) {
+                button.visible = false;
+            }
+            for (FordixButton button : propertyButtons) {
+                button.visible = false;
+            }
+            renderPreview(guiGraphics);
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            return;
+        }
         // The game stays visible and undimmed behind: only a faint veil so the outlines read.
         guiGraphics.fill(0, 0, this.width, this.height, 0x33000000);
         if (showGrid) {
@@ -404,6 +430,70 @@ public class HudLayoutScreen extends FordixScreen {
         redoButton.active = !redo.isEmpty();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.pose().popPose();
+    }
+
+    /** The layout as a player on a {@code width} x {@code height} interface would get it: a miniature, with the problems marked. */
+    private void renderPreview(GuiGraphics g) {
+        int[] size = HudPreview.SIZES[preview];
+        int w = size[0];
+        int h = size[1];
+        g.fill(0, 0, this.width, this.height, 0xE0050A10);
+        int top = 30;
+        int bottom = 32;
+        int areaW = this.width - 40;
+        int areaH = this.height - top - bottom;
+        float scale = HudPreview.scale(areaW, areaH, w, h);
+        int pw = Math.round(w * scale);
+        int ph = Math.round(h * scale);
+        int ox = (this.width - pw) / 2;
+        int oy = top + (areaH - ph) / 2;
+        String title = Tr.s("hud.preview.size", HudPreview.label(preview));
+        g.drawCenteredString(this.font, title, this.width / 2, 12, FordixPalette.TEXT_BRIGHT);
+        g.fillGradient(ox, oy, ox + pw, oy + ph, 0xFF16222E, 0xFF0A1118);
+        g.renderOutline(ox - 1, oy - 1, pw + 2, ph + 2, 0x60FFFFFF);
+
+        List<String> ids = new ArrayList<>();
+        List<HudSnap.Rect> rects = new ArrayList<>();
+        for (String id : elements) {
+            if (!HudSlots.hidden(id)) {
+                ids.add(id);
+                rects.add(HudSlots.placed(id, w, h));
+            }
+        }
+        List<int[]> overlaps = HudChecks.overlaps(rects);
+        List<Integer> outside = HudPreview.outsideAll(rects, w, h);
+        java.util.Set<Integer> bad = new java.util.HashSet<>();
+        for (int[] pair : overlaps) {
+            bad.add(pair[0]);
+            bad.add(pair[1]);
+        }
+        for (int i = 0; i < rects.size(); i++) {
+            HudSnap.Rect r = rects.get(i);
+            int x1 = ox + Math.round(r.x() * scale);
+            int y1 = oy + Math.round(r.y() * scale);
+            int x2 = ox + Math.round(r.right() * scale);
+            int y2 = oy + Math.round(r.bottom() * scale);
+            int color = bad.contains(i) ? 0xE5534B : outside.contains(i) ? 0xE8A64A : FordixPalette.ACCENT & 0xFFFFFF;
+            g.fill(x1, y1, Math.max(x2, x1 + 1), Math.max(y2, y1 + 1), 0x55000000 | color);
+            g.renderOutline(x1, y1, Math.max(x2 - x1, 1), Math.max(y2 - y1, 1), 0xFF000000 | color);
+            if (x2 - x1 >= 40 && y2 - y1 >= 8) {
+                g.pose().pushPose();
+                g.pose().translate(x1 + 2, y1 + 2, 0.0F);
+                g.pose().scale(0.5F, 0.5F, 1.0F);
+                g.drawString(this.font, this.font.plainSubstrByWidth(HudSlots.label(ids.get(i)), (x2 - x1 - 4) * 2), 0, 0, 0xFFFFFFFF, false);
+                g.pose().popPose();
+            }
+        }
+        String verdict;
+        int verdictColor;
+        if (overlaps.isEmpty() && outside.isEmpty()) {
+            verdict = Tr.s("hud.preview.ok");
+            verdictColor = 0xFF5ED68A;
+        } else {
+            verdict = Tr.s("hud.preview.problems", overlaps.size(), outside.size());
+            verdictColor = 0xFFE8A64A;
+        }
+        g.drawCenteredString(this.font, verdict, this.width / 2, this.height - 42, verdictColor);
     }
 
     /** Whether the point is on a panel (only what a panel really covers, and nothing while an element is being dragged). */
@@ -657,6 +747,9 @@ public class HudLayoutScreen extends FordixScreen {
         if (super.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
+        if (preview >= 0) {
+            return true;
+        }
         if (button != 0) {
             return false;
         }
@@ -743,6 +836,9 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (preview >= 0) {
+            return false;
+        }
         if (resizing && selected >= 0 && button == 0) {
             HudSnap.Rect rect = rectOf(selected);
             String id = elements.get(selected);
@@ -800,6 +896,10 @@ public class HudLayoutScreen extends FordixScreen {
     /** The wheel resizes the element under the pointer (Shift: bigger steps). */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (preview >= 0) {
+            preview = HudPreview.step(preview, delta > 0 ? -1 : 1);
+            return true;
+        }
         if (leftOpen && mouseX < PANEL_MARGIN + PANEL_WIDTH && mouseY >= listTop && mouseY < listBottom) {
             int max = Math.max(0, elements.size() * ROW_HEIGHT - (listBottom - listTop));
             listScroll = Math.max(0, Math.min(max, listScroll - (int) Math.signum(delta) * ROW_HEIGHT * 2));
@@ -821,6 +921,17 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (preview >= 0) {
+            if (keyCode == GLFW.GLFW_KEY_LEFT) {
+                preview = HudPreview.step(preview, -1);
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+                preview = HudPreview.step(preview, 1);
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
         if (keyCode == GLFW.GLFW_KEY_H && !hasControlDown()) {
             boolean open = !(leftOpen || rightOpen);
             leftOpen = open;
@@ -882,6 +993,10 @@ public class HudLayoutScreen extends FordixScreen {
 
     @Override
     public void onClose() {
+        if (preview >= 0) {
+            preview = -1;
+            return;
+        }
         this.minecraft.setScreen(parent);
     }
 }

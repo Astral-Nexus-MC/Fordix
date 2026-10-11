@@ -577,5 +577,10 @@
     "fordix.inv.book.title": "Recettes",
     "fordix.inv.book.craftable": "Faisables",
     "fordix.inv.book.all": "Tout",
-    "fordix.inv.book.empty": "Aucune recette"
+    "fordix.inv.book.empty": "Aucune recette",
+    "fordix.hud.preview": "Aperçu à d'autres tailles",
+    "fordix.hud.preview.exit": "Retour à l'édition",
+    "fordix.hud.preview.size": "Interface %s",
+    "fordix.hud.preview.ok": "Aucun chevauchement, tout est dans l'écran",
+    "fordix.hud.preview.problems": "%s chevauchements, %s hors de l'écran"
 }

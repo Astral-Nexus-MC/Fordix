@@ -56,7 +56,7 @@ Principes, par ordre de priorité quand ils s'opposent :
 | Élément | Raison |
 |---|---|
 | **Écran titre et liste des mondes** | Cachés par le mod **Astral-launcher** : le joueur n'y passe pas. C'est la situation normale, ne pas y investir. Ils gardent seulement la recoloration des boutons. |
-| Métier à tisser, cartographie, créatif | Peu utilisés en survie : textures recolorées (`TextureRecolor`), plus le halo de case et l'ouverture communs. |
+| Métier à tisser, cartographie, créatif | En verre depuis la 0.1.78 : le corps de la texture du jeu est vidé (`TextureRecolor`), le panneau, les puits et les onglets sont dessinés par `VoidframeStations`. |
 | Sous-titres sonores, F3 | Le jeu ne publie aucun événement exploitable pour les sous-titres ; F3 est un outil de diagnostic. Restent vanilla (voir la dette, section 14). |
 | Signes, livres, blocs de commande, cartes | Ce sont des objets du monde, pas de l'interface. |
 | Écrans des autres mods (Create, Twilight Forest, MineColonies, JourneyMap) | Dessinés par ces mods. Fordix ne touche qu'aux écrans du jeu, de Forge et les siens (`VoidframeButtons.isGameScreen`). |
@@ -451,6 +451,8 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D13 | Les **sous-écrans d'options du jeu** (vidéo, sons, souris, chat, accessibilité, langue, touches, contrôles, apparence, statistiques) sont posés sur un panneau de verre avec leur titre en capitales d'accent (`SubOptionsSkin`) ; leurs listes cessent de tapisser la terre du jeu (`setRenderBackground(false)`), sans remplacer les écrans. Restent en style du jeu : packs de ressources, crédits, télémétrie, création de monde, multijoueur (dette). | Même langage que le menu d'options, aucun écran du jeu remplacé, donc compatible avec les autres mods. |
 | D14 | La **rareté d'un objet se lit sur le fond de sa case** (`RarityFrames`, chiffres dans `RarityMotion`, testés) : teinte qui monte du peu commun au légendaire (le commun reste le puits sombre), sous l'objet ; sur l'épique un voile violet et un reflet lent, sur le légendaire un cadre doré qui tourne, des étincelles, un reflet vif et une respiration ; reflet unique au survol, éclair blanc à l'arrivée d'un objet. L'objet n'est jamais modifié. Remplace le filet lumineux sous l'objet. | Choisi par le propriétaire parmi huit variantes : lisible de loin, et le légendaire se reconnaît sans la couleur. |
 | D15 | Le livre de recettes est dessiné en verre (`GlassBook` : sous-classes du livre du jeu installées dans les écrans par réflexion), aussi haut que le conteneur voisin ; le jeu garde la logique (recettes, onglets, pages, clics, recette fantôme). | Le livre vanilla a une taille fixe de 147 x 166 et ne peut pas s'aligner sur le panneau ; seul le menu des variantes de recette garde le dessin du jeu. |
+| D16 | Métier à tisser, cartographie et inventaire créatif sont en verre : on vide le corps de leur texture et on dessine le panneau, les puits et les onglets ; les sprites utiles (motifs, icônes, curseur) restent ceux du jeu. | Ces écrans mêlent logique et dessin du jeu (motifs de bannière, carte, onglets) qu'on ne peut pas refaire sans les réécrire ; vider le fond suffit à les mettre en verre. |
+| D17 | L'éditeur de HUD offre un aperçu de la disposition à huit tailles d'interface (320 x 240 à 1920 x 1080), avec les chevauchements et les débordements marqués. | Un joueur voit la disposition à sa taille d'écran, pas à celle de l'admin. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
 Dette connue (à traiter dans l'ordre) :
@@ -458,10 +460,10 @@ Dette connue (à traiter dans l'ordre) :
 1. Sous-titres sonores (`SUBTITLES`) : la liste est privée à `SubtitleOverlay` ; elle reste vanilla. F3 reste vanilla (outil de diagnostic).
 2. Titre à l'écran : lu par type et ordre de déclaration dans `Gui` (`TitleHud`, repli sur le titre du jeu si la disposition diffère) ; à revérifier à chaque version du jeu.
 3. Options > Contrôles, Vidéo, Sons : seuls les boutons et le fond sont habillés ; les listes de réglages gardent leur forme.
-4. Éditeur de HUD : une notice à la première ouverture (`firstOpenHint`) mais pas d'assistant pas à pas ni de prévisualisation multi-résolution.
+4. Éditeur de HUD : une notice à la première ouverture (`firstOpenHint`) mais pas d'assistant pas à pas. La prévisualisation multi-résolutions existe depuis la 0.1.78 (`HudPreview`, bouton Aperçu).
 5. Champs `EditBox` du chat et des commandes : le chat de Voidframe a le sien, la ligne de commande du jeu garde le champ vanilla.
 6. Fiche d'objet : les barres de caractéristiques de la maquette ne sont pas encore dessinées (liste de chiffres alignés).
-7. Créatif, métier à tisser, cartographie : textures recolorées seulement.
+7. (Soldée en 0.1.78 : créatif, métier à tisser et cartographie sont en verre.)
 
 ## 15. Voidframe 3 : ce qu'on prépare
 
@@ -518,7 +520,7 @@ Validé en jeu par l'utilisateur sur la version 0.1.77 (tailles d'écran et d'in
 | Inventaire, coffres, shulker, entonnoir, distributeur, établi, fourneaux | fait |
 | Enclume, meule, alambic, balise, enchantement, villageois, forge, cheval | fait (glass et primitives) |
 | Tailleur de pierre | fait (choix en puits et lignes) |
-| Métier à tisser, cartographie, créatif | recoloré |
+| Métier à tisser, cartographie, créatif | fait (verre, corps de texture vidé) |
 | Infobulle, rareté, durabilité | fait |
 | Réglages, éditeur de HUD | fait |
 | Administration, guides, wiki, fiches d'objet et de créature, livre de bienvenue, avancements, panels générés | fait |

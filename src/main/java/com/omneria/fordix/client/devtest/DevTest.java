@@ -242,6 +242,19 @@ public final class DevTest {
                 }
             }, 40, false));
         }
+        for (int[] pv : new int[][]{{0, 0}, {3, 3}, {7, 7}}) {
+            steps.add(new Step("10p" + pv[0] + "-hud-preview", () -> {
+                HudLayoutScreen layout = new HudLayoutScreen(null);
+                mc.setScreen(layout);
+                try {
+                    java.lang.reflect.Field f = HudLayoutScreen.class.getDeclaredField("preview");
+                    f.setAccessible(true);
+                    f.setInt(layout, pv[1]);
+                } catch (ReflectiveOperationException e) {
+                    throw new IllegalStateException(e);
+                }
+            }, 30, false));
+        }
         steps.add(new Step("09-settings", () -> {
             cmd(mc, "gamemode survival");
             mc.setScreen(new FordixSettingsScreen(null));
