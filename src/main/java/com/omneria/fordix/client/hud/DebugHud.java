@@ -3,12 +3,13 @@ package com.omneria.fordix.client.hud;
 import com.omneria.fordix.Fordix;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Glass;
+import com.omneria.fordix.client.gui.vanilla.Reflect;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 import java.lang.reflect.Method;
@@ -23,6 +24,8 @@ import java.util.List;
  * When anything is not as expected, the game draws its own F3.
  */
 public final class DebugHud {
+    /** The game's debug overlay, held by its HUD class: the only field of that type. */
+    private static final java.lang.reflect.Field OVERLAY = Reflect.uniqueField(Gui.class, DebugScreenOverlay.class);
     private static boolean resolved;
     private static List<Method> sources = List.of();
 
@@ -69,14 +72,16 @@ public final class DebugHud {
             return;
         }
         Minecraft minecraft = Minecraft.getInstance();
-        if (!minecraft.options.renderDebug || !(minecraft.gui instanceof ForgeGui forgeGui)) {
+        if (!minecraft.options.renderDebug || minecraft.gui == null) {
             return;
         }
         resolve();
         if (sources.isEmpty()) {
             return;
         }
-        DebugScreenOverlay overlay = forgeGui.getDebugOverlay();
+        if (!(Reflect.get(OVERLAY, minecraft.gui) instanceof DebugScreenOverlay overlay)) {
+            return;
+        }
         try {
             List<String> left = null;
             List<String> right = null;
