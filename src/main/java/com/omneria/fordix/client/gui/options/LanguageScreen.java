@@ -99,7 +99,7 @@ public final class LanguageScreen extends OptionsPageScreen {
         if (minecraft != null && chosen != null && !chosen.equals(minecraft.options.languageCode)) {
             LanguageInfo info = minecraft.getLanguageManager().getLanguages().get(chosen);
             if (info != null) {
-                minecraft.getLanguageManager().setSelected(info);
+                minecraft.getLanguageManager().setSelected(chosen);
                 minecraft.options.languageCode = chosen;
                 minecraft.reloadResourcePacks();
             }

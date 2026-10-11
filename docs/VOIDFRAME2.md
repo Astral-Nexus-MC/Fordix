@@ -50,6 +50,8 @@ Principes, par ordre de priorité quand ils s'opposent :
 | Objets | infobulle, liseré de rareté, durabilité | `client/tooltip`, `RarityFrames`, `VoidframeDurability` |
 | Écrans Fordix | réglages, éditeur de HUD, administration, guides, wiki, fiches d'objet et de créature, livre de bienvenue, avancements, roue des animaux, panels générés | `client/gui`, `client/pet` |
 | Menus du jeu | menu pause, écran de mort, habillage de tous les écrans du jeu (boutons, fond) | `PauseSkin`, `VoidframeDeathScreen`, `ScreenBackdrop`, `VoidframeButtons` |
+| Options et statistiques | vidéo, sons, contrôles, souris, chat, accessibilité, skin, langue, statistiques | `client/gui/options` |
+| Sous-titres sonores, F3 | liste des sons à l'écran, texte de débogage | `SubtitleHud`, `DebugHud` |
 
 ### 2.2 Ce qui n'y est pas, et pourquoi
 
@@ -57,7 +59,6 @@ Principes, par ordre de priorité quand ils s'opposent :
 |---|---|
 | **Écran titre et liste des mondes** | Cachés par le mod **Astral-launcher** : le joueur n'y passe pas. C'est la situation normale, ne pas y investir. Ils gardent seulement la recoloration des boutons. |
 | Métier à tisser, cartographie, créatif | En verre depuis la 0.1.78 : le corps de la texture du jeu est vidé (`TextureRecolor`), le panneau, les puits et les onglets sont dessinés par `VoidframeStations`. |
-| Sous-titres sonores, F3 | Le jeu ne publie aucun événement exploitable pour les sous-titres ; F3 est un outil de diagnostic. Restent vanilla (voir la dette, section 14). |
 | Signes, livres, blocs de commande, cartes | Ce sont des objets du monde, pas de l'interface. |
 | Écrans des autres mods (Create, Twilight Forest, MineColonies, JourneyMap) | Dessinés par ces mods. Fordix ne touche qu'aux écrans du jeu, de Forge et les siens (`VoidframeButtons.isGameScreen`). |
 
@@ -460,13 +461,17 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D19 | Les pages Options > Vidéo, Sons et Contrôles du jeu sont remplacées par les nôtres (`OptionsPageScreen`, `VideoScreen`, `SoundScreen`, `KeyControlsScreen`, installées par `OptionsScreens` sur `ScreenEvent.Opening`) : mêmes `OptionInstance` et mêmes `KeyMapping`, fichier d'options du jeu enregistré à la fermeture. Si un mod de rendu (Sodium, Embeddium, Rubidium) a pris la place de l'écran vidéo, notre page passe devant et mène à son écran par une ligne « Rendu avancé ». | Les listes de réglages du jeu ne pouvaient pas recevoir les lignes de §5.4. |
 | D20 | La fiche d'objet dessine ses caractéristiques en barres avec le trait du meilleur objet du jeu (mods compris, `ItemFacts.Bests`) et le repère de l'objet en main (`StatScale`, pur et testé) ; en petite taille, trois onglets remplacent les deux colonnes. | Voir d'un coup d'œil si l'objet vaut ce qu'on porte. |
 | D21 | La ligne de commande du chat (`CommandLineSkin`, `HistoryView`) dessine les suggestions en verre, l'usage en carte ambre, l'erreur en carte rouge avec bord rouge du champ, et l'historique des messages avec les flèches ; tout est lu par type dans `CommandSuggestions`, repli sur le dessin du jeu. | La commande tapée doit dire où elle se trompe. |
+| D22 | Avec Sodium, Embeddium ou Rubidium installé, la page Vidéo n'offre pas le mode Fabulous (et y ramène un réglage qui l'avait) : ces mods ne construisent pas les cibles de transparence de ce mode et le jeu plante au premier rendu. Leur écran garde ses réglages propres, derrière la ligne « Rendu avancé ». | Un choix de la page ne doit pas pouvoir faire planter le jeu ; leurs écrans ne l'offrent pas non plus. |
+| D23 | Les pages Options > Souris, Chat, Accessibilité, Skin, Langue et Statistiques sont aussi les nôtres (`MouseScreen`, `ChatSettingsScreen`, `AccessibilityScreen`, `SkinScreen`, `LanguageScreen` qui applique la langue à la fermeture comme le jeu, `StatsPageScreen` qui demande les chiffres au serveur et se refait à leur arrivée). Seules restent habillées les pages d'un autre mod et les écrans de sélection de monde, de serveur et de packs. | Dernière dette d'habillage des options. |
+| D24 | Les sous-titres sonores (`SubtitleHud`, qui écoute le gestionnaire de sons lui-même) et le texte F3 (`DebugHud`, qui lit les deux colonnes de lignes de `DebugScreenOverlay` par leur signature et les reconnaît à leur contenu) sont dessinés en verre ; le repli est le dessin du jeu. La position des sous-titres reste celle de l'overlay du jeu (déplaçable dans l'éditeur de HUD). | Dette 1. |
+| D25 | Le titre à l'écran reste lu par disposition de champs, mais le test en jeu (`26a-title-fields`) échoue si `TitleHud` ne les trouve plus : une nouvelle version du jeu est vérifiée par la CI, plus à la main. | Dette 2. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
 Dette connue (à traiter dans l'ordre) :
 
-1. Sous-titres sonores (`SUBTITLES`) : la liste est privée à `SubtitleOverlay` ; elle reste vanilla. F3 reste vanilla (outil de diagnostic).
-2. Titre à l'écran : lu par type et ordre de déclaration dans `Gui` (`TitleHud`, repli sur le titre du jeu si la disposition diffère) ; à revérifier à chaque version du jeu.
-3. (Soldée en 0.1.79 : Vidéo, Sons et Contrôles ont leurs pages Voidframe. Restent habillées seulement : Souris, Chat, Accessibilité, Skin, Langue, Statistiques.)
+1. (Soldée : sous-titres sonores et F3 en verre, voir D24.)
+2. (Soldée : le titre à l'écran est vérifié par le test en jeu à chaque version, voir D25.)
+3. (Soldée : toutes les pages d'options du jeu ont leurs pages Voidframe, voir D19 et D23.)
 4. (Soldée en 0.1.78 : l'éditeur de HUD a une visite guidée à la première ouverture, `HudTour`, et un aperçu multi-résolutions, `HudPreview`.)
 5. (Soldée en 0.1.79 : la ligne de commande a son rendu, voir D21.)
 6. (Soldée en 0.1.79 : barres de la fiche d'objet, voir D20.)
@@ -519,7 +524,7 @@ sont repris qu'écran par écran, avec leur capture avant et après, jamais en b
 
 ## Annexe B. État des écrans
 
-Validé en jeu par l'utilisateur sur la version 0.1.78 (tailles d'écran et d'interface comprises), publiée sur `main` : tous les écrans ci-dessous marqués « fait » sont conformes, y compris l'éditeur de HUD (visite guidée, aperçu multi-tailles) et le métier à tisser, la cartographie et le créatif en verre. Restent hors de la validation : les écrans seulement recolorés ou habillés, et la dette listée plus haut.
+Validé en jeu par l'utilisateur sur les versions 0.1.78 à 0.1.82 (tailles d'écran et d'interface comprises, avec Embeddium, Controlling et JourneyMap), publiées sur `main` : tous les écrans ci-dessous marqués « fait » sont conformes, y compris l'éditeur de HUD, le métier à tisser, la cartographie et le créatif en verre, les options Vidéo, Sons et Contrôles, la fiche d'objet et la ligne de commande. Restent à valider en jeu : les lignes marquées « à valider ».
 
 | Écran | État Voidframe 2 |
 |---|---|
@@ -533,11 +538,12 @@ Validé en jeu par l'utilisateur sur la version 0.1.78 (tailles d'écran et d'in
 | Administration, guides, wiki, fiches d'objet et de créature, livre de bienvenue, avancements, panels générés | fait |
 | Roue des animaux | fait |
 | Menu pause, écran de mort | fait |
-| Options Vidéo, Sons, Contrôles ; fiche d'objet ; ligne de commande | fait en 0.1.79 (à valider en jeu) |
-| Autres écrans du jeu (souris, chat, accessibilité, statistiques, multijoueur, packs…) | boutons et fond habillés |
+| Options Vidéo, Sons, Contrôles ; fiche d'objet ; ligne de commande | fait, validé en 0.1.82. Avec Embeddium, Sodium ou Rubidium : pas de mode Fabulous (D22) |
+| Options Souris, Chat, Accessibilité, Skin, Langue ; statistiques | fait (D23), à valider en jeu |
+| Autres écrans du jeu (multijoueur, packs, mondes, écrans des mods…) | boutons et fond habillés |
 | Écran titre, liste des mondes | **hors périmètre** (Astral-launcher) |
-| Titre à l'écran | fait (`TitleHud`) |
-| Sous-titres sonores, F3 | vanilla (dette 1) |
+| Titre à l'écran | fait (`TitleHud`), vérifié par le test en jeu (D25) |
+| Sous-titres sonores, F3 | fait (D24), à valider en jeu |
 
 ## Annexe C. Glossaire
 
