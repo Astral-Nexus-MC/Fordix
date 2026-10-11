@@ -140,7 +140,7 @@ public final class KeyControlsScreen extends OptionsPageScreen {
     @Override
     protected void onDefaults() {
         for (KeyMapping mapping : this.minecraft.options.keyMappings) {
-            mapping.setKeyModifierAndCode(mapping.getKeyModifierDefault(), mapping.getDefaultKey());
+            mapping.setToDefault();
             this.minecraft.options.setKey(mapping, mapping.getDefaultKey());
         }
         KeyMapping.resetMapping();
@@ -324,7 +324,7 @@ public final class KeyControlsScreen extends OptionsPageScreen {
         @Override
         public void onClick(double mouseX, double mouseY) {
             if (!mapping.isDefault() && mouseX >= getX() + getWidth() - 16) {
-                mapping.setKeyModifierAndCode(mapping.getKeyModifierDefault(), mapping.getDefaultKey());
+                mapping.setToDefault();
                 Minecraft.getInstance().options.setKey(mapping, mapping.getDefaultKey());
                 KeyMapping.resetMapping();
                 return;
