@@ -328,6 +328,8 @@ public final class FordixClient {
             PlayerListHud.onOverlayPre(event);
             com.omneria.fordix.client.hud.ScoreboardHud.onOverlayPre(event);
             com.omneria.fordix.client.hud.TitleHud.onOverlayPre(event);
+            com.omneria.fordix.client.hud.SubtitleHud.onOverlayPre(event);
+            com.omneria.fordix.client.hud.DebugHud.onOverlayPre(event);
             com.omneria.fordix.client.hud.ActionBarHud.onOverlayPre(event);
         }
 

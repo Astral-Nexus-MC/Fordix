@@ -77,6 +77,16 @@ public final class TitleHud {
         }
     }
 
+    /**
+     * Whether the game's title fields were found. The in-game test calls it, so a game version that changes the class layout fails
+     * the test instead of silently bringing the vanilla title back.
+     */
+    public static boolean selfCheck() {
+        resolved = false;
+        resolve();
+        return countdown != null;
+    }
+
     public static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
         if (event.getOverlay() != VanillaGuiOverlay.TITLE_TEXT.type() || !FordixConfig.voidframeHud()) {
             return;

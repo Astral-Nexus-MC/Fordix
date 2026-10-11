@@ -760,6 +760,12 @@ public final class DevTest {
         steps.add(new Step("19-video", () -> mc.setScreen(new net.minecraft.client.gui.screens.VideoSettingsScreen(optionsParent(mc), mc.options)), 30, false));
         steps.add(new Step("19a-video-quality", () -> mc.setScreen(new com.omneria.fordix.client.gui.options.VideoScreen(optionsParent(mc), 1)), 30, false));
         steps.add(new Step("19a2-video-interface", () -> mc.setScreen(new com.omneria.fordix.client.gui.options.VideoScreen(optionsParent(mc), 2)), 30, false));
+        steps.add(new Step("19a3-video-open", () -> mc.setScreen(new com.omneria.fordix.client.gui.options.VideoScreen(optionsParent(mc))), 10, false));
+        steps.add(new Step("19a4-video-tab-clicks", () -> clickEveryTab(mc), 20, false));
+        steps.add(new Step("19a5-sounds-tab-clicks", () -> {
+            mc.setScreen(new com.omneria.fordix.client.gui.options.SoundScreen(optionsParent(mc)));
+            clickEveryTab(mc);
+        }, 15, false));
         steps.add(new Step("19b-language", () -> mc.setScreen(new net.minecraft.client.gui.screens.LanguageSelectScreen(null, mc.options, mc.getLanguageManager())), 30, false));
         steps.add(new Step("19c-accessibility", () -> mc.setScreen(new net.minecraft.client.gui.screens.AccessibilityOptionsScreen(null, mc.options)), 30, false));
         steps.add(new Step("19d-chat-options", () -> mc.setScreen(new net.minecraft.client.gui.screens.ChatOptionsScreen(null, mc.options)), 30, false));
@@ -773,6 +779,21 @@ public final class DevTest {
         steps.add(new Step("24-sounds", () -> mc.setScreen(new net.minecraft.client.gui.screens.SoundOptionsScreen(optionsParent(mc), mc.options)), 30, false));
         steps.add(new Step("25-death", () -> mc.setScreen(new net.minecraft.client.gui.screens.DeathScreen(net.minecraft.network.chat.Component.literal("Tu es tombe de haut"), false)), 30, false));
         steps.add(new Step("26-title", () -> mc.setScreen(new net.minecraft.client.gui.screens.TitleScreen()), 40, false));
+        steps.add(new Step("26a-title-fields", () -> {
+            // The game's title is read by field layout: a game version that changes it must fail here, not bring the vanilla title back.
+            if (!com.omneria.fordix.client.hud.TitleHud.selfCheck()) {
+                throw new IllegalStateException("TitleHud: the game's title fields were not found (the class layout changed)");
+            }
+            mc.setScreen(null);
+        }, 5, false));
+        steps.add(new Step("26b-subtitles", () -> {
+            mc.options.showSubtitles().set(true);
+            mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F));
+            mc.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.CHEST_OPEN, 1.0F));
+        }, 25, false));
+        steps.add(new Step("26c-subtitles-off", () -> mc.options.showSubtitles().set(false), 3, false));
+        steps.add(new Step("26d-debug-text", () -> mc.options.renderDebug = true, 25, false));
+        steps.add(new Step("26e-debug-text-off", () -> mc.options.renderDebug = false, 3, false));
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
@@ -786,6 +807,24 @@ public final class DevTest {
                     && !step.name().equals("01-hud") && !step.name().equals("99-done"));
             // Long enough for the toasts of the set-up (recipes, advancements) to leave the screen.
             steps.replaceAll(step -> step.name().equals("01-hud") ? new Step("01-hud", step.setup(), 700, false) : step);
+        }
+    }
+
+    /** Clicks every tab of the options page on screen, the way a player does (the click rebuilds the page), then goes back to the first one. */
+    private static void clickEveryTab(Minecraft mc) {
+        if (mc.screen instanceof com.omneria.fordix.client.gui.options.OptionsPageScreen page) {
+            for (int i = 2; i >= 0; i--) {
+                int[] point = page.tabPoint(i);
+                if (point != null) {
+                    page.mouseClicked(point[0], point[1], 0);
+                    page.mouseReleased(point[0], point[1], 0);
+                }
+            }
+            int[] first = page.tabPoint(0);
+            if (first != null) {
+                page.mouseClicked(first[0], first[1], 0);
+                page.mouseReleased(first[0], first[1], 0);
+            }
         }
     }
 
