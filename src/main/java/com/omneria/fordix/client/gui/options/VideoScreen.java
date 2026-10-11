@@ -123,9 +123,17 @@ public final class VideoScreen extends OptionsPageScreen {
                 }
             }
             case 1 -> {
-                pick("G", "options.graphics", "options.video.desc.graphics", 2,
-                        List.of(vanilla("options.graphics.fast"), vanilla("options.graphics.fancy"), vanilla("options.graphics.fabulous")),
-                        () -> o.graphicsMode().get().ordinal(), i -> o.graphicsMode().set(GraphicsStatus.values()[i]), 1);
+                // Sodium, Embeddium and Rubidium do not draw the Fabulous mode (its transparency targets are never built: the game
+                // crashes on the first frame), so their own screens do not offer it, and neither does this one.
+                boolean noFabulous = advanced != null || net.minecraftforge.fml.ModList.get().isLoaded("embeddium")
+                        || net.minecraftforge.fml.ModList.get().isLoaded("sodium") || net.minecraftforge.fml.ModList.get().isLoaded("rubidium");
+                if (noFabulous && o.graphicsMode().get() == GraphicsStatus.FABULOUS) {
+                    o.graphicsMode().set(GraphicsStatus.FANCY);
+                }
+                List<String> graphics = noFabulous ? List.of(vanilla("options.graphics.fast"), vanilla("options.graphics.fancy"))
+                        : List.of(vanilla("options.graphics.fast"), vanilla("options.graphics.fancy"), vanilla("options.graphics.fabulous"));
+                pick("G", "options.graphics", "options.video.desc.graphics", 2, graphics,
+                        () -> Math.min(graphics.size() - 1, o.graphicsMode().get().ordinal()), i -> o.graphicsMode().set(GraphicsStatus.values()[i]), 1);
                 pick("C", "options.renderClouds", "options.video.desc.clouds", 2,
                         List.of(vanilla("options.off"), vanilla("options.clouds.fast"), vanilla("options.clouds.fancy")),
                         () -> o.cloudStatus().get().ordinal(), i -> o.cloudStatus().set(CloudStatus.values()[i]), 2);
