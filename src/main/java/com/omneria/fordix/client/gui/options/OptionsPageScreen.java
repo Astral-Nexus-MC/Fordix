@@ -231,17 +231,19 @@ public abstract class OptionsPageScreen extends FordixScreen {
         if (mouseY >= listTop && mouseY < listBottom) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
-        // A row scrolled half under the foot or the header must not take a click that lands on them.
-        boolean[] shown = new boolean[rows.size()];
+        // A row scrolled half under the foot or the header must not take a click that lands on them. The click may rebuild the page
+        // (a tab, a link to another screen), which replaces the rows: only the rows that were there before are put back.
+        List<AbstractWidget> before = new ArrayList<>(rows);
+        boolean[] shown = new boolean[before.size()];
         for (int i = 0; i < shown.length; i++) {
-            shown[i] = rows.get(i).visible;
-            rows.get(i).visible = false;
+            shown[i] = before.get(i).visible;
+            before.get(i).visible = false;
         }
         try {
             return super.mouseClicked(mouseX, mouseY, button);
         } finally {
             for (int i = 0; i < shown.length; i++) {
-                rows.get(i).visible = shown[i];
+                before.get(i).visible = shown[i];
             }
         }
     }
