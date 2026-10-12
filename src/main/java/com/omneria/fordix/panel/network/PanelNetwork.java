@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "11";
+    private static final String PROTOCOL_VERSION = "12";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -105,6 +105,21 @@ public final class PanelNetwork {
                 ServerboundPetActionPayload::encode,
                 ServerboundPetActionPayload::decode,
                 PetService::handle);
+        CHANNEL.registerMessage(id++, com.omneria.fordix.debug.ServerboundDebugInfoPayload.class,
+                com.omneria.fordix.debug.ServerboundDebugInfoPayload::encode,
+                com.omneria.fordix.debug.ServerboundDebugInfoPayload::decode,
+                com.omneria.fordix.debug.DebugInfoService::handle);
+        CHANNEL.registerMessage(id++, com.omneria.fordix.debug.ClientboundDebugInfoPayload.class,
+                com.omneria.fordix.debug.ClientboundDebugInfoPayload::encode,
+                com.omneria.fordix.debug.ClientboundDebugInfoPayload::decode,
+                PanelNetwork::handleDebugInfo);
+    }
+
+    private static void handleDebugInfo(com.omneria.fordix.debug.ClientboundDebugInfoPayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.omneria.fordix.client.hud.DebugInfoClient.receive(payload))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleHudRules(com.omneria.fordix.hud.ClientboundHudRulesPayload payload, Supplier<NetworkEvent.Context> ctx) {
