@@ -106,8 +106,12 @@ public final class DebugHud {
         List<Card> right = List.of(system(font), hardware(font, minecraft));
         int width = event.getWindow().getGuiScaledWidth();
         int height = event.getWindow().getGuiScaledHeight();
-        drawColumn(event.getGuiGraphics(), font, left, false, width, height);
-        drawColumn(event.getGuiGraphics(), font, right, true, width, height);
+        // One scale for both columns, so they never overlap and their text has the same size.
+        float scale = Math.min(Math.min(1.0F, (height - 4.0F) / Math.max(1, columnHeight(left))), Math.min(1.0F, (height - 4.0F) / Math.max(1, columnHeight(right))));
+        float spread = (width - 8.0F) / Math.max(1, columnWidth(font, left) + columnWidth(font, right) + 6);
+        scale = Math.min(scale, spread);
+        drawColumn(event.getGuiGraphics(), font, left, false, width, scale);
+        drawColumn(event.getGuiGraphics(), font, right, true, width, scale);
     }
 
     // ---- cards
@@ -363,12 +367,23 @@ public final class DebugHud {
         return height + 4;
     }
 
-    private static void drawColumn(GuiGraphics g, Font font, List<Card> cards, boolean rightAligned, int screenWidth, int screenHeight) {
+    private static int columnHeight(List<Card> cards) {
         int total = 0;
         for (Card card : cards) {
             total += cardHeight(card) + 4;
         }
-        float scale = Math.min(1.0F, (screenHeight - 4.0F) / Math.max(1, total));
+        return total;
+    }
+
+    private static int columnWidth(Font font, List<Card> cards) {
+        int widest = 0;
+        for (Card card : cards) {
+            widest = Math.max(widest, cardWidth(font, card) + 18);
+        }
+        return widest;
+    }
+
+    private static void drawColumn(GuiGraphics g, Font font, List<Card> cards, boolean rightAligned, int screenWidth, float scale) {
         g.pose().pushPose();
         g.pose().scale(scale, scale, 1.0F);
         int width = (int) (screenWidth / scale);
