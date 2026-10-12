@@ -27,9 +27,16 @@ public final class DebugHud {
     /** The game's debug overlay, held by its HUD class: the only field of that type. */
     private static final java.lang.reflect.Field OVERLAY = Reflect.uniqueField(Gui.class, DebugScreenOverlay.class);
     private static boolean resolved;
+    private static boolean takenOver;
+    private static boolean resolvedOverlayWarned;
     private static List<Method> sources = List.of();
 
     private DebugHud() {
+    }
+
+    /** True once F3 has been drawn by Fordix (the dev test checks it). */
+    public static boolean takenOver() {
+        return takenOver;
     }
 
     private static void resolve() {
@@ -40,7 +47,7 @@ public final class DebugHud {
         List<Method> found = new ArrayList<>();
         try {
             for (Method method : DebugScreenOverlay.class.getDeclaredMethods()) {
-                if (!Modifier.isStatic(method.getModifiers()) && method.getParameterCount() == 0 && method.getReturnType() == List.class) {
+                if (!Modifier.isStatic(method.getModifiers()) && !method.isSynthetic() && method.getParameterCount() == 0 && method.getReturnType() == List.class) {
                     method.setAccessible(true);
                     found.add(method);
                 }
@@ -48,10 +55,11 @@ public final class DebugHud {
         } catch (RuntimeException e) {
             found.clear();
         }
-        if (found.size() != 2) {
+        if (found.size() < 2) {
             Fordix.LOGGER.warn("Fordix: the game's F3 lines were not found ({} candidates), F3 stays vanilla", found.size());
             return;
         }
+        // Another mod may add list methods of its own: every candidate is read and told apart by its content below.
         sources = found;
     }
 
@@ -80,30 +88,41 @@ public final class DebugHud {
             return;
         }
         if (!(Reflect.get(OVERLAY, minecraft.gui) instanceof DebugScreenOverlay overlay)) {
+            if (!resolvedOverlayWarned) {
+                resolvedOverlayWarned = true;
+                Fordix.LOGGER.warn("Fordix: the game's debug overlay was not found on {}, F3 stays vanilla", minecraft.gui.getClass().getName());
+            }
             return;
         }
         try {
             List<String> left = null;
             List<String> right = null;
             for (Method method : sources) {
-                List<String> lines = lines(method, overlay);
+                List<String> lines;
+                try {
+                    lines = lines(method, overlay);
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    continue;
+                }
                 boolean system = false;
                 for (String line : lines) {
-                    if (line != null && line.startsWith("Java:")) {
+                    if (line.startsWith("Java:")) {
                         system = true;
                         break;
                     }
                 }
                 if (system) {
                     right = lines;
-                } else {
+                } else if (!lines.isEmpty() && lines.get(0).startsWith("Minecraft ")) {
                     left = lines;
                 }
             }
             if (left == null || right == null) {
                 sources = List.of();
+                Fordix.LOGGER.warn("Fordix: the game's F3 columns were not recognised (left {}, right {}), F3 stays vanilla", left != null, right != null);
                 return;
             }
+            takenOver = true;
             event.setCanceled(true);
             int width = event.getWindow().getGuiScaledWidth();
             Font font = minecraft.font;

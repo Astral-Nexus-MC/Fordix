@@ -793,7 +793,12 @@ public final class DevTest {
         }, 25, false));
         steps.add(new Step("26c-subtitles-off", () -> mc.options.showSubtitles().set(false), 3, false));
         steps.add(new Step("26d-debug-text", () -> mc.options.renderDebug = true, 25, false));
-        steps.add(new Step("26e-debug-text-off", () -> mc.options.renderDebug = false, 3, false));
+        steps.add(new Step("26e-debug-text-off", () -> {
+            mc.options.renderDebug = false;
+            if (!com.omneria.fordix.client.hud.DebugHud.takenOver()) {
+                throw new IllegalStateException("F3 was not drawn by Fordix (see the warnings in the log)");
+            }
+        }, 3, false));
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);

@@ -66,7 +66,7 @@ public final class LanguageScreen extends OptionsPageScreen {
             chosen = this.minecraft.options.languageCode;
         }
         for (Map.Entry<String, LanguageInfo> entry : this.minecraft.getLanguageManager().getLanguages().entrySet()) {
-            LanguageRow row = new LanguageRow(left, listTop, width, rowHeight(), entry.getKey(), entry.getValue().toString());
+            LanguageRow row = new LanguageRow(left, listTop, width, rowHeight(), entry.getKey(), entry.getValue().toComponent().getString());
             languageRows.add(row);
             addRow(row, null);
         }
