@@ -793,10 +793,10 @@ public final class DevTest {
         }, 25, false));
         steps.add(new Step("26c-subtitles-off", () -> mc.options.showSubtitles().set(false), 3, false));
         steps.add(new Step("26d-debug-text", () -> mc.options.renderDebug = true, 25, false));
-        steps.add(new Step("26d2-debug-chunks", () -> mc.debugRenderer.renderChunkborder = true, 25, false));
+        steps.add(new Step("26d2-debug-chunks", () -> com.omneria.fordix.client.hud.DebugHud.setChunkBorders(mc, true), 25, false));
         steps.add(new Step("26e-debug-text-off", () -> {
             mc.options.renderDebug = false;
-            mc.debugRenderer.renderChunkborder = false;
+            com.omneria.fordix.client.hud.DebugHud.setChunkBorders(mc, false);
             if (!com.omneria.fordix.client.hud.DebugHud.takenOver()) {
                 throw new IllegalStateException("F3 was not drawn by Fordix (see the warnings in the log)");
             }

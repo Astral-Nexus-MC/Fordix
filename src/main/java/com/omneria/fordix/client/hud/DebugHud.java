@@ -47,6 +47,19 @@ public final class DebugHud {
         return takenOver;
     }
 
+    /** Whether F3 + G has the chunk borders on: the game keeps it private, but its switch gives the new state, so two switches read it. */
+    public static boolean chunkBorders(Minecraft minecraft) {
+        boolean flipped = minecraft.debugRenderer.switchRenderChunkborder();
+        minecraft.debugRenderer.switchRenderChunkborder();
+        return !flipped;
+    }
+
+    public static void setChunkBorders(Minecraft minecraft, boolean on) {
+        if (chunkBorders(minecraft) != on) {
+            minecraft.debugRenderer.switchRenderChunkborder();
+        }
+    }
+
     private record Seg(String text, int color) {
     }
 
@@ -86,7 +99,7 @@ public final class DebugHud {
             if (mobs != null) {
                 left.add(mobs);
             }
-            if (minecraft.debugRenderer.renderChunkborder && data.slimeKnown()) {
+            if (chunkBorders(minecraft) && data.slimeKnown()) {
                 left.add(slimes(font, data));
             }
         }
