@@ -463,7 +463,7 @@ Décisions prises (à ne pas rouvrir sans raison écrite) :
 | D21 | La ligne de commande du chat (`CommandLineSkin`, `HistoryView`) dessine les suggestions en verre, l'usage en carte ambre, l'erreur en carte rouge avec bord rouge du champ, et l'historique des messages avec les flèches ; tout est lu par type dans `CommandSuggestions`, repli sur le dessin du jeu. | La commande tapée doit dire où elle se trompe. |
 | D22 | Avec Sodium, Embeddium ou Rubidium installé, la page Vidéo n'offre pas le mode Fabulous (et y ramène un réglage qui l'avait) : ces mods ne construisent pas les cibles de transparence de ce mode et le jeu plante au premier rendu. Leur écran garde ses réglages propres, derrière la ligne « Rendu avancé ». | Un choix de la page ne doit pas pouvoir faire planter le jeu ; leurs écrans ne l'offrent pas non plus. |
 | D23 | Les pages Options > Souris, Chat, Accessibilité, Skin, Langue et Statistiques sont aussi les nôtres (`MouseScreen`, `ChatSettingsScreen`, `AccessibilityScreen`, `SkinScreen`, `LanguageScreen` qui applique la langue à la fermeture comme le jeu, `StatsPageScreen` qui demande les chiffres au serveur et se refait à leur arrivée). Seules restent habillées les pages d'un autre mod et les écrans de sélection de monde, de serveur et de packs. | Dernière dette d'habillage des options. |
-| D24 | Les sous-titres sonores (`SubtitleHud`, qui écoute le gestionnaire de sons lui-même) et le texte F3 (`DebugHud`, qui lit les deux colonnes de lignes de `DebugScreenOverlay` par leur signature et les reconnaît à leur contenu) sont dessinés en verre ; le repli est le dessin du jeu. La position des sous-titres reste celle de l'overlay du jeu (déplaçable dans l'éditeur de HUD). | Dette 1. |
+| D24 | Les sous-titres sonores (`SubtitleHud`, qui écoute le gestionnaire de sons lui-même) sont dessinés en verre. Le F3 (`DebugHud`) ne reprend plus les lignes du jeu (la détection de ses colonnes échouait avec certains mods) : il dessine ses propres cartes, sans ce que les panneaux du HUD montrent déjà (position, FPS, TPS). À gauche Monde, Minerais (échelle de hauteur dont le trait suit le joueur ; la liste ne garde que les minerais de sa couche), Créatures qui peuvent apparaître (amicales, hostiles, étiquette du mod) et, avec F3 + G, la grille des chunks à slimes ; à droite Système et Matériel. Minerais, créatures et slimes viennent du serveur (`debug/DebugInfoService` : génération du biome, liste d'apparition du biome, graine pour les slimes ; requête `ServerboundDebugInfoPayload`, protocole 12) et sont coupés par `[hud] debugReveal = false`. `RangeMath` et `OreColors` sont purs et testés. La position des sous-titres reste celle de l'overlay du jeu (déplaçable dans l'éditeur de HUD). | Dette 1. |
 | D25 | Le titre à l'écran reste lu par disposition de champs, mais le test en jeu (`26a-title-fields`) échoue si `TitleHud` ne les trouve plus : une nouvelle version du jeu est vérifiée par la CI, plus à la main. | Dette 2. |
 | D9 | Le thème fournit les couleurs de structure ; le sémantique est fixe. | Un thème ne doit pas rendre le rouge de danger illisible. |
 
@@ -543,7 +543,8 @@ Validé en jeu par l'utilisateur sur les versions 0.1.78 à 0.1.82 (tailles d'é
 | Autres écrans du jeu (multijoueur, packs, mondes, écrans des mods…) | boutons et fond habillés |
 | Écran titre, liste des mondes | **hors périmètre** (Astral-launcher) |
 | Titre à l'écran | fait (`TitleHud`), vérifié par le test en jeu (D25) |
-| Sous-titres sonores, F3 | fait (D24), à valider en jeu |
+| Sous-titres sonores | validé en 0.1.83 |
+| F3 | refait en cartes (D24), à valider en jeu |
 
 ## Annexe C. Glossaire
 
