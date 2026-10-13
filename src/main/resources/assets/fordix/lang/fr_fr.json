@@ -674,10 +674,6 @@
     "fordix.debug.slime_hint": "sous Y 40 seulement",
     "fordix.debug.ores": "Minerais de cette couche",
     "fordix.debug.ores_none": "Aucun minerai à cette hauteur",
-    "fordix.debug.ore_range": "Y %s",
-    "fordix.debug.and": "et",
-    "fordix.debug.to": "à",
-    "fordix.debug.scale": "échelle %s à %s",
     "fordix.debug.mobs": "Peut apparaître ici",
     "fordix.debug.friendly": "Amicales",
     "fordix.debug.friendly_cond": "(jour, herbe)",
@@ -695,5 +691,7 @@
     "fordix.debug.opengl": "OpenGL",
     "fordix.debug.java": "Java",
     "fordix.debug.slimes_title": "Chunks à slimes",
-    "fordix.debug.slimes_legend": "vert : chunk à slimes, cadre : le vôtre"
+    "fordix.debug.slimes_legend": "vert : chunk à slimes, cadre : le vôtre",
+    "fordix.debug.ore_prefixes": "Minerai de |Minerai d'|Minerai ",
+    "fordix.debug.ore_suffixes": ""
 }

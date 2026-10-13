@@ -674,10 +674,6 @@
     "fordix.debug.slime_hint": "below Y 40 only",
     "fordix.debug.ores": "Ores in this layer",
     "fordix.debug.ores_none": "No ore at this height",
-    "fordix.debug.ore_range": "Y %s",
-    "fordix.debug.and": "and",
-    "fordix.debug.to": "to",
-    "fordix.debug.scale": "scale %s to %s",
     "fordix.debug.mobs": "Can spawn here",
     "fordix.debug.friendly": "Friendly",
     "fordix.debug.friendly_cond": "(daytime, grass)",
@@ -695,5 +691,7 @@
     "fordix.debug.opengl": "OpenGL",
     "fordix.debug.java": "Java",
     "fordix.debug.slimes_title": "Slime chunks",
-    "fordix.debug.slimes_legend": "green: slime chunk, frame: yours"
+    "fordix.debug.slimes_legend": "green: slime chunk, frame: yours",
+    "fordix.debug.ore_prefixes": "",
+    "fordix.debug.ore_suffixes": "| Ore| ore"
 }

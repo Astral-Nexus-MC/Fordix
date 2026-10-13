@@ -33,8 +33,7 @@ public final class DebugHud {
     private static final int GOOD = 0xFF6FE08A;
     private static final int WARN = 0xFFF0B64C;
     private static final int BAD = 0xFFF06A5C;
-    private static final int RULER_WIDTH = 14;
-    private static final int RULER_HEIGHT = 96;
+    private static final int BAR_WIDTH = 130;
     private static final int LINE = 10;
     private static final int WRAP = 260;
     private static boolean takenOver;
@@ -176,74 +175,78 @@ public final class DebugHud {
         return ModList.get().getModContainerById(namespace).map(container -> container.getModInfo().getDisplayName()).orElse(namespace);
     }
 
+    /** "Minerai de fer" or "Iron Ore" become "Fer" and "Iron": the words around the name come from the language file. */
+    private static String shortOreName(String name) {
+        String result = name;
+        for (String prefix : Tr.s("debug.ore_prefixes").split("\\|")) {
+            if (!prefix.isEmpty() && result.regionMatches(true, 0, prefix, 0, prefix.length()) && result.length() > prefix.length()) {
+                result = result.substring(prefix.length());
+                break;
+            }
+        }
+        for (String suffix : Tr.s("debug.ore_suffixes").split("\\|")) {
+            if (!suffix.isEmpty() && result.toLowerCase(java.util.Locale.ROOT).endsWith(suffix.toLowerCase(java.util.Locale.ROOT)) && result.length() > suffix.length()) {
+                result = result.substring(0, result.length() - suffix.length());
+                break;
+            }
+        }
+        return result.isEmpty() ? name : Character.toUpperCase(result.charAt(0)) + result.substring(1);
+    }
+
+    /** The ores of the player's layer, one row each: a swatch, the name and a bar showing where the ore lies between the bottom and the top of the world; a white line crosses every bar at the player's height. */
     private static Card ores(Font font, Minecraft minecraft, ClientboundDebugInfoPayload data) {
         int y = minecraft.player.blockPosition().getY();
-        String and = Tr.s("debug.and");
-        String to = Tr.s("debug.to");
-        List<ClientboundDebugInfoPayload.Ore> all = data.ores();
-        List<List<Seg>> rows = new ArrayList<>();
-        List<Integer> rowColors = new ArrayList<>();
-        int widest = 0;
-        for (ClientboundDebugInfoPayload.Ore ore : all) {
-            if (!RangeMath.contains(ore.ranges(), y)) {
-                continue;
-            }
-            List<Seg> segs = new ArrayList<>();
-            segs.add(value(blockName(ore.block())));
-            String mod = modOf(ore.block());
-            if (!mod.isEmpty()) {
-                segs.add(new Seg(" [" + mod + "]", Glass.dim()));
-            }
-            segs.add(new Seg("  " + Tr.s("debug.ore_range", RangeMath.describe(ore.ranges(), and, to)), Glass.dim()));
-            int width = 0;
-            for (Seg seg : segs) {
-                width += font.width(seg.text());
-            }
-            widest = Math.max(widest, width);
-            rows.add(segs);
-            rowColors.add(0xFF000000 | OreColors.of(ore.block()));
-        }
         int minY = data.minY();
         int maxY = data.maxY();
-        String scale = Tr.s("debug.scale", maxY, minY);
-        int bodyHeight = Math.max(RULER_HEIGHT, Math.max(rows.size(), 1) * LINE);
-        int listX = RULER_WIDTH + 8;
+        List<ClientboundDebugInfoPayload.Ore> active = new ArrayList<>();
+        int nameWidth = 0;
+        for (ClientboundDebugInfoPayload.Ore ore : data.ores()) {
+            if (RangeMath.contains(ore.ranges(), y)) {
+                active.add(ore);
+                String mod = modOf(ore.block());
+                nameWidth = Math.max(nameWidth, font.width(shortOreName(blockName(ore.block()))) + (mod.isEmpty() ? 0 : font.width(" [" + mod + "]")));
+            }
+        }
         String none = Tr.s("debug.ores_none");
-        int listWidth = rows.isEmpty() ? font.width(none) : widest + 12;
-        int bodyWidth = Math.max(listX + listWidth, font.width(scale));
+        String low = Integer.toString(minY);
+        String high = Integer.toString(maxY);
+        String here = Integer.toString(y);
+        int barX = 11 + nameWidth + 8;
+        int bodyWidth = Math.max(barX + BAR_WIDTH, font.width(none));
+        int rowsHeight = Math.max(active.size(), 1) * LINE;
         Drawer drawer = (g, x, top) -> {
-            g.fill(x, top, x + RULER_WIDTH, top + RULER_HEIGHT, 0x22FFFFFF);
-            int half = RULER_WIDTH / 2;
-            for (int i = 0; i < all.size(); i++) {
-                ClientboundDebugInfoPayload.Ore ore = all.get(i);
-                boolean active = RangeMath.contains(ore.ranges(), y);
-                int color = (active ? 0xFF000000 : 0x40000000) | OreColors.of(ore.block());
-                int x0 = x + (i % 2 == 0 ? 0 : half);
-                int x1 = x0 + half;
-                for (int r = 0; r + 1 < ore.ranges().length; r += 2) {
-                    int top0 = top + (int) Math.round(RangeMath.fraction(ore.ranges()[r + 1], minY, maxY) * (RULER_HEIGHT - 1));
-                    int bottom0 = top + (int) Math.round(RangeMath.fraction(ore.ranges()[r], minY, maxY) * (RULER_HEIGHT - 1)) + 1;
-                    g.fill(x0, top0, x1, Math.max(bottom0, top0 + 1), color);
-                }
+            if (active.isEmpty()) {
+                g.drawString(font, none, x, top + 1, Glass.dim(), false);
+                return;
             }
-            int marker = top + (int) Math.round(RangeMath.fraction(y, minY, maxY) * (RULER_HEIGHT - 1));
-            g.fill(x - 2, marker, x + RULER_WIDTH + 2, marker + 1, 0xFFFFFFFF);
-            if (rows.isEmpty()) {
-                g.drawString(font, none, x + listX, top + 1, Glass.dim(), false);
-            }
-            for (int i = 0; i < rows.size(); i++) {
+            int markerX = x + barX + (int) Math.round((1.0D - RangeMath.fraction(y, minY, maxY)) * (BAR_WIDTH - 1));
+            for (int i = 0; i < active.size(); i++) {
+                ClientboundDebugInfoPayload.Ore ore = active.get(i);
                 int rowY = top + i * LINE;
-                g.fill(x + listX, rowY + 1, x + listX + 7, rowY + 8, rowColors.get(i));
-                int tx = x + listX + 11;
-                for (Seg seg : rows.get(i)) {
-                    g.drawString(font, seg.text(), tx, rowY, seg.color(), false);
-                    tx += font.width(seg.text());
+                int color = 0xFF000000 | OreColors.of(ore.block());
+                g.fill(x, rowY + 1, x + 7, rowY + 8, color);
+                String name = shortOreName(blockName(ore.block()));
+                g.drawString(font, name, x + 11, rowY, FordixPalette.TEXT_BRIGHT, false);
+                String mod = modOf(ore.block());
+                if (!mod.isEmpty()) {
+                    g.drawString(font, " [" + mod + "]", x + 11 + font.width(name), rowY, Glass.dim(), false);
+                }
+                g.fill(x + barX, rowY + 2, x + barX + BAR_WIDTH, rowY + 7, 0x22FFFFFF);
+                for (int r = 0; r + 1 < ore.ranges().length; r += 2) {
+                    int x0 = x + barX + (int) Math.round((1.0D - RangeMath.fraction(ore.ranges()[r], minY, maxY)) * (BAR_WIDTH - 1));
+                    int x1 = x + barX + (int) Math.round((1.0D - RangeMath.fraction(ore.ranges()[r + 1], minY, maxY)) * (BAR_WIDTH - 1)) + 1;
+                    g.fill(x0, rowY + 2, Math.max(x1, x0 + 1), rowY + 7, color);
                 }
             }
+            g.fill(markerX, top, markerX + 1, top + active.size() * LINE, 0xFFFFFFFF);
+            int axisY = top + active.size() * LINE + 1;
+            g.drawString(font, low, x + barX, axisY, Glass.dim(), false);
+            g.drawString(font, high, x + barX + BAR_WIDTH - font.width(high), axisY, Glass.dim(), false);
+            int hereX = Math.max(x + barX + font.width(low) + 4, Math.min(markerX - font.width(here) / 2, x + barX + BAR_WIDTH - font.width(high) - font.width(here) - 4));
+            g.drawString(font, here, hereX, axisY, FordixPalette.TEXT_BRIGHT, false);
         };
         List<Line> lines = new ArrayList<>();
-        lines.add(new Line(List.of(), bodyWidth, bodyHeight, drawer));
-        lines.add(text(font, new Seg(scale, Glass.dim())));
+        lines.add(new Line(List.of(), bodyWidth, rowsHeight + (active.isEmpty() ? 0 : LINE), drawer));
         return new Card(Tr.s("debug.ores") + "  Y " + y, lines);
     }
 
