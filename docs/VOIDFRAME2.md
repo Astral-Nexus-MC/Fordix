@@ -539,12 +539,12 @@ Validé en jeu par l'utilisateur sur les versions 0.1.78 à 0.1.82 (tailles d'é
 | Roue des animaux | fait |
 | Menu pause, écran de mort | fait |
 | Options Vidéo, Sons, Contrôles ; fiche d'objet ; ligne de commande | fait, validé en 0.1.82. Avec Embeddium, Sodium ou Rubidium : pas de mode Fabulous (D22) |
-| Options Souris, Chat, Accessibilité, Skin, Langue ; statistiques | fait (D23), à valider en jeu |
+| Options Souris, Chat, Accessibilité, Skin, Langue ; statistiques | validé en 0.1.84 (Langue : liste lisible validée en 0.1.84) |
 | Autres écrans du jeu (multijoueur, packs, mondes, écrans des mods…) | boutons et fond habillés |
 | Écran titre, liste des mondes | **hors périmètre** (Astral-launcher) |
 | Titre à l'écran | fait (`TitleHud`), vérifié par le test en jeu (D25) |
 | Sous-titres sonores | validé en 0.1.83 |
-| F3 | refait en cartes (D24), à valider en jeu |
+| F3 | refait en cartes (D24), validé en 0.1.85 |
 
 ## Annexe C. Glossaire
 
