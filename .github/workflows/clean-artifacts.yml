@@ -1,12 +1,9 @@
 name: Clean artifacts
 
 # Deletes every build artifact of the repository (jars and screenshots of old runs), to get back under the storage quota.
-# Runs by hand (Actions > Clean artifacts > Run workflow) and once when this file is pushed.
+# Runs by hand only: Actions > Clean artifacts > Run workflow.
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/clean-artifacts.yml'
 
 permissions:
   actions: write
