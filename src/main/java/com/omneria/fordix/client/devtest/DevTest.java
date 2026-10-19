@@ -807,6 +807,8 @@ public final class DevTest {
             Fordix.LOGGER.info("[devtest] F3 server data: biome {}, {} ores, {} friendly, {} hostile, slimes known {}",
                     info.biome(), info.ores().size(), info.friendly().size(), info.hostile().size(), info.slimeKnown());
         }, 3, false));
+        steps.add(new Step("27a-console", () -> mc.setScreen(new com.omneria.fordix.client.console.ConsoleScreen(sampleConsole())), 20, false));
+        steps.add(new Step("27b-console-closed", () -> mc.setScreen(null), 3, false));
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
@@ -939,5 +941,28 @@ public final class DevTest {
         } catch (IOException e) {
             Fordix.LOGGER.warn("[devtest] screenshot failed", e);
         }
+    }
+
+    /** A console with the settings of a spawner console, to see the screen. */
+    private static com.omneria.fordix.console.ConsoleData sampleConsole() {
+        net.minecraft.network.chat.Component none = net.minecraft.network.chat.Component.empty();
+        java.util.List<com.omneria.fordix.console.ConsoleData.Row> rows = java.util.List.of(
+                row("cadence", "Cadence", "delai x0,75 par cran", 2, "200-800 > 113-450 ticks", "minecraft:cobweb", "minecraft:quartz"),
+                row("count", "Quantite", "+1 monstre par apparition", 1, "4 > 5 monstres", "minecraft:iron_bars", "minecraft:lightning_rod"),
+                row("population", "Population max", "x4 puis x2 par cran", 3, "6 > 96 monstres", "minecraft:lead", "minecraft:bone_block"),
+                row("range", "Portee d'activation", "+8 blocs par cran", 0, "16 blocs", "minecraft:slime_ball", "minecraft:ender_eye"),
+                row("radius", "Rayon d'apparition", "+2 blocs par cran", -1, "4 > 2 blocs", "minecraft:string", "minecraft:compass"),
+                row("health", "Vie des monstres", "+50 % par cran", 5, "x3,5", "minecraft:pointed_dripstone", "#minecraft:fishes"));
+        return new com.omneria.fordix.console.ConsoleData("devtest:console", net.minecraft.core.BlockPos.ZERO,
+                net.minecraft.network.chat.Component.literal("Console des spawners"), net.minecraft.network.chat.Component.literal("Chunk 0 / 0"),
+                net.minecraft.network.chat.Component.literal("3 spawners"), net.minecraft.network.chat.Component.literal("Un objet par cran"), 5, rows,
+                java.util.List.of(net.minecraft.network.chat.Component.literal("Zombie"), net.minecraft.network.chat.Component.literal("Squelette")));
+    }
+
+    private static com.omneria.fordix.console.ConsoleData.Row row(String id, String name, String effect, int level, String value, String malus, String bonus) {
+        return new com.omneria.fordix.console.ConsoleData.Row(id, net.minecraft.network.chat.Component.literal(name), net.minecraft.network.chat.Component.literal(effect),
+                level, net.minecraft.network.chat.Component.literal(value),
+                new com.omneria.fordix.console.ConsoleData.Slot(malus, net.minecraft.network.chat.Component.literal(malus)),
+                new com.omneria.fordix.console.ConsoleData.Slot(bonus, net.minecraft.network.chat.Component.literal(bonus)));
     }
 }

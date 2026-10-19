@@ -693,5 +693,8 @@
     "fordix.debug.slimes_title": "Slime chunks",
     "fordix.debug.slimes_legend": "green: slime chunk, frame: yours",
     "fordix.debug.ore_prefixes": "",
-    "fordix.debug.ore_suffixes": "| Ore| ore"
+    "fordix.debug.ore_suffixes": "| Ore| ore",
+    "fordix.console.none": "none",
+    "fordix.console.limit": "Level limit reached.",
+    "fordix.console.missing": "You don't have this item."
 }

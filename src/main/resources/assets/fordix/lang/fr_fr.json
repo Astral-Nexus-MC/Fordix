@@ -693,5 +693,8 @@
     "fordix.debug.slimes_title": "Chunks à slimes",
     "fordix.debug.slimes_legend": "vert : chunk à slimes, cadre : le vôtre",
     "fordix.debug.ore_prefixes": "Minerai de |Minerai d'|Minerai ",
-    "fordix.debug.ore_suffixes": ""
+    "fordix.debug.ore_suffixes": "",
+    "fordix.console.none": "aucun",
+    "fordix.console.limit": "Niveau limite atteint.",
+    "fordix.console.missing": "Il vous manque cet objet."
 }

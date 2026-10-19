@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * messages instead.
  */
 public final class PanelNetwork {
-    private static final String PROTOCOL_VERSION = "12";
+    private static final String PROTOCOL_VERSION = "13";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(Fordix.MODID, "main"),
@@ -113,6 +113,21 @@ public final class PanelNetwork {
                 com.omneria.fordix.debug.ClientboundDebugInfoPayload::encode,
                 com.omneria.fordix.debug.ClientboundDebugInfoPayload::decode,
                 PanelNetwork::handleDebugInfo);
+        CHANNEL.registerMessage(id++, com.omneria.fordix.console.ServerboundConsolePayload.class,
+                com.omneria.fordix.console.ServerboundConsolePayload::encode,
+                com.omneria.fordix.console.ServerboundConsolePayload::decode,
+                com.omneria.fordix.console.FordixConsoles::handle);
+        CHANNEL.registerMessage(id++, com.omneria.fordix.console.ClientboundConsolePayload.class,
+                com.omneria.fordix.console.ClientboundConsolePayload::encode,
+                com.omneria.fordix.console.ClientboundConsolePayload::decode,
+                PanelNetwork::handleConsole);
+    }
+
+    private static void handleConsole(com.omneria.fordix.console.ClientboundConsolePayload payload, Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() ->
+                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> com.omneria.fordix.client.console.ClientConsole.receive(payload))
+        );
+        ctx.get().setPacketHandled(true);
     }
 
     private static void handleDebugInfo(com.omneria.fordix.debug.ClientboundDebugInfoPayload payload, Supplier<NetworkEvent.Context> ctx) {
