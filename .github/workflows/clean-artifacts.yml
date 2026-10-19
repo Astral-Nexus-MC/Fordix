@@ -1,0 +1,28 @@
+name: Clean artifacts
+
+# Deletes every build artifact of the repository (jars and screenshots of old runs), to get back under the storage quota.
+# Runs by hand (Actions > Clean artifacts > Run workflow) and once when this file is pushed.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/clean-artifacts.yml'
+
+permissions:
+  actions: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$REPO/actions/artifacts?per_page=100" --jq '.artifacts[].id' > ids.txt
+          echo "$(wc -l < ids.txt) artifacts to delete"
+          while read -r id; do
+            gh api -X DELETE "repos/$REPO/actions/artifacts/$id" --silent || echo "could not delete $id"
+          done < ids.txt
+          echo "left: $(gh api "repos/$REPO/actions/artifacts?per_page=1" --jq '.total_count')"

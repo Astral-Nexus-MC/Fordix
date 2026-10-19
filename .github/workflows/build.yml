@@ -29,6 +29,7 @@ jobs:
           name: fordix-jar
           path: build/libs/*.jar
           if-no-files-found: error
+          retention-days: 5
 
   ingame-test:
     # Starts the real client without a screen (Xvfb + software OpenGL), opens every Fordix screen and
@@ -82,3 +83,4 @@ jobs:
             run/fordix-shots/*.png
             client.log
           if-no-files-found: warn
+          retention-days: 5
