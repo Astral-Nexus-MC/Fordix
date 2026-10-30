@@ -354,103 +354,9 @@ public final class VoidframeScreens {
             }
             if (wide) {
                 placeWide();
-                if (FordixConfig.modScreens() && CuriosView.cells().size() != accessories.size()) {
-                    rebuildWidgets();
-                }
-                adoptCuriosButton();
             }
             GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
-            if (wide && !accessories.isEmpty()) {
-                accessoriesTooltip(guiGraphics, mouseX, mouseY);
-            }
-        }
-
-        private static boolean isCurios(Object widget) {
-            return widget.getClass().getName().startsWith("top.theillusivec4.curios.");
-        }
-
-        /**
-         * Curios' button sits where the narrow panel has room and moves itself on every frame: it is hidden here and ours, in the
-         * column of buttons under the search field, presses it, so the mod still does everything it does.
-         */
-        private void adoptCuriosButton() {
-            if (curiosButton == null) {
-                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                    if (child instanceof net.minecraft.client.gui.components.AbstractButton button && isCurios(button)) {
-                        curiosButton = button;
-                        button.visible = false;
-                        accessoriesButton = new AccessoriesButton(button, leftPos + 432, topPos + 316, 66, 22);
-                        addRenderableWidget(accessoriesButton);
-                        break;
-                    }
-                }
-            } else {
-                curiosButton.visible = false;
-                accessoriesButton.setX(leftPos + 432);
-                accessoriesButton.setY(topPos + 316);
-            }
-        }
-
-        /** A press on the Curios column opens the accessories screen, the way Curios' button does. */
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (wide && button == 0 && curiosButton != null
-                    && ModLayouts.curiosRowAt((int) mouseX - leftPos, (int) mouseY - topPos, ModLayouts.curiosShown(accessories.size())) >= 0) {
-                net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
-                        net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                curiosButton.onPress();
-                return true;
-            }
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-        private void accessoriesTooltip(GuiGraphics g, int mouseX, int mouseY) {
-            int shown = ModLayouts.curiosShown(accessories.size());
-            int row = ModLayouts.curiosRowAt(mouseX - leftPos, mouseY - topPos, shown);
-            if (row < 0) {
-                return;
-            }
-            CuriosView.Cell cell = accessories.get(row);
-            if (!cell.stack().isEmpty()) {
-                g.renderTooltip(font, cell.stack(), mouseX, mouseY);
-            } else {
-                g.renderTooltip(font, java.util.List.of(
-                        Component.translatable("curios.identifier." + cell.identifier()).withStyle(net.minecraft.ChatFormatting.GRAY),
-                        Component.translatable("fordix.mod.curios_open").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
-                        java.util.Optional.empty(), mouseX, mouseY);
-            }
-        }
-
-        /** A button of the column under the search field: it presses Curios' own button. */
-        private static final class AccessoriesButton extends net.minecraft.client.gui.components.AbstractWidget {
-            private final net.minecraft.client.gui.components.AbstractButton target;
-            private final Glass.Fade fade = new Glass.Fade();
-
-            AccessoriesButton(net.minecraft.client.gui.components.AbstractButton target, int x, int y, int w, int h) {
-                super(x, y, w, h, Component.translatable("fordix.mod.curios"));
-                this.target = target;
-                setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fordix.mod.curios_open")));
-            }
-
-            @Override
-            protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-                Glass.button(g, getX(), getY(), width, height, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
-                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-                String text = font.plainSubstrByWidth(getMessage().getString(), width - 6);
-                g.drawString(font, text, getX() + (width - font.width(text)) / 2, getY() + (height - 8) / 2,
-                        Glass.buttonText(Glass.Kind.NORMAL, true), false);
-            }
-
-            @Override
-            public void onClick(double mouseX, double mouseY) {
-                target.onPress();
-            }
-
-            @Override
-            protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
-                defaultButtonNarrationText(output);
-            }
         }
 
         @Override
@@ -597,9 +503,103 @@ public final class VoidframeScreens {
             }
             if (wide) {
                 placeWide();
+                if (FordixConfig.modScreens() && CuriosView.cells().size() != accessories.size()) {
+                    rebuildWidgets();
+                }
+                adoptCuriosButton();
             }
             GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
+            if (wide && !accessories.isEmpty()) {
+                accessoriesTooltip(guiGraphics, mouseX, mouseY);
+            }
+        }
+
+        private static boolean isCurios(Object widget) {
+            return widget.getClass().getName().startsWith("top.theillusivec4.curios.");
+        }
+
+        /**
+         * Curios' button sits where the narrow panel has room and moves itself on every frame: it is hidden here and ours, in the
+         * column of buttons under the search field, presses it, so the mod still does everything it does.
+         */
+        private void adoptCuriosButton() {
+            if (curiosButton == null) {
+                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                    if (child instanceof net.minecraft.client.gui.components.AbstractButton button && isCurios(button)) {
+                        curiosButton = button;
+                        button.visible = false;
+                        accessoriesButton = new AccessoriesButton(button, leftPos + 432, topPos + 316, 66, 22);
+                        addRenderableWidget(accessoriesButton);
+                        break;
+                    }
+                }
+            } else {
+                curiosButton.visible = false;
+                accessoriesButton.setX(leftPos + 432);
+                accessoriesButton.setY(topPos + 316);
+            }
+        }
+
+        /** A press on the Curios column opens the accessories screen, the way Curios' button does. */
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (wide && button == 0 && curiosButton != null
+                    && ModLayouts.curiosRowAt((int) mouseX - leftPos, (int) mouseY - topPos, ModLayouts.curiosShown(accessories.size())) >= 0) {
+                net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
+                        net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                curiosButton.onPress();
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        private void accessoriesTooltip(GuiGraphics g, int mouseX, int mouseY) {
+            int shown = ModLayouts.curiosShown(accessories.size());
+            int row = ModLayouts.curiosRowAt(mouseX - leftPos, mouseY - topPos, shown);
+            if (row < 0) {
+                return;
+            }
+            CuriosView.Cell cell = accessories.get(row);
+            if (!cell.stack().isEmpty()) {
+                g.renderTooltip(font, cell.stack(), mouseX, mouseY);
+            } else {
+                g.renderTooltip(font, java.util.List.of(
+                        Component.translatable("curios.identifier." + cell.identifier()).withStyle(net.minecraft.ChatFormatting.GRAY),
+                        Component.translatable("fordix.mod.curios_open").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                        java.util.Optional.empty(), mouseX, mouseY);
+            }
+        }
+
+        /** A button of the column under the search field: it presses Curios' own button. */
+        private static final class AccessoriesButton extends net.minecraft.client.gui.components.AbstractWidget {
+            private final net.minecraft.client.gui.components.AbstractButton target;
+            private final Glass.Fade fade = new Glass.Fade();
+
+            AccessoriesButton(net.minecraft.client.gui.components.AbstractButton target, int x, int y, int w, int h) {
+                super(x, y, w, h, Component.translatable("fordix.mod.curios"));
+                this.target = target;
+                setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fordix.mod.curios_open")));
+            }
+
+            @Override
+            protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+                Glass.button(g, getX(), getY(), width, height, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                String text = font.plainSubstrByWidth(getMessage().getString(), width - 6);
+                g.drawString(font, text, getX() + (width - font.width(text)) / 2, getY() + (height - 8) / 2,
+                        Glass.buttonText(Glass.Kind.NORMAL, true), false);
+            }
+
+            @Override
+            public void onClick(double mouseX, double mouseY) {
+                target.onPress();
+            }
+
+            @Override
+            protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
+                defaultButtonNarrationText(output);
+            }
         }
 
         @Override
