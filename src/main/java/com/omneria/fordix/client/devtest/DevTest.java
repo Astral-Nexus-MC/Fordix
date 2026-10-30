@@ -197,6 +197,24 @@ public final class DevTest {
             mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, false));
+        steps.add(new Step("03g-inventory-curios", () -> {
+            com.omneria.fordix.client.gui.vanilla.CuriosView.force(java.util.List.of(
+                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND), "ring"),
+                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(net.minecraft.world.item.ItemStack.EMPTY, "ring"),
+                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.NETHER_STAR), "charm"),
+                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(net.minecraft.world.item.ItemStack.EMPTY, "necklace")));
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 40, false));
+        steps.add(new Step("03h-inventory-curios-off", () -> {
+            com.omneria.fordix.client.gui.vanilla.CuriosView.force(null);
+            mc.setScreen(new InventoryScreen(mc.player));
+        }, 30, false));
+        steps.add(new Step("07h-flower-pouch", () -> mc.setScreen(com.omneria.fordix.client.gui.vanilla.ModContainerScreen.forTest(
+                com.omneria.fordix.client.gui.vanilla.ModContainerScreen.Kind.POUCH, fakeMenu(mc, 32), mc.player.getInventory(),
+                Component.literal("Flower Pouch"))), 30, false));
+        steps.add(new Step("07i-bauble-box", () -> mc.setScreen(com.omneria.fordix.client.gui.vanilla.ModContainerScreen.forTest(
+                com.omneria.fordix.client.gui.vanilla.ModContainerScreen.Kind.BOX, fakeMenu(mc, 24), mc.player.getInventory(),
+                Component.literal("Bauble Box"))), 30, false));
         steps.add(new Step("04-tooltip-sword", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, true));
         steps.add(new Step("05-advancements", () -> mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements())), 40, false));
         steps.add(new Step("06-loom", () -> mc.setScreen(new LoomScreen(new LoomMenu(1, mc.player.getInventory()),
@@ -964,5 +982,34 @@ public final class DevTest {
                 level, net.minecraft.network.chat.Component.literal(value),
                 new com.omneria.fordix.console.ConsoleData.Slot(malus, net.minecraft.network.chat.Component.literal(malus)),
                 new com.omneria.fordix.console.ConsoleData.Slot(bonus, net.minecraft.network.chat.Component.literal(bonus)));
+    }
+
+    /** A menu of {@code own} empty slots followed by the player's inventory, standing in for a mod's container. */
+    private static net.minecraft.world.inventory.AbstractContainerMenu fakeMenu(Minecraft mc, int own) {
+        net.minecraft.world.entity.player.Inventory inventory = mc.player.getInventory();
+        net.minecraft.world.SimpleContainer container = new net.minecraft.world.SimpleContainer(own);
+        return new net.minecraft.world.inventory.AbstractContainerMenu(null, 1) {
+            {
+                for (int i = 0; i < own; i++) {
+                    addSlot(new net.minecraft.world.inventory.Slot(container, i, 0, 0));
+                }
+                for (int i = 9; i < 36; i++) {
+                    addSlot(new net.minecraft.world.inventory.Slot(inventory, i, 0, 0));
+                }
+                for (int i = 0; i < 9; i++) {
+                    addSlot(new net.minecraft.world.inventory.Slot(inventory, i, 0, 0));
+                }
+            }
+
+            @Override
+            public net.minecraft.world.item.ItemStack quickMoveStack(net.minecraft.world.entity.player.Player player, int index) {
+                return net.minecraft.world.item.ItemStack.EMPTY;
+            }
+
+            @Override
+            public boolean stillValid(net.minecraft.world.entity.player.Player player) {
+                return true;
+            }
+        };
     }
 }

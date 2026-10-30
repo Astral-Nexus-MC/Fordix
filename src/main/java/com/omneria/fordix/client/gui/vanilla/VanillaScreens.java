@@ -59,6 +59,10 @@ public final class VanillaScreens {
             return null;
         }
         Inventory inventory = player.getInventory();
+        Screen mod = ModContainerScreen.replacementFor(screen, inventory);
+        if (mod != null) {
+            return mod;
+        }
         Class<?> type = screen.getClass();
         if (type == net.minecraft.client.gui.screens.DeathScreen.class) {
             return VoidframeDeathScreen.replacing((net.minecraft.client.gui.screens.DeathScreen) screen);

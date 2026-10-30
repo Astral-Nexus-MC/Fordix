@@ -696,5 +696,14 @@
     "fordix.debug.ore_suffixes": "| Ore| ore",
     "fordix.console.none": "none",
     "fordix.console.limit": "Level limit reached.",
-    "fordix.console.missing": "You don't have this item."
+    "fordix.console.missing": "You don't have this item.",
+    "fordix.mod.small_flowers": "Small flowers",
+    "fordix.mod.tall_flowers": "Tall flowers",
+    "fordix.mod.accessories_only": "Accessories only",
+    "fordix.mod.pouch_hint": "Click a flower to store it.",
+    "fordix.mod.box_hint": "Only baubles fit in here.",
+    "fordix.mod.curios": "Curios",
+    "fordix.mod.curios_more": "+%s more",
+    "fordix.mod.curios_open": "Open the accessories screen",
+    "fordix.mod.curios_empty": "Empty"
 }

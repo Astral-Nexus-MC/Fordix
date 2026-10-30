@@ -134,7 +134,7 @@ public final class RarityFrames {
     }
 
     /** The tint under the item, from the rank's top color to its bottom color; on epic a soft violet edge inside. */
-    private static void tint(GuiGraphics g, int x, int y, int size, int rank, int color) {
+    static void tint(GuiGraphics g, int x, int y, int size, int rank, int color) {
         int[] tint = RarityMotion.tint(rank, color);
         g.fillGradient(x, y, x + size, y + size, tint[0], tint[1]);
         if (rank == RarityMotion.EPIC) {

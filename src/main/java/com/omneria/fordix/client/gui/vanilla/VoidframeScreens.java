@@ -2,6 +2,7 @@ package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.hud.HudStyle;
+import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.Glass;
 import com.omneria.fordix.client.guide.GuideTabs;
@@ -353,9 +354,103 @@ public final class VoidframeScreens {
             }
             if (wide) {
                 placeWide();
+                if (FordixConfig.modScreens() && CuriosView.cells().size() != accessories.size()) {
+                    rebuildWidgets();
+                }
+                adoptCuriosButton();
             }
             GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
+            if (wide && !accessories.isEmpty()) {
+                accessoriesTooltip(guiGraphics, mouseX, mouseY);
+            }
+        }
+
+        private static boolean isCurios(Object widget) {
+            return widget.getClass().getName().startsWith("top.theillusivec4.curios.");
+        }
+
+        /**
+         * Curios' button sits where the narrow panel has room and moves itself on every frame: it is hidden here and ours, in the
+         * column of buttons under the search field, presses it, so the mod still does everything it does.
+         */
+        private void adoptCuriosButton() {
+            if (curiosButton == null) {
+                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                    if (child instanceof net.minecraft.client.gui.components.AbstractButton button && isCurios(button)) {
+                        curiosButton = button;
+                        button.visible = false;
+                        accessoriesButton = new AccessoriesButton(button, leftPos + 432, topPos + 316, 66, 22);
+                        addRenderableWidget(accessoriesButton);
+                        break;
+                    }
+                }
+            } else {
+                curiosButton.visible = false;
+                accessoriesButton.setX(leftPos + 432);
+                accessoriesButton.setY(topPos + 316);
+            }
+        }
+
+        /** A press on the Curios column opens the accessories screen, the way Curios' button does. */
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (wide && button == 0 && curiosButton != null
+                    && ModLayouts.curiosRowAt((int) mouseX - leftPos, (int) mouseY - topPos, ModLayouts.curiosShown(accessories.size())) >= 0) {
+                net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
+                        net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                curiosButton.onPress();
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        private void accessoriesTooltip(GuiGraphics g, int mouseX, int mouseY) {
+            int shown = ModLayouts.curiosShown(accessories.size());
+            int row = ModLayouts.curiosRowAt(mouseX - leftPos, mouseY - topPos, shown);
+            if (row < 0) {
+                return;
+            }
+            CuriosView.Cell cell = accessories.get(row);
+            if (!cell.stack().isEmpty()) {
+                g.renderTooltip(font, cell.stack(), mouseX, mouseY);
+            } else {
+                g.renderTooltip(font, java.util.List.of(
+                        Component.translatable("curios.identifier." + cell.identifier()).withStyle(net.minecraft.ChatFormatting.GRAY),
+                        Component.translatable("fordix.mod.curios_open").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
+                        java.util.Optional.empty(), mouseX, mouseY);
+            }
+        }
+
+        /** A button of the column under the search field: it presses Curios' own button. */
+        private static final class AccessoriesButton extends net.minecraft.client.gui.components.AbstractWidget {
+            private final net.minecraft.client.gui.components.AbstractButton target;
+            private final Glass.Fade fade = new Glass.Fade();
+
+            AccessoriesButton(net.minecraft.client.gui.components.AbstractButton target, int x, int y, int w, int h) {
+                super(x, y, w, h, Component.translatable("fordix.mod.curios"));
+                this.target = target;
+                setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fordix.mod.curios_open")));
+            }
+
+            @Override
+            protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+                Glass.button(g, getX(), getY(), width, height, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
+                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
+                String text = font.plainSubstrByWidth(getMessage().getString(), width - 6);
+                g.drawString(font, text, getX() + (width - font.width(text)) / 2, getY() + (height - 8) / 2,
+                        Glass.buttonText(Glass.Kind.NORMAL, true), false);
+            }
+
+            @Override
+            public void onClick(double mouseX, double mouseY) {
+                target.onPress();
+            }
+
+            @Override
+            protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
+                defaultButtonNarrationText(output);
+            }
         }
 
         @Override
@@ -421,6 +516,13 @@ public final class VoidframeScreens {
     /** The survival inventory (E key). Creative mode uses its own screen, which stays vanilla. */
     public static class PlayerInventory extends InventoryScreen implements VoidframeScreen, WideLayout {
         private boolean wide;
+        /** The Curios slots (other mods' accessories) as read at the last layout: a column on the left of the equipment when there are some. */
+        private java.util.List<CuriosView.Cell> accessories = java.util.List.of();
+        /** How far the equipment, the player and the attribute card sit to the right to make room for that column (0 without it). */
+        private int dx;
+        /** Curios' own button (hidden: its place assumes the narrow panel) and the one of ours that presses it. */
+        private net.minecraft.client.gui.components.AbstractButton curiosButton;
+        private AccessoriesButton accessoriesButton;
 
         /**
          * JEI lays its item list out from {@link #getXSize()}, which reports the width plus the guide tab column so
@@ -506,6 +608,10 @@ public final class VoidframeScreens {
             lastBook = false;
             imageWidth = wide ? INV_W : 176;
             imageHeight = wide ? INV_H : 166;
+            accessories = wide && FordixConfig.modScreens() ? CuriosView.cells() : java.util.List.of();
+            dx = accessories.isEmpty() ? 0 : ModLayouts.CURIOS_SHIFT;
+            curiosButton = null;
+            accessoriesButton = null;
             super.init();
             if (!wide) {
                 ContainerLayout.restore(menu);
@@ -519,9 +625,9 @@ public final class VoidframeScreens {
                     int index = slot.getContainerSlot();
                     if (index >= 36 && index <= 39) {
                         // Head, chest, legs, feet down the left column, with room for the name of each piece.
-                        ContainerLayout.put(slot, 18, 50 + (39 - index) * 32, ContainerLayout.BIG);
+                        ContainerLayout.put(slot, 18 + dx, 50 + (39 - index) * 32, ContainerLayout.BIG);
                     } else if (index == 40) {
-                        ContainerLayout.put(slot, 18, 186, ContainerLayout.BIG);
+                        ContainerLayout.put(slot, 18 + dx, 186, ContainerLayout.BIG);
                     }
                 }
             }
@@ -530,7 +636,7 @@ public final class VoidframeScreens {
             }
             ContainerLayout.playerBlock(menu, 18, 264, 352);
             for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                if (child instanceof net.minecraft.client.gui.components.ImageButton button) {
+                if (child instanceof net.minecraft.client.gui.components.ImageButton button && !isCurios(button)) {
                     button.setX(leftPos + 506);
                     button.setY(topPos + 290);
                     button.setWidth(66);
@@ -556,11 +662,12 @@ public final class VoidframeScreens {
         private void wideBackground(GuiGraphics g, int mouseX, int mouseY) {
             VoidframeDraw.wideBackground(g, menu, this, leftPos, topPos, imageWidth, imageHeight);
             // The player in a deep well with a soft light from below.
-            VoidframeDraw.well(g, leftPos + 156, topPos + 46, 148, 168);
-            g.fillGradient(leftPos + 157, topPos + 140, leftPos + 303, topPos + 213, 0x00000000,
+            accessoriesColumn(g);
+            VoidframeDraw.well(g, leftPos + 156 + dx, topPos + 46, 148, 168);
+            g.fillGradient(leftPos + 157 + dx, topPos + 140, leftPos + 303 + dx, topPos + 213, 0x00000000,
                     com.omneria.fordix.client.hud.HudTokens.withAlpha(FordixPalette.ACCENT, 0x28));
-            InventoryScreen.renderEntityInInventoryFollowsMouse(g, leftPos + 230, topPos + 204, 56,
-                    (float) (leftPos + 230 - mouseX), (float) (topPos + 204 - 84 - mouseY), minecraft.player);
+            InventoryScreen.renderEntityInInventoryFollowsMouse(g, leftPos + 230 + dx, topPos + 204, 56,
+                    (float) (leftPos + 230 + dx - mouseX), (float) (topPos + 204 - 84 - mouseY), minecraft.player);
             Glass.card(g, leftPos + 246, topPos + 248, 164, 124);
             Glass.card(g, leftPos + 420, topPos + 248, 164, 124);
             VoidframeDraw.arrow(g, leftPos + 312, topPos + 292, 24, 12, 24);
@@ -577,19 +684,45 @@ public final class VoidframeScreens {
             }
         }
 
+        /** The Curios column: a well per slot, the item (read only), the rarity tint, and "+N" under it when it is longer than the room. */
+        private void accessoriesColumn(GuiGraphics g) {
+            int shown = ModLayouts.curiosShown(accessories.size());
+            for (int row = 0; row < shown; row++) {
+                int[] at = ModLayouts.curiosBox(row);
+                int x = leftPos + at[0];
+                int y = topPos + at[1];
+                VoidframeDraw.well(g, x, y, 20, 20);
+                net.minecraft.world.item.ItemStack stack = accessories.get(row).stack();
+                if (!stack.isEmpty()) {
+                    if (com.omneria.fordix.client.tooltip.ItemRarity.isNotable(stack)) {
+                        RarityFrames.tint(g, x, y, 20, com.omneria.fordix.client.tooltip.ItemRarity.rank(stack),
+                                com.omneria.fordix.client.tooltip.ItemRarity.color(stack));
+                    }
+                    g.renderItem(stack, x + 2, y + 2);
+                    g.renderItemDecorations(font, stack, x + 2, y + 2);
+                }
+            }
+            int hidden = ModLayouts.curiosHidden(accessories.size());
+            if (hidden > 0) {
+                g.drawString(font, Tr.s("mod.curios_more", hidden), leftPos + ModLayouts.CURIOS_X,
+                        topPos + ModLayouts.CURIOS_Y + shown * ModLayouts.PITCH + 2, Glass.dim(), false);
+            }
+        }
+
         /** The experience under the player and the attributes of the game (the ones other mods add come as more rows). */
         private void bigStats(GuiGraphics g) {
             net.minecraft.world.entity.player.Player player = minecraft.player;
-            int levelX = leftPos + 156;
+            int levelX = leftPos + 156 + dx;
             int levelY = topPos + 222;
             g.drawString(font, Tr.s("inv.level", player.experienceLevel).toUpperCase(java.util.Locale.ROOT), levelX, levelY, 0xFF9BF0B9, false);
             String percent = Math.round(player.experienceProgress * 100) + " %";
             g.drawString(font, percent, levelX + 148 - font.width(percent), levelY, Glass.dim(), false);
             HudStyle.bar(g, levelX, levelY + 12, 148, 5, player.experienceProgress, 0xFF5ED68A);
 
-            int x = leftPos + 322;
+            int x = leftPos + 322 + dx;
             int y = topPos + 46;
-            Glass.card(g, x, y, 262, 190);
+            int cardWidth = 262 - dx;
+            Glass.card(g, x, y, cardWidth, 190);
             Object[][] rows = {
                     {"inv.attr.health", net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH, 40.0D, 0xFFE5534B, 0},
                     {"inv.armor", net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, 20.0D, 0xFF6FE0E6, 0},
@@ -603,8 +736,8 @@ public final class VoidframeScreens {
                 String text = decimals == 0 ? Integer.toString((int) Math.round(value)) : String.format(java.util.Locale.ROOT, "%." + decimals + "f", value);
                 int rowY = y + 12 + i * 35;
                 g.drawString(font, Tr.s((String) row[0]), x + 12, rowY, FordixPalette.TEXT, false);
-                g.drawString(font, text, x + 250 - font.width(text), rowY, FordixPalette.TEXT_BRIGHT, false);
-                HudStyle.bar(g, x + 12, rowY + 13, 238, 6, (float) Math.min(1.0D, value / (Double) row[2]), (Integer) row[3]);
+                g.drawString(font, text, x + cardWidth - 12 - font.width(text), rowY, FordixPalette.TEXT_BRIGHT, false);
+                HudStyle.bar(g, x + 12, rowY + 13, cardWidth - 24, 6, (float) Math.min(1.0D, value / (Double) row[2]), (Integer) row[3]);
             }
         }
 
@@ -640,7 +773,10 @@ public final class VoidframeScreens {
                         .toUpperCase(java.util.Locale.ROOT);
                 guiGraphics.drawString(font, right, INV_W - 14 - font.width(right), 9, Glass.dim(), false);
             }
-            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 18, 34);
+            if (dx > 0) {
+                VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.mod.curios"), 18, 34);
+            }
+            VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 18 + dx, 34);
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.craft"), 258, 256);
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.bag"), 18, 250);
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.hotbar"), 18, 338);
@@ -660,7 +796,7 @@ public final class VoidframeScreens {
         private void drawWorn(GuiGraphics g, net.minecraft.world.item.ItemStack stack, String emptyKey, int boxY) {
             boolean empty = stack.isEmpty();
             String text = font.plainSubstrByWidth(empty ? Tr.s(emptyKey) : stack.getHoverName().getString(), 92);
-            g.drawString(font, text, 52, boxY + 9, empty ? Glass.dim() : FordixPalette.TEXT, false);
+            g.drawString(font, text, 52 + dx, boxY + 9, empty ? Glass.dim() : FordixPalette.TEXT, false);
         }
     }
 

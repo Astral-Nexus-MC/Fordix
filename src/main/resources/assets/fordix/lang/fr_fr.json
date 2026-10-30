@@ -696,5 +696,14 @@
     "fordix.debug.ore_suffixes": "",
     "fordix.console.none": "aucun",
     "fordix.console.limit": "Niveau limite atteint.",
-    "fordix.console.missing": "Il vous manque cet objet."
+    "fordix.console.missing": "Il vous manque cet objet.",
+    "fordix.mod.small_flowers": "Petites fleurs",
+    "fordix.mod.tall_flowers": "Grandes fleurs",
+    "fordix.mod.accessories_only": "Accessoires uniquement",
+    "fordix.mod.pouch_hint": "Cliquez une fleur pour la ranger.",
+    "fordix.mod.box_hint": "Seuls les bijoux entrent ici.",
+    "fordix.mod.curios": "Curios",
+    "fordix.mod.curios_more": "+%s autres",
+    "fordix.mod.curios_open": "Ouvrir l'écran des accessoires",
+    "fordix.mod.curios_empty": "Vide"
 }

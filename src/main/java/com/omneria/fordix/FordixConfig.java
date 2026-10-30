@@ -18,6 +18,7 @@ import java.util.Map;
 public final class FordixConfig {
     public static final ForgeConfigSpec CLIENT_SPEC;
     public static final ForgeConfigSpec.BooleanValue GUIDE_HINTS;
+    public static final ForgeConfigSpec.BooleanValue MOD_SCREENS;
     /** Elements of the Voidframe HUD whose position can be moved, in the order the layout screen lists them. */
     public static final List<String> HUD_ELEMENTS = List.of("health", "hunger", "armor", "air", "experience", "boss");
     private static final Map<String, ForgeConfigSpec.IntValue[]> HUD_OFFSETS = new LinkedHashMap<>();
@@ -116,6 +117,10 @@ public final class FordixConfig {
         GUIDE_HINTS = builder
                 .comment("Add the \"[Shift + G] open the guide\" line to the tooltip of items that have a guide (the key keeps working when off).")
                 .define("guideHints", true);
+        MOD_SCREENS = builder
+                .comment("Draw the screens of other mods (Botania flower pouch and bauble box, Curios column of the inventory) in Voidframe.",
+                        "Turn off to get the original screens back.")
+                .define("modScreens", true);
         GUIDES = builder
                 .comment("Guide tabs along the right edge of the survival inventory, one per line: \"modid | Label | icon item | action\".",
                         "A tab only shows when its mod is installed (\"minecraft\" always is). Actions: ponder (Create's",
@@ -207,6 +212,15 @@ public final class FordixConfig {
     /** The game's own screens (pause, options, containers, tooltips frames, death...) are always drawn in Voidframe: no option, a stale client file cannot turn them off. */
     public static boolean voidframeScreens() {
         return true;
+    }
+
+    /** Screens of other mods drawn in Voidframe (Botania pouch and box, Curios column); a client file option, on by default. */
+    public static boolean modScreens() {
+        try {
+            return MOD_SCREENS.get();
+        } catch (IllegalStateException notLoadedYet) {
+            return true;
+        }
     }
 
     /** The Voidframe chat (tabs, heads, times, styled field) is always on. */
