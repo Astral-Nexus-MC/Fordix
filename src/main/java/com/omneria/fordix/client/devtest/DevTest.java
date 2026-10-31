@@ -222,8 +222,15 @@ public final class DevTest {
             mc.setScreen(null);
             guiScale(mc, FORDIX_SCALE);
         }, 5, false));
-        steps.add(new Step("07k-accessory-bar-compact", () -> mc.setScreen(
-                new com.omneria.fordix.client.gui.vanilla.VoidframeScreens.PlayerInventory(mc.player, accessoryMenu(mc, 6))), 40, false));
+        steps.add(new Step("07k-accessory-bar-compact", () -> {
+            mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
+            com.omneria.fordix.client.gui.vanilla.CuriosView.force(java.util.List.of());
+            mc.setScreen(new com.omneria.fordix.client.gui.vanilla.VoidframeScreens.PlayerInventory(mc.player, accessoryMenu(mc, 6)));
+        }, 40, false));
+        steps.add(new Step("07l-accessory-reset", () -> {
+            com.omneria.fordix.client.gui.vanilla.CuriosView.force(null);
+            mc.setScreen(null);
+        }, 5, false));
         steps.add(new Step("04-tooltip-sword", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, true));
         steps.add(new Step("05-advancements", () -> mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements())), 40, false));
         steps.add(new Step("06-loom", () -> mc.setScreen(new LoomScreen(new LoomMenu(1, mc.player.getInventory()),

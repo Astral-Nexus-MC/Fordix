@@ -38,6 +38,7 @@ public final class CuriosView {
 
     public static void force(List<Cell> cells) {
         forced = cells;
+        CuriosLink.assume(cells != null);
     }
 
     /** Every slot of every visible kind, in the order Curios keeps them. */

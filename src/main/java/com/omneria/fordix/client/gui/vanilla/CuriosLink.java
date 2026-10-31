@@ -16,12 +16,18 @@ import java.lang.reflect.Constructor;
 final class CuriosLink {
     private static final String NETWORK = "top.theillusivec4.curios.common.network.";
     private static boolean broken;
+    /** The dev test has no Curios: it says so, to see the screens as they are with it. */
+    private static boolean assumed;
 
     private CuriosLink() {
     }
 
     static boolean loaded() {
-        return !broken && ModList.get().isLoaded("curios");
+        return assumed || !broken && ModList.get().isLoaded("curios");
+    }
+
+    static void assume(boolean on) {
+        assumed = on;
     }
 
     /** The accessory screen (the inventory with the bar open): Curios opens its menu on the server and the client follows. */
@@ -49,7 +55,7 @@ final class CuriosLink {
 
     /** The key that opens and closes the accessory screen in Curios (its own binding, "open Curios GUI"). */
     static boolean isOpenKey(int keyCode, int scanCode) {
-        if (!loaded()) {
+        if (!loaded() || assumed) {
             return false;
         }
         try {
