@@ -126,6 +126,7 @@ public final class FordixConfig {
                         "A tab only shows when its mod is installed (\"minecraft\" always is). Actions: ponder (Create's",
                         "Ponder index), patchouli:<book id>, url:<https link> (asks before opening), command:<command>.")
                 .defineList("guides", List.of(
+                        "botania | Botania : Lexica | botania:lexicon | patchouli:botania:lexicon",
                         "create | Create : Ponder | create:wrench | ponder",
                         "create | Create : Wiki | create:andesite_alloy | url:https://create.fandom.com/wiki/Create_Mod_Wiki",
                         "minecolonies | MineColonies : Wiki | minecolonies:blockhuttownhall | url:https://minecolonies.com/wiki/",

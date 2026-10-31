@@ -190,6 +190,7 @@ public final class ItemTooltipRenderer {
         }
         guiGraphics.flush();
         guiGraphics.pose().popPose();
+        PatchouliLookup.draw(guiGraphics, stack, x, y);
     }
 
     /** One enchantment: a pill named in its rarity's color, then what it does in numbers. */
