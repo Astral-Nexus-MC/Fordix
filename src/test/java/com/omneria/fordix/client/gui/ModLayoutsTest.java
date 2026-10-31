@@ -34,22 +34,28 @@ class ModLayoutsTest {
     }
 
     @Test
-    void curiosColumnStopsAtEightAndCountsTheRest() {
-        assertEquals(0, ModLayouts.curiosShown(0));
-        assertEquals(5, ModLayouts.curiosShown(5));
-        assertEquals(8, ModLayouts.curiosShown(8));
-        assertEquals(8, ModLayouts.curiosShown(11));
-        assertEquals(3, ModLayouts.curiosHidden(11));
-        assertEquals(0, ModLayouts.curiosHidden(8));
+    void accessoryColumnsHoldEightSlots() {
+        assertEquals(0, ModLayouts.accessoryColumns(0));
+        assertEquals(1, ModLayouts.accessoryColumns(1));
+        assertEquals(1, ModLayouts.accessoryColumns(8));
+        assertEquals(2, ModLayouts.accessoryColumns(9));
+        assertEquals(6, ModLayouts.accessoryColumns(48));
     }
 
     @Test
-    void curiosRowAtFindsOnlyTheBoxes() {
-        assertEquals(0, ModLayouts.curiosRowAt(20, 52, 8));
-        assertEquals(1, ModLayouts.curiosRowAt(30, 50 + 22 + 3, 8));
-        assertEquals(-1, ModLayouts.curiosRowAt(20, 50 + 21, 8));
-        assertEquals(-1, ModLayouts.curiosRowAt(17, 60, 8));
-        assertEquals(-1, ModLayouts.curiosRowAt(20, 49, 8));
-        assertEquals(-1, ModLayouts.curiosRowAt(20, 50 + 4 * 22, 4));
+    void accessoryShiftIsZeroWithoutSlotsAndGrowsByAColumn() {
+        assertEquals(0, ModLayouts.accessoryShift(0, 0));
+        assertEquals(32, ModLayouts.accessoryShift(5, 0));
+        assertEquals(54, ModLayouts.accessoryShift(12, 0));
+        assertEquals(54, ModLayouts.accessoryShift(8, 8));
+        assertEquals(142, ModLayouts.accessoryShift(48, 0));
+    }
+
+    @Test
+    void accessoryBoxFillsAColumnThenTheNext() {
+        assertArrayEquals(new int[]{18, 50}, ModLayouts.accessoryBox(0, 0));
+        assertArrayEquals(new int[]{18, 50 + 7 * 22}, ModLayouts.accessoryBox(7, 0));
+        assertArrayEquals(new int[]{40, 50}, ModLayouts.accessoryBox(8, 0));
+        assertArrayEquals(new int[]{62, 72}, ModLayouts.accessoryBox(1, 2));
     }
 }

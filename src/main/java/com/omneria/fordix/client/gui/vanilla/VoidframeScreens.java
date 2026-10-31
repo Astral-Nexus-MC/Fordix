@@ -414,6 +414,21 @@ public final class VoidframeScreens {
         }
     }
 
+    /**
+     * The screen of Curios' accessory menu, opening, as the Voidframe inventory with the bar open; null when the original screen
+     * is not one of Curios' or its menu does not fit this one (the original then opens as it always did).
+     */
+    public static net.minecraft.client.gui.screens.Screen accessoryInventory(
+            net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> original, Player player) {
+        String name = original.getClass().getName();
+        if (!name.equals("top.theillusivec4.curios.client.gui.CuriosScreen")
+                && !name.equals("top.theillusivec4.curios.client.gui.CuriosScreenV2")
+                || !FordixConfig.modScreens() || !(original.getMenu() instanceof net.minecraft.world.inventory.InventoryMenu menu)) {
+            return null;
+        }
+        return PlayerInventory.withAccessories(player, menu);
+    }
+
     // ---------- the survival inventory ----------
 
     private static final int INV_W = 600;
@@ -422,22 +437,55 @@ public final class VoidframeScreens {
     /** The survival inventory (E key). Creative mode uses its own screen, which stays vanilla. */
     public static class PlayerInventory extends InventoryScreen implements VoidframeScreen, WideLayout {
         private boolean wide;
-        /** The Curios slots (other mods' accessories) as read at the last layout: a column on the left of the equipment when there are some. */
-        private java.util.List<CuriosView.Cell> accessories = java.util.List.of();
-        /** How far the equipment, the player and the attribute card sit to the right to make room for that column (0 without it). */
+        /** Whether this screen shows the accessory menu (the inventory with the bar open) instead of the plain inventory menu. */
+        private final boolean accessoryMode;
+        /** How far the equipment, the player and the attribute card sit to the right to make room for the accessory bar (0 without it). */
         private int dx;
-        /** Curios' own button (hidden: its place assumes the narrow panel) and the one of ours that presses it. */
-        private net.minecraft.client.gui.components.AbstractButton curiosButton;
-        private AccessoriesButton accessoriesButton;
+        private int normalCount;
+        private int cosmeticCount;
+        /** The slot list as it was laid out: Curios rebuilds it on a page change, and every slot is a new one then. */
+        private int seenSize;
+        private Object seenFirst;
+        private final java.util.List<AccessoryWidgets.Anchored> controls = new java.util.ArrayList<>();
+        private final java.util.List<AccessoryWidgets.Eye> eyes = new java.util.ArrayList<>();
+        private int pageCooldown;
+        private float legacyScroll;
+
+        public PlayerInventory(Player player) {
+            this(player, null);
+        }
 
         /**
          * JEI lays its item list out from {@link #getXSize()}, which reports the width plus the guide tab column so
          * the list stays clear of the tabs; clicks on the tabs don't count as clicks outside.
+         * With {@code accessories}, the menu of Curios (an inventory menu with the accessory slots after the 46 of the
+         * inventory) takes the place of the plain one: this screen is then the inventory with the bar open.
          */
-        public PlayerInventory(Player player) {
+        public PlayerInventory(Player player, net.minecraft.world.inventory.InventoryMenu accessories) {
             super(player);
             GlassBook.install(this, new GlassBook.Plain());
             slotColor = FordixPalette.SLOT_HOVER;
+            accessoryMode = accessories != null && swapMenu(accessories);
+        }
+
+        /** The screen of the accessory menu, or null when the menu cannot be put in this screen (the original then stays). */
+        static PlayerInventory withAccessories(Player player, net.minecraft.world.inventory.InventoryMenu menu) {
+            PlayerInventory screen = new PlayerInventory(player, menu);
+            return screen.accessoryMode ? screen : null;
+        }
+
+        private boolean swapMenu(net.minecraft.world.inventory.InventoryMenu accessories) {
+            java.lang.reflect.Field field = Reflect.uniqueField(
+                    net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.class, AbstractContainerMenu.class);
+            if (field == null) {
+                return false;
+            }
+            try {
+                field.set(this, accessories);
+                return true;
+            } catch (IllegalAccessException | RuntimeException e) {
+                return false;
+            }
         }
 
         public int panelWidth() {
@@ -503,103 +551,236 @@ public final class VoidframeScreens {
             }
             if (wide) {
                 placeWide();
-                if (FordixConfig.modScreens() && CuriosView.cells().size() != accessories.size()) {
-                    rebuildWidgets();
-                }
-                adoptCuriosButton();
+            }
+            if (layoutChanged()) {
+                rebuildWidgets();
+            }
+            hideCuriosButton();
+            for (AccessoryWidgets.Anchored control : controls) {
+                control.follow(leftPos, topPos);
+            }
+            if (pageCooldown > 0 && minecraft != null && minecraft.player != null && minecraft.player.tickCount % 5 == 0) {
+                pageCooldown--;
             }
             GlassBook.frame(getRecipeBookComponent(), wide ? topPos : -1, imageHeight);
             super.render(guiGraphics, mouseX, mouseY, partialTick);
-            if (wide && !accessories.isEmpty()) {
-                accessoriesTooltip(guiGraphics, mouseX, mouseY);
+            if (accessoryMode) {
+                accessoryOverlay(guiGraphics, mouseX, mouseY);
             }
+        }
+
+        /** Whether the accessory slots, or whether there are any, changed since the last layout. */
+        private boolean layoutChanged() {
+            if (!FordixConfig.modScreens()) {
+                return false;
+            }
+            if (accessoryMode) {
+                return menu.slots.size() != seenSize || !menu.slots.isEmpty() && menu.slots.get(0) != seenFirst;
+            }
+            return toggleShown() != hasToggle();
+        }
+
+        private boolean hasToggle() {
+            for (AccessoryWidgets.Anchored control : controls) {
+                if (control instanceof AccessoryWidgets.Toggle) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** The button over the player: with Curios, and either on the accessory screen or when the player has accessory slots. */
+        private boolean toggleShown() {
+            return FordixConfig.modScreens() && CuriosLink.loaded() && (accessoryMode || !CuriosView.cells().isEmpty());
         }
 
         private static boolean isCurios(Object widget) {
             return widget.getClass().getName().startsWith("top.theillusivec4.curios.");
         }
 
-        /**
-         * Curios' button sits where the narrow panel has room and moves itself on every frame: it is hidden here and ours, in the
-         * column of buttons under the search field, presses it, so the mod still does everything it does.
-         */
-        private void adoptCuriosButton() {
-            if (curiosButton == null) {
-                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                    if (child instanceof net.minecraft.client.gui.components.AbstractButton button && isCurios(button)) {
-                        curiosButton = button;
-                        button.visible = false;
-                        accessoriesButton = new AccessoriesButton(button, leftPos + 432, topPos + 316, 66, 22);
-                        addRenderableWidget(accessoriesButton);
-                        break;
-                    }
-                }
-            } else {
-                curiosButton.visible = false;
-                accessoriesButton.setX(leftPos + 432);
-                accessoriesButton.setY(topPos + 316);
-            }
-        }
-
-        /** A press on the Curios column opens the accessories screen, the way Curios' button does. */
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (wide && button == 0 && curiosButton != null
-                    && ModLayouts.curiosRowAt((int) mouseX - leftPos, (int) mouseY - topPos, ModLayouts.curiosShown(accessories.size())) >= 0) {
-                net.minecraft.client.Minecraft.getInstance().getSoundManager().play(
-                        net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                curiosButton.onPress();
-                return true;
-            }
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
-
-        private void accessoriesTooltip(GuiGraphics g, int mouseX, int mouseY) {
-            int shown = ModLayouts.curiosShown(accessories.size());
-            int row = ModLayouts.curiosRowAt(mouseX - leftPos, mouseY - topPos, shown);
-            if (row < 0) {
+        /** Curios' own button sits where the narrow panel has room and moves itself on every frame: ours replaces it. */
+        private void hideCuriosButton() {
+            if (!toggleShown()) {
                 return;
             }
-            CuriosView.Cell cell = accessories.get(row);
-            if (!cell.stack().isEmpty()) {
-                g.renderTooltip(font, cell.stack(), mouseX, mouseY);
-            } else {
-                g.renderTooltip(font, java.util.List.of(
-                        Component.translatable("curios.identifier." + cell.identifier()).withStyle(net.minecraft.ChatFormatting.GRAY),
-                        Component.translatable("fordix.mod.curios_open").withStyle(net.minecraft.ChatFormatting.DARK_GRAY)),
-                        java.util.Optional.empty(), mouseX, mouseY);
+            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                if (child instanceof net.minecraft.client.gui.components.AbstractButton button && isCurios(button)) {
+                    button.visible = false;
+                }
             }
         }
 
-        /** A button of the column under the search field: it presses Curios' own button. */
-        private static final class AccessoriesButton extends net.minecraft.client.gui.components.AbstractWidget {
-            private final net.minecraft.client.gui.components.AbstractButton target;
-            private final Glass.Fade fade = new Glass.Fade();
+        /** Over the player's corner, in both layouts: the button that opens or closes the bar. */
+        private void addToggle() {
+            int x = wide ? 156 + dx + 6 : 26 + 3;
+            int y = wide ? 46 + 6 : 8 + 3;
+            AccessoryWidgets.Toggle toggle = new AccessoryWidgets.Toggle(x, y, accessoryMode,
+                    Component.translatable("fordix.mod.curios_toggle"), this::switchBar);
+            controls.add(toggle);
+            addRenderableWidget(toggle);
+        }
 
-            AccessoriesButton(net.minecraft.client.gui.components.AbstractButton target, int x, int y, int w, int h) {
-                super(x, y, w, h, Component.translatable("fordix.mod.curios"));
-                this.target = target;
-                setTooltip(net.minecraft.client.gui.components.Tooltip.create(Component.translatable("fordix.mod.curios_open")));
+        /** The way Curios' button does it: carry the held stack over, and the server opens the other menu. */
+        private void switchBar() {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc.player == null || !CuriosLink.loaded()) {
+                return;
             }
+            net.minecraft.world.item.ItemStack carried = mc.player.containerMenu.getCarried();
+            mc.player.containerMenu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);
+            if (accessoryMode) {
+                mc.setScreen(new InventoryScreen(mc.player));
+                mc.player.containerMenu.setCarried(carried);
+                CuriosLink.openVanilla(carried);
+            } else {
+                if (getRecipeBookComponent().isVisible()) {
+                    getRecipeBookComponent().toggleVisibility();
+                }
+                CuriosLink.openCurios(carried);
+            }
+        }
 
-            @Override
-            protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-                Glass.button(g, getX(), getY(), width, height, Glass.Kind.NORMAL, fade.update(isHoveredOrFocused()), true);
-                net.minecraft.client.gui.Font font = net.minecraft.client.Minecraft.getInstance().font;
-                String text = font.plainSubstrByWidth(getMessage().getString(), width - 6);
-                g.drawString(font, text, getX() + (width - font.width(text)) / 2, getY() + (height - 8) / 2,
-                        Glass.buttonText(Glass.Kind.NORMAL, true), false);
-            }
+        private boolean isAccessory(net.minecraft.world.inventory.Slot slot) {
+            return accessoryMode && slot.index >= 46;
+        }
 
-            @Override
-            public void onClick(double mouseX, double mouseY) {
-                target.onPress();
+        private void measureAccessories() {
+            normalCount = 0;
+            cosmeticCount = 0;
+            if (accessoryMode) {
+                for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                    if (isAccessory(slot)) {
+                        if (isCosmetic(slot)) {
+                            cosmeticCount++;
+                        } else {
+                            normalCount++;
+                        }
+                    }
+                }
             }
+            dx = wide ? ModLayouts.accessoryShift(normalCount, cosmeticCount) : 0;
+        }
 
-            @Override
-            protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput output) {
-                defaultButtonNarrationText(output);
+        private static boolean isCosmetic(net.minecraft.world.inventory.Slot slot) {
+            return slot.getClass().getSimpleName().equals("CosmeticCurioSlot") || CuriosLink.test(slot, "isCosmetic");
+        }
+
+        /** The accessory slots in the bar: normal ones first, eight to a column, then the cosmetic ones beside them. */
+        private void placeAccessories() {
+            int normal = 0;
+            int cosmetic = 0;
+            int firstCosmetic = ModLayouts.accessoryColumns(normalCount);
+            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                if (isAccessory(slot)) {
+                    int[] box = isCosmetic(slot) ? ModLayouts.accessoryBox(cosmetic++, firstCosmetic) : ModLayouts.accessoryBox(normal++, 0);
+                    ContainerLayout.put(slot, box[0], box[1], ContainerLayout.BOX);
+                }
             }
+        }
+
+        /** The eyes, the pager and the cosmetic switch of the bar, from the slots as they are now. */
+        private void addAccessoryControls() {
+            int bottom = 0;
+            int left = Integer.MAX_VALUE;
+            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                if (!isAccessory(slot)) {
+                    continue;
+                }
+                bottom = Math.max(bottom, slot.y + 18);
+                left = Math.min(left, slot.x - 2);
+                if (!isCosmetic(slot) && CuriosLink.test(slot, "canToggleRender")) {
+                    String id = CuriosLink.text(slot, "getIdentifier");
+                    int index = slot.getSlotIndex();
+                    AccessoryWidgets.Eye eye = new AccessoryWidgets.Eye(slot, () -> CuriosLink.toggleRender(id, index));
+                    eyes.add(eye);
+                    controls.add(eye);
+                    addRenderableWidget(eye);
+                }
+            }
+            if (left == Integer.MAX_VALUE) {
+                left = ModLayouts.ACCESS_X;
+                bottom = ModLayouts.ACCESS_Y + ModLayouts.ACCESS_ROWS * ModLayouts.PITCH;
+            }
+            int y = bottom + 6;
+            int x = left;
+            int windowId = menu.containerId;
+            if (CuriosLink.intOf(menu, "totalPages") > 1) {
+                addSmall(x, y, "<", false, "fordix.mod.curios_prev", () -> changePage(windowId, false));
+                addSmall(x + 16, y, ">", false, "fordix.mod.curios_next", () -> changePage(windowId, true));
+                x += 32;
+            }
+            if (CuriosLink.flagOf(menu, "hasCosmetics")) {
+                addSmall(x, y, "C", true, "gui.curios.toggle.cosmetics", () -> CuriosLink.flipCosmetics(menu, windowId));
+            }
+        }
+
+        private void addSmall(int x, int y, String label, boolean cosmetic, String tip, Runnable action) {
+            AccessoryWidgets.Small button = new AccessoryWidgets.Small(x, y, () -> label,
+                    () -> cosmetic && CuriosLink.flagOf(menu, "isViewingCosmetics"), Component.translatable(tip), action);
+            controls.add(button);
+            addRenderableWidget(button);
+        }
+
+        private void changePage(int windowId, boolean next) {
+            if (pageCooldown <= 0) {
+                CuriosLink.page(windowId, next);
+                pageCooldown = 2;
+            }
+        }
+
+        /** Over the items: the eyes, then the name of an empty accessory slot under the pointer. */
+        private void accessoryOverlay(GuiGraphics g, int mouseX, int mouseY) {
+            boolean overEye = false;
+            for (AccessoryWidgets.Eye eye : eyes) {
+                eye.drawOverlay(g, mouseX, mouseY);
+                overEye |= eye.isHoveredOrFocused();
+            }
+            if (minecraft == null || minecraft.player == null || !menu.getCarried().isEmpty()) {
+                return;
+            }
+            if (overEye) {
+                g.renderTooltip(font, Component.translatable("gui.curios.toggle"), mouseX, mouseY);
+                return;
+            }
+            net.minecraft.world.inventory.Slot slot = getSlotUnderMouse();
+            if (slot != null && isAccessory(slot) && !slot.hasItem()) {
+                g.renderTooltip(font, Component.literal(CuriosLink.text(slot, "getSlotName")), mouseX, mouseY);
+            }
+        }
+
+        private boolean overBar(double mouseX, double mouseY) {
+            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                if (isAccessory(slot) && Math.abs(mouseX - (leftPos + slot.x + 8)) < 40 && Math.abs(mouseY - (topPos + slot.y + 8)) < 100) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** The wheel over the bar turns the pages (or scrolls the old menu). */
+        @Override
+        public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+            if (accessoryMode && overBar(mouseX, mouseY)) {
+                if (CuriosLink.intOf(menu, "totalPages") > 1) {
+                    changePage(menu.containerId, delta < 0);
+                    return true;
+                }
+                if (CuriosLink.test(menu, "canScroll")) {
+                    legacyScroll = net.minecraft.util.Mth.clamp(legacyScroll - (float) delta * 0.125F, 0.0F, 1.0F);
+                    CuriosLink.scrollTo(menu, legacyScroll);
+                    return true;
+                }
+            }
+            return super.mouseScrolled(mouseX, mouseY, delta);
+        }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (accessoryMode && CuriosLink.isOpenKey(keyCode, scanCode)) {
+                switchBar();
+                return true;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         @Override
@@ -608,40 +789,51 @@ public final class VoidframeScreens {
             lastBook = false;
             imageWidth = wide ? INV_W : 176;
             imageHeight = wide ? INV_H : 166;
-            accessories = wide && FordixConfig.modScreens() ? CuriosView.cells() : java.util.List.of();
-            dx = accessories.isEmpty() ? 0 : ModLayouts.CURIOS_SHIFT;
-            curiosButton = null;
-            accessoriesButton = null;
+            controls.clear();
+            eyes.clear();
+            measureAccessories();
             super.init();
             if (!wide) {
                 ContainerLayout.restore(menu);
-                return;
-            }
-            int p = ContainerLayout.PITCH;
-            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
-                if (slot instanceof net.minecraft.world.inventory.ResultSlot) {
-                    ContainerLayout.put(slot, 344, 285, ContainerLayout.BIG);
-                } else if (slot.container instanceof Inventory) {
-                    int index = slot.getContainerSlot();
-                    if (index >= 36 && index <= 39) {
-                        // Head, chest, legs, feet down the left column, with room for the name of each piece.
-                        ContainerLayout.put(slot, 18 + dx, 50 + (39 - index) * 32, ContainerLayout.BIG);
-                    } else if (index == 40) {
-                        ContainerLayout.put(slot, 18 + dx, 186, ContainerLayout.BIG);
+            } else {
+                int p = ContainerLayout.PITCH;
+                for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                    if (slot instanceof net.minecraft.world.inventory.ResultSlot) {
+                        ContainerLayout.put(slot, 344, 285, ContainerLayout.BIG);
+                    } else if (slot.container instanceof Inventory) {
+                        int index = slot.getContainerSlot();
+                        if (index >= 36 && index <= 39) {
+                            // Head, chest, legs, feet down the left column, with room for the name of each piece.
+                            ContainerLayout.put(slot, 18 + dx, 50 + (39 - index) * 32, ContainerLayout.BIG);
+                        } else if (index == 40) {
+                            ContainerLayout.put(slot, 18 + dx, 186, ContainerLayout.BIG);
+                        }
+                    }
+                }
+                for (int i = 1; i <= 4; i++) {
+                    ContainerLayout.put(menu.getSlot(i), 258 + (i - 1) % 2 * p, 276 + (i - 1) / 2 * p, ContainerLayout.BOX);
+                }
+                ContainerLayout.playerBlock(menu, 18, 264, 352);
+                placeAccessories();
+                for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
+                    if (child instanceof net.minecraft.client.gui.components.ImageButton button && !isCurios(button)) {
+                        button.setX(leftPos + 506);
+                        button.setY(topPos + 290);
+                        button.setWidth(66);
+                        button.setHeight(22);
                     }
                 }
             }
-            for (int i = 1; i <= 4; i++) {
-                ContainerLayout.put(menu.getSlot(i), 258 + (i - 1) % 2 * p, 276 + (i - 1) / 2 * p, ContainerLayout.BOX);
+            seenSize = menu.slots.size();
+            seenFirst = menu.slots.isEmpty() ? null : menu.slots.get(0);
+            if (toggleShown()) {
+                addToggle();
             }
-            ContainerLayout.playerBlock(menu, 18, 264, 352);
-            for (net.minecraft.client.gui.components.events.GuiEventListener child : children()) {
-                if (child instanceof net.minecraft.client.gui.components.ImageButton button && !isCurios(button)) {
-                    button.setX(leftPos + 506);
-                    button.setY(topPos + 290);
-                    button.setWidth(66);
-                    button.setHeight(22);
-                }
+            if (accessoryMode) {
+                addAccessoryControls();
+            }
+            for (AccessoryWidgets.Anchored control : controls) {
+                control.follow(leftPos, topPos);
             }
         }
 
@@ -656,13 +848,41 @@ public final class VoidframeScreens {
             VoidframeDraw.arrow(guiGraphics, leftPos + 134, topPos + 31, 13, 11, 13);
             InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 51, topPos + 75, 30,
                     (float) (leftPos + 51 - mouseX), (float) (topPos + 75 - 50 - mouseY), minecraft.player);
-            statsCard(guiGraphics);
+            if (accessoryMode) {
+                compactBar(guiGraphics);
+            } else {
+                statsCard(guiGraphics);
+            }
+        }
+
+        /** The accessory slots of the compact layout sit left of the panel, where Curios puts them: a glass panel behind them. */
+        private void compactBar(GuiGraphics g) {
+            int minX = Integer.MAX_VALUE;
+            int minY = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE;
+            int maxY = Integer.MIN_VALUE;
+            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                if (isAccessory(slot)) {
+                    minX = Math.min(minX, slot.x);
+                    minY = Math.min(minY, slot.y);
+                    maxX = Math.max(maxX, slot.x);
+                    maxY = Math.max(maxY, slot.y);
+                }
+            }
+            if (minX == Integer.MAX_VALUE) {
+                return;
+            }
+            Glass.panel(g, leftPos + minX - 8, topPos + minY - 8, maxX - minX + 16 + 16, maxY - minY + 16 + 16 + 14);
+            for (net.minecraft.world.inventory.Slot slot : menu.slots) {
+                if (isAccessory(slot)) {
+                    VoidframeDraw.well(g, leftPos + slot.x - 1, topPos + slot.y - 1, 18, 18);
+                }
+            }
         }
 
         private void wideBackground(GuiGraphics g, int mouseX, int mouseY) {
             VoidframeDraw.wideBackground(g, menu, this, leftPos, topPos, imageWidth, imageHeight);
             // The player in a deep well with a soft light from below.
-            accessoriesColumn(g);
             VoidframeDraw.well(g, leftPos + 156 + dx, topPos + 46, 148, 168);
             g.fillGradient(leftPos + 157 + dx, topPos + 140, leftPos + 303 + dx, topPos + 213, 0x00000000,
                     com.omneria.fordix.client.hud.HudTokens.withAlpha(FordixPalette.ACCENT, 0x28));
@@ -681,31 +901,6 @@ public final class VoidframeScreens {
                 g.fill(bx, by + 1, bx + 1, by + 21, line);
                 g.fill(bx + 21, by + 1, bx + 22, by + 21, line);
                 bigStats(g);
-            }
-        }
-
-        /** The Curios column: a well per slot, the item (read only), the rarity tint, and "+N" under it when it is longer than the room. */
-        private void accessoriesColumn(GuiGraphics g) {
-            int shown = ModLayouts.curiosShown(accessories.size());
-            for (int row = 0; row < shown; row++) {
-                int[] at = ModLayouts.curiosBox(row);
-                int x = leftPos + at[0];
-                int y = topPos + at[1];
-                VoidframeDraw.well(g, x, y, 20, 20);
-                net.minecraft.world.item.ItemStack stack = accessories.get(row).stack();
-                if (!stack.isEmpty()) {
-                    if (com.omneria.fordix.client.tooltip.ItemRarity.isNotable(stack)) {
-                        RarityFrames.tint(g, x, y, 20, com.omneria.fordix.client.tooltip.ItemRarity.rank(stack),
-                                com.omneria.fordix.client.tooltip.ItemRarity.color(stack));
-                    }
-                    g.renderItem(stack, x + 2, y + 2);
-                    g.renderItemDecorations(font, stack, x + 2, y + 2);
-                }
-            }
-            int hidden = ModLayouts.curiosHidden(accessories.size());
-            if (hidden > 0) {
-                g.drawString(font, Tr.s("mod.curios_more", hidden), leftPos + ModLayouts.CURIOS_X,
-                        topPos + ModLayouts.CURIOS_Y + shown * ModLayouts.PITCH + 2, Glass.dim(), false);
             }
         }
 
@@ -775,6 +970,11 @@ public final class VoidframeScreens {
             }
             if (dx > 0) {
                 VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.mod.curios_short"), 18, 34);
+                int pages = CuriosLink.intOf(menu, "totalPages");
+                if (pages > 1) {
+                    guiGraphics.drawString(font, (CuriosLink.intOf(menu, "currentPage") + 1) + "/" + pages,
+                            18 + 34, 50 + ModLayouts.ACCESS_ROWS * ModLayouts.PITCH + 6 + 3, Glass.dim(), false);
+                }
             }
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 18 + dx, 34);
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.craft"), 258, 256);

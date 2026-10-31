@@ -702,9 +702,8 @@
     "fordix.mod.accessories_only": "Accessories only",
     "fordix.mod.pouch_hint": "Click a flower to store it.",
     "fordix.mod.box_hint": "Only baubles fit in here.",
-    "fordix.mod.curios": "Curios",
-    "fordix.mod.curios_more": "+%s more",
-    "fordix.mod.curios_open": "Open the accessories screen",
-    "fordix.mod.curios_empty": "Empty",
-    "fordix.mod.curios_short": "Acc."
+    "fordix.mod.curios_short": "Acc.",
+    "fordix.mod.curios_toggle": "Accessories",
+    "fordix.mod.curios_prev": "Previous page",
+    "fordix.mod.curios_next": "Next page"
 }

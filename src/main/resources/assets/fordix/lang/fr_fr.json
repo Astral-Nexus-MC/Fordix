@@ -702,9 +702,8 @@
     "fordix.mod.accessories_only": "Accessoires uniquement",
     "fordix.mod.pouch_hint": "Cliquez une fleur pour la ranger.",
     "fordix.mod.box_hint": "Seuls les bijoux entrent ici.",
-    "fordix.mod.curios": "Curios",
-    "fordix.mod.curios_more": "+%s autres",
-    "fordix.mod.curios_open": "Ouvrir l'écran des accessoires",
-    "fordix.mod.curios_empty": "Vide",
-    "fordix.mod.curios_short": "Acc."
+    "fordix.mod.curios_short": "Acc.",
+    "fordix.mod.curios_toggle": "Accessoires",
+    "fordix.mod.curios_prev": "Page précédente",
+    "fordix.mod.curios_next": "Page suivante"
 }

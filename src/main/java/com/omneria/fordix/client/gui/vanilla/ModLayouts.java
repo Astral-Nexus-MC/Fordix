@@ -27,12 +27,13 @@ public final class ModLayouts {
     /** The well the player is drawn in: {x, y, width, height}. */
     public static final int[] BOX_PLAYER = {10, BOX_GRID_Y, 68, 86};
 
-    // ---- the Curios column of the survival inventory
-    /** How far the equipment, the player and the attribute card move to the right to make room for the column. */
-    public static final int CURIOS_SHIFT = 32;
-    public static final int CURIOS_X = 18;
-    public static final int CURIOS_Y = 50;
-    public static final int CURIOS_ROWS = 8;
+    // ---- the accessory bar (Curios) at the left of the survival inventory
+    /** The bar starts at the left edge of the panel, below the title row, and holds eight slots per column. */
+    public static final int ACCESS_X = 18;
+    public static final int ACCESS_Y = 50;
+    public static final int ACCESS_ROWS = 8;
+    /** Room kept between the bar and the equipment column. */
+    public static final int ACCESS_GAP = 10;
 
     private ModLayouts() {
     }
@@ -49,30 +50,19 @@ public final class ModLayouts {
         return new int[]{BOX_GRID_X + index % 6 * PITCH, BOX_GRID_Y + index / 6 * PITCH};
     }
 
-    /** How many Curios slots the column draws out of {@code total}: it stops at the room there is. */
-    public static int curiosShown(int total) {
-        return Math.max(0, Math.min(total, CURIOS_ROWS));
+    /** How many columns {@code count} accessory slots take, eight to a column. */
+    public static int accessoryColumns(int count) {
+        return count <= 0 ? 0 : (count + ACCESS_ROWS - 1) / ACCESS_ROWS;
     }
 
-    /** How many Curios slots do not fit in the column (the "+3" under it). */
-    public static int curiosHidden(int total) {
-        return Math.max(0, total - CURIOS_ROWS);
+    /** How far the equipment, the player and the attribute card move right to make room for the bar (0 without slots). */
+    public static int accessoryShift(int normal, int cosmetic) {
+        int columns = accessoryColumns(normal) + accessoryColumns(cosmetic);
+        return columns == 0 ? 0 : columns * PITCH + ACCESS_GAP;
     }
 
-    /** The box of Curios cell {@code row}: {x, y}. */
-    public static int[] curiosBox(int row) {
-        return new int[]{CURIOS_X, CURIOS_Y + row * PITCH};
-    }
-
-    /** The row of the Curios column at a point relative to the panel, or -1. */
-    public static int curiosRowAt(int x, int y, int shown) {
-        if (x < CURIOS_X || x >= CURIOS_X + 20) {
-            return -1;
-        }
-        int row = (y - CURIOS_Y) / PITCH;
-        if (y < CURIOS_Y || row >= shown || (y - CURIOS_Y) % PITCH >= 20) {
-            return -1;
-        }
-        return row;
+    /** The top-left of the box of accessory slot {@code index} of a block whose first column is {@code firstColumn}. */
+    public static int[] accessoryBox(int index, int firstColumn) {
+        return new int[]{ACCESS_X + (firstColumn + index / ACCESS_ROWS) * PITCH, ACCESS_Y + index % ACCESS_ROWS * PITCH};
     }
 }

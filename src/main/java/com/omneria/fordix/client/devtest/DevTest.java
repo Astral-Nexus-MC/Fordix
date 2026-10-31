@@ -199,13 +199,15 @@ public final class DevTest {
         }, 40, false));
         steps.add(new Step("03g0-scale-one", () -> guiScale(mc, 1), 5, false));
         steps.add(new Step("03g-inventory-curios", () -> {
+            // Accessory slots exist: the button over the player shows (the bar is closed in the plain inventory).
             com.omneria.fordix.client.gui.vanilla.CuriosView.force(java.util.List.of(
-                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND), "ring"),
-                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(net.minecraft.world.item.ItemStack.EMPTY, "ring"),
-                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.NETHER_STAR), "charm"),
-                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(net.minecraft.world.item.ItemStack.EMPTY, "necklace")));
+                    new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(net.minecraft.world.item.ItemStack.EMPTY, "ring")));
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, false));
+        steps.add(new Step("03g2-accessory-bar", () -> mc.setScreen(
+                new com.omneria.fordix.client.gui.vanilla.VoidframeScreens.PlayerInventory(mc.player, accessoryMenu(mc, 11))), 40, false));
+        steps.add(new Step("03g3-accessory-bar-full", () -> mc.setScreen(
+                new com.omneria.fordix.client.gui.vanilla.VoidframeScreens.PlayerInventory(mc.player, accessoryMenu(mc, 20))), 40, false));
         steps.add(new Step("03h-inventory-curios-off", () -> {
             com.omneria.fordix.client.gui.vanilla.CuriosView.force(null);
             mc.setScreen(new InventoryScreen(mc.player));
@@ -220,6 +222,8 @@ public final class DevTest {
             mc.setScreen(null);
             guiScale(mc, FORDIX_SCALE);
         }, 5, false));
+        steps.add(new Step("07k-accessory-bar-compact", () -> mc.setScreen(
+                new com.omneria.fordix.client.gui.vanilla.VoidframeScreens.PlayerInventory(mc.player, accessoryMenu(mc, 6))), 40, false));
         steps.add(new Step("04-tooltip-sword", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, true));
         steps.add(new Step("05-advancements", () -> mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements())), 40, false));
         steps.add(new Step("06-loom", () -> mc.setScreen(new LoomScreen(new LoomMenu(1, mc.player.getInventory()),
@@ -1024,5 +1028,17 @@ public final class DevTest {
     private static void guiScale(Minecraft mc, int scale) {
         mc.options.guiScale().set(scale);
         mc.resizeDisplay();
+    }
+
+    /** The inventory menu with {@code count} extra slots after its 46, standing in for the accessory menu of Curios. */
+    private static net.minecraft.world.inventory.InventoryMenu accessoryMenu(Minecraft mc, int count) {
+        net.minecraft.world.SimpleContainer container = new net.minecraft.world.SimpleContainer(count);
+        return new net.minecraft.world.inventory.InventoryMenu(mc.player.getInventory(), true, mc.player) {
+            {
+                for (int i = 0; i < count; i++) {
+                    addSlot(new net.minecraft.world.inventory.Slot(container, i, -18, 12 + i * 18));
+                }
+            }
+        };
     }
 }
