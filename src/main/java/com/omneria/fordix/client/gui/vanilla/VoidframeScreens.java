@@ -774,7 +774,7 @@ public final class VoidframeScreens {
                 guiGraphics.drawString(font, right, INV_W - 14 - font.width(right), 9, Glass.dim(), false);
             }
             if (dx > 0) {
-                VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.mod.curios"), 18, 34);
+                VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.mod.curios_short"), 18, 34);
             }
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.equipment"), 18 + dx, 34);
             VoidframeDraw.label(guiGraphics, font, Component.translatable("fordix.inv.craft"), 258, 256);

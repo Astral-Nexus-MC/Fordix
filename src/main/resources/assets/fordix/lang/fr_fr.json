@@ -705,5 +705,6 @@
     "fordix.mod.curios": "Curios",
     "fordix.mod.curios_more": "+%s autres",
     "fordix.mod.curios_open": "Ouvrir l'écran des accessoires",
-    "fordix.mod.curios_empty": "Vide"
+    "fordix.mod.curios_empty": "Vide",
+    "fordix.mod.curios_short": "Acc."
 }
