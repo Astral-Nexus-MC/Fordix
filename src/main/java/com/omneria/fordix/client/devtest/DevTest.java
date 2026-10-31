@@ -197,6 +197,7 @@ public final class DevTest {
             mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
             mc.setScreen(new InventoryScreen(mc.player));
         }, 40, false));
+        steps.add(new Step("03g0-scale-one", () -> guiScale(mc, 1), 5, false));
         steps.add(new Step("03g-inventory-curios", () -> {
             com.omneria.fordix.client.gui.vanilla.CuriosView.force(java.util.List.of(
                     new com.omneria.fordix.client.gui.vanilla.CuriosView.Cell(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND), "ring"),
@@ -215,6 +216,10 @@ public final class DevTest {
         steps.add(new Step("07i-bauble-box", () -> mc.setScreen(com.omneria.fordix.client.gui.vanilla.ModContainerScreen.forTest(
                 com.omneria.fordix.client.gui.vanilla.ModContainerScreen.Kind.BOX, fakeMenu(mc, 24), mc.player.getInventory(),
                 Component.literal("Bauble Box"))), 30, false));
+        steps.add(new Step("07j-scale-back", () -> {
+            mc.setScreen(null);
+            guiScale(mc, FORDIX_SCALE);
+        }, 5, false));
         steps.add(new Step("04-tooltip-sword", () -> mc.setScreen(new InventoryScreen(mc.player)), 30, true));
         steps.add(new Step("05-advancements", () -> mc.setScreen(new AdvancementsScreen(mc.player.connection.getAdvancements())), 40, false));
         steps.add(new Step("06-loom", () -> mc.setScreen(new LoomScreen(new LoomMenu(1, mc.player.getInventory()),
@@ -1011,5 +1016,13 @@ public final class DevTest {
                 return true;
             }
         };
+    }
+
+    private static final int FORDIX_SCALE = System.getenv("FORDIX_DEVTEST_SCALE") == null ? 3 : Integer.parseInt(System.getenv("FORDIX_DEVTEST_SCALE"));
+
+    /** The interface scale for the screens that only fit at a small one (the wide layouts), back to the test's own after them. */
+    private static void guiScale(Minecraft mc, int scale) {
+        mc.options.guiScale().set(scale);
+        mc.resizeDisplay();
     }
 }
