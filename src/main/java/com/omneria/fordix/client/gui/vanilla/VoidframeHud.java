@@ -154,8 +154,26 @@ public final class VoidframeHud {
         // Saturation: a thin light line, the reserve that's burned before hunger drops.
         int reserve = Math.round(inner * Mth.clamp(food.getSaturationLevel(), 0.0F, 20.0F) / 20.0F);
         fillRange(guiGraphics, x, y, false, inner - reserve, inner, INNER_ROWS - 1, INNER_ROWS, SATURATION);
-        String text = String.valueOf((int) level);
+        // What the food in hand would give: a pulsing ghost beyond the filled part (what AppleSkin shows on vanilla's drumsticks).
+        int gain = heldFoodGain(player, (int) level);
+        if (gain > 0) {
+            int ghost = Math.min(inner, Math.round(inner * ((level + gain) / 20.0F)));
+            int tint = HudTokens.mix(FordixPalette.SLOT_FILL, brighten(color), 0.45F + 0.4F * HudTokens.pulse(System.currentTimeMillis()));
+            fillRange(guiGraphics, x, y, false, inner - ghost, inner - filled, 0, INNER_ROWS, tint);
+        }
+        String text = (int) level + (gain > 0 ? " +" + gain : "");
         guiGraphics.drawString(font, text, x + BAR_WIDTH - 5 - font.width(text), y + 1, FordixPalette.TEXT_BRIGHT, true);
+    }
+
+    /** The hunger the food in the main hand (or else the off hand) would give: 0 for anything that cannot be eaten now. */
+    private static int heldFoodGain(Player player, int level) {
+        for (net.minecraft.world.item.ItemStack stack : new net.minecraft.world.item.ItemStack[]{player.getMainHandItem(), player.getOffhandItem()}) {
+            net.minecraft.world.food.FoodProperties properties = stack.isEmpty() ? null : stack.getFoodProperties(player);
+            if (properties != null) {
+                return player.canEat(properties.canAlwaysEat()) ? HudTokens.foodGain(level, properties.getNutrition()) : 0;
+            }
+        }
+        return 0;
     }
 
     /** The bar's outline and empty track, both cut on the slant. */

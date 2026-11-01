@@ -29,6 +29,11 @@ public final class HudTokens {
         return cycle < start ? -1.0F : (cycle - start) / (float) (GLINT_MS - start);
     }
 
+    /** How much hunger a food would give now: its nutrition, up to what is missing from the 20 points of the bar (0 when full or not food). */
+    public static int foodGain(int foodLevel, int nutrition) {
+        return Math.max(0, Math.min(20 - Math.max(0, foodLevel), nutrition));
+    }
+
     public static boolean isLow(float health, float max) {
         return max > 0.0F && health / max <= LOW;
     }

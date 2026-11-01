@@ -46,4 +46,13 @@ class HudTokensTest {
         assertEquals(0.0F, HudTokens.toastAlpha(2700), 1e-4);
         assertEquals(0.0F, HudTokens.toastAlpha(-5), 1e-4);
     }
+
+    @org.junit.jupiter.api.Test
+    void foodGainStopsAtAFullBar() {
+        org.junit.jupiter.api.Assertions.assertEquals(6, HudTokens.foodGain(10, 6));
+        org.junit.jupiter.api.Assertions.assertEquals(2, HudTokens.foodGain(18, 6));
+        org.junit.jupiter.api.Assertions.assertEquals(0, HudTokens.foodGain(20, 6));
+        org.junit.jupiter.api.Assertions.assertEquals(0, HudTokens.foodGain(10, 0));
+        org.junit.jupiter.api.Assertions.assertEquals(20, HudTokens.foodGain(-3, 40));
+    }
 }
