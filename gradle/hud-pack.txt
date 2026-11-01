@@ -16,7 +16,7 @@ maven.modrinth:corail-tombstone:53ABlBFY   # corail-tombstone forge-1.20.1-9.1.4
 maven.modrinth:create:8amzvn9x   # create mc1.20.1-6.0.8 (exact)
 maven.modrinth:iron-chests:YjbOtYwN   # iron-chests 1.20.1-14.4.4 (exact)
 maven.modrinth:journeymap:gryqmTt2   # journeymap 1.20.1-6.0.6+forge (exact)
-maven.modrinth:jei:9jqubC9n   # just-enough-items-jei 15.56.0.205 (exact)
+maven.modrinth:jei:6E4ps2ER   # jei 15.74.0.234 (la derniere : Polymorph 0.49.11 refuse JEI 15.56.0.205, la version de la liste)
 maven.modrinth:mowzies-mobs:acYEfsJa   # mowzies-mobs 1.8.2 (exact)
 maven.modrinth:polymorph:5lNATnbO   # polymorph 0.49.11+1.20.1 (exact)
 maven.modrinth:quark:DijQLauD   # quark 1.20.1-4.0-462 (exact)

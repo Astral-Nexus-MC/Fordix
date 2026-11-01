@@ -38,6 +38,10 @@ jobs:
           echo "onboardAccessibility:false" > run/options.txt
           printf 'earlyWindowControl = false\n' > run/config/fml.toml
           rm -rf run/fordix-shots
+          # A mod loading error leaves the game on its error screen for ever: stop it as soon as the log says so.
+          ( while sleep 15; do
+              if grep -q "Mod Loading has failed\|\[devtest\] finished" client.log 2>/dev/null; then sleep 10; pkill -f net.neoforged.devlaunch || true; pkill -f xvfb-run || true; break; fi
+            done ) &
           timeout 1500 xvfb-run -a -s "-screen 0 1280x720x24" env FORDIX_DEVTEST=1 FORDIX_DEVTEST_MODS=1 LIBGL_ALWAYS_SOFTWARE=1 \
             MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLSL_VERSION_OVERRIDE=450 JAVA_TOOL_OPTIONS=-Xmx3g \
             ./gradlew --no-daemon runClient -PmodPack < /dev/null 2>&1 | head -c 40000000 > client.log || true
