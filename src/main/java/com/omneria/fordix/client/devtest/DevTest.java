@@ -1073,6 +1073,8 @@ public final class DevTest {
     private void addModSteps(Minecraft mc) {
         steps.add(new Step("m00-mods-setup", () -> {
             mc.setScreen(null);
+            // The steps before leave the player in creative mode, which has no health, no hunger and another inventory.
+            cmd(mc, "gamemode survival");
             cmd(mc, "clear @s");
             cmd(mc, "tp @s ~ ~ ~ 0 0");
         }, 30, false));
