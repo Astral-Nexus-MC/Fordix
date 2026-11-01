@@ -28,3 +28,4 @@ maven.modrinth:supermartijn642s-core-lib:7fVdwsOt   # supermartijn642s-core-lib 
 maven.modrinth:waystones:Y0IgdaoP   # waystones 14.1.21+forge-1.20.1 (exact)
 maven.modrinth:storagedrawers:53npfO5m   # storage-drawers 1.20.1-12.15.1 (latest)
 curse.maven:the-twilight-forest-227639:5468648   # the-twilight-forest (version du test local -PdevMods)
+# (relance du test avec les configs client chargees tot)
