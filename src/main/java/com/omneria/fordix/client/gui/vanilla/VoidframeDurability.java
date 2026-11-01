@@ -22,7 +22,15 @@ public final class VoidframeDurability implements IItemDecorator {
 
     public static void onRegister(RegisterItemDecorationsEvent event) {
         for (Item item : ForgeRegistries.ITEMS) {
-            if (item.canBeDepleted()) {
+            // Some modded items answer from a config that is not loaded yet at this point (Mowzie's wrought axe): then they are
+            // registered anyway, the decorator draws nothing for a stack that has no bar.
+            boolean depletable;
+            try {
+                depletable = item.canBeDepleted();
+            } catch (RuntimeException notReady) {
+                depletable = true;
+            }
+            if (depletable) {
                 event.register(item, INSTANCE);
             }
         }
