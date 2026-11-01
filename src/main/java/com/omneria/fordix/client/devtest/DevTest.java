@@ -1079,14 +1079,20 @@ public final class DevTest {
             cmd(mc, "tp @s ~ ~ ~ 0 0");
         }, 30, false));
         if (modLoaded("appleskin")) {
-            steps.add(new Step("m01-appleskin-food", () -> {
-                mc.gui.getChat().clearMessages(true);
+            steps.add(new Step("m01-food-prep", () -> {
                 cmd(mc, "item replace entity @s hotbar.1 with minecraft:cooked_beef 16");
                 cmd(mc, "item replace entity @s hotbar.0 with minecraft:golden_apple 4");
                 serverFood(mc, 8);
+            }, 40, false));
+            // The answers of the commands above would hide the bars: the chat is emptied after them, and the shot comes right after.
+            steps.add(new Step("m01-appleskin-food", () -> {
+                mc.gui.getChat().clearMessages(true);
                 mc.player.getInventory().selected = 1;
-            }, 60, false));
-            steps.add(new Step("m01b-appleskin-golden-apple", () -> mc.player.getInventory().selected = 0, 40, false));
+            }, 12, false));
+            steps.add(new Step("m01b-appleskin-golden-apple", () -> {
+                mc.gui.getChat().clearMessages(true);
+                mc.player.getInventory().selected = 0;
+            }, 12, false));
         }
         if (modLoaded("create")) {
             steps.add(new Step("m02-create-goggles", () -> {

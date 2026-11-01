@@ -34,3 +34,4 @@ maven.modrinth:small-ships:58DKgNnY   # small-ships-fabric-forge 2.0.0-b1.4 (exa
 # Corail Tombstone : son enchantement lit sa config au chargement des recettes (Quark), avant la config du monde : refuse par l'environnement de dev, accepte par le vrai jeu.
 # relance : mode survie pour les etapes des mods
 # relance : discussion effacee, inventaire a l'echelle 1
+# relance : apercu de nourriture
