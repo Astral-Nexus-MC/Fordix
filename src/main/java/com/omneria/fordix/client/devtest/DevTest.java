@@ -1149,16 +1149,4 @@ public final class DevTest {
             mc.setScreen(null);
         }, 40, false));
     }
-
-    private static boolean configsLoaded;
-
-    /** Loads the client configs of every mod now (see FordixClient): once, when the registries open and every mod is built. */
-    public static void loadClientConfigsEarly() {
-        if (configsLoaded) {
-            return;
-        }
-        configsLoaded = true;
-        net.minecraftforge.fml.config.ConfigTracker.INSTANCE.loadConfigs(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
-                net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get());
-    }
 }

@@ -126,6 +126,11 @@ obfuscation {
     createRemappingConfiguration(configurations.localRuntime)
 }
 
+// With -PmodPack: accessory slots for Curios (it has none of its own), as a data pack of this mod, for the test of the accessory bar.
+if (project.hasProperty('modPack')) {
+    sourceSets.main.resources.srcDir 'src/modpack/resources'
+}
+
 dependencies {
     // If you wish to declare dependencies against mods, make sure to use the 'mod*' configurations so that they're remapped.
     // See https://github.com/neoforged/ModDevGradle/blob/main/LEGACY.md#remapping-mod-dependencies for more information.
