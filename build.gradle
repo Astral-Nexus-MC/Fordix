@@ -41,7 +41,8 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 legacyForge {
     // Specify the version of MinecraftForge to use.
-    version = project.minecraft_version + '-' + project.forge_version
+    // The test with the server's mods runs on the server's Forge (some of them want 47.3 or more); the build and the release stay on forge_version.
+    version = project.minecraft_version + '-' + (project.hasProperty('modPack') ? '47.4.23' : project.forge_version)
 
     parchment {
         mappingsVersion = project.parchment_mappings_version
