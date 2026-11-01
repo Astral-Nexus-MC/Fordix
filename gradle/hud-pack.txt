@@ -12,7 +12,7 @@ maven.modrinth:curios:IPQlZkz1   # curios-api 5.14.1+1.20.1 (exact)
 # maven.modrinth:mythicbotany:1IR2M8cY   # mythicbotany 1.20.1-4.0.4 (exact)
 maven.modrinth:cc-tweaked:gRtcHJd8   # cc-tweaked 1.120.2 (exact)
 maven.modrinth:controlling:LH6Bi6Am   # controlling 12.0.2 (exact)
-maven.modrinth:corail-tombstone:53ABlBFY   # corail-tombstone forge-1.20.1-9.1.4 (exact)
+# maven.modrinth:corail-tombstone:53ABlBFY   # corail-tombstone forge-1.20.1-9.1.4 (exact)
 maven.modrinth:create:8amzvn9x   # create mc1.20.1-6.0.8 (exact, comme le serveur)
 maven.modrinth:iron-chests:YjbOtYwN   # iron-chests 1.20.1-14.4.4 (exact)
 maven.modrinth:journeymap:gryqmTt2   # journeymap 1.20.1-6.0.6+forge (exact)
@@ -31,3 +31,4 @@ curse.maven:the-twilight-forest-227639:5468648   # the-twilight-forest (version 
 # Botania (et MythicBotany, LibX) : sa construction de 1.20.1 lit une option avant le chargement des configs, ce que l'environnement de dev
 # refuse (le vrai jeu seulement avertit) : on ne peut pas le lancer ici. Les emplacements de Curios viennent de src/modpack/resources.
 # relance
+# Corail Tombstone : son enchantement lit sa config au chargement des recettes (Quark), avant la config du monde : refuse par l'environnement de dev, accepte par le vrai jeu.
