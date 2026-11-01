@@ -843,6 +843,9 @@ public final class DevTest {
         }, 3, false));
         steps.add(new Step("27a-console", () -> mc.setScreen(new com.omneria.fordix.client.console.ConsoleScreen(sampleConsole())), 20, false));
         steps.add(new Step("27b-console-closed", () -> mc.setScreen(null), 3, false));
+        if (System.getenv("FORDIX_DEVTEST_MODS") != null) {
+            addModSteps(mc);
+        }
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);
@@ -1047,5 +1050,103 @@ public final class DevTest {
                 }
             }
         };
+    }
+
+    private static boolean modLoaded(String id) {
+        return net.minecraftforge.fml.ModList.get().isLoaded(id);
+    }
+
+    /** The server (integrated) runs this on its own thread: the food of the player is not the client's to set. */
+    private static void serverFood(Minecraft mc, int level) {
+        net.minecraft.server.MinecraftServer server = mc.getSingleplayerServer();
+        if (server != null && mc.player != null) {
+            server.execute(() -> {
+                net.minecraft.server.level.ServerPlayer player = server.getPlayerList().getPlayer(mc.player.getUUID());
+                if (player != null) {
+                    player.getFoodData().setFoodLevel(level);
+                    player.getFoodData().setSaturation(2.0F);
+                }
+            });
+        }
+    }
+
+    private void addModSteps(Minecraft mc) {
+        steps.add(new Step("m00-mods-setup", () -> {
+            mc.setScreen(null);
+            cmd(mc, "clear @s");
+            cmd(mc, "tp @s ~ ~ ~ 0 0");
+        }, 30, false));
+        if (modLoaded("appleskin")) {
+            steps.add(new Step("m01-appleskin-food", () -> {
+                cmd(mc, "item replace entity @s hotbar.1 with minecraft:cooked_beef 16");
+                cmd(mc, "item replace entity @s hotbar.0 with minecraft:golden_apple 4");
+                serverFood(mc, 8);
+                mc.player.getInventory().selected = 1;
+            }, 60, false));
+            steps.add(new Step("m01b-appleskin-golden-apple", () -> mc.player.getInventory().selected = 0, 40, false));
+        }
+        if (modLoaded("create")) {
+            steps.add(new Step("m02-create-goggles", () -> {
+                cmd(mc, "item replace entity @s armor.head with create:goggles");
+                cmd(mc, "execute at @s run setblock ^ ^1 ^2 create:creative_motor");
+                cmd(mc, "item replace entity @s hotbar.4 with create:wrench");
+                mc.player.getInventory().selected = 4;
+            }, 70, false));
+        }
+        if (modLoaded("botania")) {
+            steps.add(new Step("m03-botania-hud", () -> {
+                cmd(mc, "setblock ~ ~1 ~2 minecraft:air");
+                cmd(mc, "execute at @s run setblock ^ ^1 ^2 botania:mana_pool");
+                cmd(mc, "item replace entity @s hotbar.5 with botania:twig_wand");
+                mc.player.getInventory().selected = 5;
+            }, 70, false));
+            steps.add(new Step("m04-flower-pouch", () -> {
+                cmd(mc, "item replace entity @s hotbar.6 with botania:flower_bag");
+                mc.player.getInventory().selected = 6;
+            }, 20, false));
+            steps.add(new Step("m04b-flower-pouch-open", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 60, false));
+            steps.add(new Step("m04c-flower-pouch-close", () -> mc.player.closeContainer(), 10, false));
+            steps.add(new Step("m05-bauble-box", () -> {
+                cmd(mc, "item replace entity @s hotbar.7 with botania:bauble_box");
+                mc.player.getInventory().selected = 7;
+            }, 20, false));
+            steps.add(new Step("m05b-bauble-box-open", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 60, false));
+            steps.add(new Step("m05c-bauble-box-close", () -> mc.player.closeContainer(), 10, false));
+        }
+        if (modLoaded("curios")) {
+            steps.add(new Step("m06-inventory-with-mods", () -> mc.setScreen(new InventoryScreen(mc.player)), 50, false));
+            steps.add(new Step("m06b-curios-opened", () -> com.omneria.fordix.client.gui.vanilla.VoidframeScreens.openAccessoryBar(), 80, false));
+            steps.add(new Step("m06c-curios-closed", () -> mc.player.closeContainer(), 10, false));
+        }
+        if (modLoaded("ironchest")) {
+            steps.add(new Step("m07-iron-chest", () -> {
+                cmd(mc, "setblock ~ ~ ~2 ironchest:iron_chest");
+            }, 20, false));
+            steps.add(new Step("m07b-iron-chest-open", () -> {
+                net.minecraft.core.BlockPos pos = mc.player.blockPosition().offset(0, 0, 2);
+                mc.gameMode.useItemOn(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                                net.minecraft.core.Direction.UP, pos, false));
+            }, 60, false));
+            steps.add(new Step("m07c-iron-chest-close", () -> mc.player.closeContainer(), 10, false));
+        }
+        if (modLoaded("mowziesmobs")) {
+            steps.add(new Step("m08-mowzie-boss", () -> cmd(mc, "execute at @s run summon mowziesmobs:ferrous_wroughtnaut ^ ^ ^7"), 120, false));
+            steps.add(new Step("m08b-mowzie-clear", () -> cmd(mc, "kill @e[type=mowziesmobs:ferrous_wroughtnaut]"), 10, false));
+        }
+        if (modLoaded("smallships")) {
+            steps.add(new Step("m09-ship", () -> {
+                cmd(mc, "execute at @s run summon smallships:cog ~ ~ ~3");
+            }, 30, false));
+            steps.add(new Step("m09b-ship-ride", () -> cmd(mc, "ride @s mount @e[type=smallships:cog,limit=1,sort=nearest]"), 60, false));
+            steps.add(new Step("m09c-ship-leave", () -> {
+                cmd(mc, "ride @s dismount");
+                cmd(mc, "kill @e[type=smallships:cog]");
+            }, 10, false));
+        }
+        steps.add(new Step("m10-final-hud", () -> {
+            mc.player.getInventory().selected = 0;
+            mc.setScreen(null);
+        }, 40, false));
     }
 }

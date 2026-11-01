@@ -20,7 +20,7 @@ group = mod_group_id
 repositories {
     mavenLocal()
     // Only for the optional local test with other mods (-PdevMods): never needed to build or release.
-    if (project.hasProperty('devMods')) {
+    if (project.hasProperty('devMods') || project.hasProperty('modPack')) {
         maven {
             url 'https://cursemaven.com'
             content { includeGroup 'curse.maven' }
@@ -154,6 +154,17 @@ dependencies {
 
     // Twilight Forest and Create in the dev client, to see their items in the in-game test:
     // ./gradlew runClient -PdevMods (remapped by the plugin, like any mod* dependency).
+    // The mods of the server's list that touch the interface, to see Fordix next to them in the in-game test
+    // (./gradlew runClient -PmodPack, used by the "Mods in game" workflow): one Maven coordinate per line of gradle/hud-pack.txt.
+    if (project.hasProperty('modPack')) {
+        file('gradle/hud-pack.txt').readLines().each { line ->
+            String coordinate = line.contains('#') ? line.substring(0, line.indexOf('#')).trim() : line.trim()
+            if (!coordinate.isEmpty()) {
+                modLocalRuntime coordinate
+            }
+        }
+    }
+
     if (project.hasProperty('devMods')) {
         modLocalRuntime 'curse.maven:the-twilight-forest-227639:5468648'
         modLocalRuntime 'maven.modrinth:create:1.20.1-0.5.1.j'

@@ -1,0 +1,52 @@
+name: Mods in game
+
+# The in-game test of Fordix next to the mods of the server's list that touch the interface (gradle/hud-pack.txt, fetched from Modrinth
+# by -PmodPack). Heavier than the normal test, so it only runs on demand: Actions > Mods in game > Run workflow.
+on: workflow_dispatch
+
+jobs:
+  mods:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Install virtual display and software OpenGL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0 libopenal1 libxrandr2 libxcursor1 libxi6 libxinerama1 libxxf86vm1
+
+      - name: Run the client with the mods
+        run: |
+          mkdir -p run/config
+          echo "onboardAccessibility:false" > run/options.txt
+          printf 'earlyWindowControl = false\n' > run/config/fml.toml
+          rm -rf run/fordix-shots
+          timeout 1500 xvfb-run -a -s "-screen 0 1280x720x24" env FORDIX_DEVTEST=1 FORDIX_DEVTEST_MODS=1 LIBGL_ALWAYS_SOFTWARE=1 \
+            MESA_GL_VERSION_OVERRIDE=4.5 MESA_GLSL_VERSION_OVERRIDE=450 JAVA_TOOL_OPTIONS=-Xmx3g \
+            ./gradlew --no-daemon runClient -PmodPack < /dev/null 2>&1 | head -c 40000000 > client.log || true
+          grep -q "\[devtest\] finished" client.log
+
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: mods-screenshots
+          path: |
+            run/fordix-shots/*.png
+            client.log
+            run/logs/latest.log
+            run/crash-reports/*.txt
+          if-no-files-found: warn
+          retention-days: 5

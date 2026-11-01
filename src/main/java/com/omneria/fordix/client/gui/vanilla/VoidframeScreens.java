@@ -429,6 +429,11 @@ public final class VoidframeScreens {
         return PlayerInventory.withAccessories(player, menu);
     }
 
+    /** For the in-game test: asks Curios, as its own button does, to open the accessory menu (the server answers, the screen follows). */
+    public static boolean openAccessoryBar() {
+        return CuriosLink.openCurios(net.minecraft.world.item.ItemStack.EMPTY);
+    }
+
     // ---------- the survival inventory ----------
 
     private static final int INV_W = 600;
