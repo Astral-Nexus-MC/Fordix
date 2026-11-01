@@ -1080,6 +1080,7 @@ public final class DevTest {
         }, 30, false));
         if (modLoaded("appleskin")) {
             steps.add(new Step("m01-appleskin-food", () -> {
+                mc.gui.getChat().clearMessages(true);
                 cmd(mc, "item replace entity @s hotbar.1 with minecraft:cooked_beef 16");
                 cmd(mc, "item replace entity @s hotbar.0 with minecraft:golden_apple 4");
                 serverFood(mc, 8);
@@ -1116,9 +1117,16 @@ public final class DevTest {
             steps.add(new Step("m05c-bauble-box-close", () -> mc.player.closeContainer(), 10, false));
         }
         if (modLoaded("curios")) {
-            steps.add(new Step("m06-inventory-with-mods", () -> mc.setScreen(new InventoryScreen(mc.player)), 50, false));
+            steps.add(new Step("m06-inventory-with-mods", () -> {
+                mc.player.getRecipeBook().getBookSettings().setOpen(net.minecraft.world.inventory.RecipeBookType.CRAFTING, false);
+                guiScale(mc, 1);
+                mc.setScreen(new InventoryScreen(mc.player));
+            }, 50, false));
             steps.add(new Step("m06b-curios-opened", () -> com.omneria.fordix.client.gui.vanilla.VoidframeScreens.openAccessoryBar(), 80, false));
-            steps.add(new Step("m06c-curios-closed", () -> mc.player.closeContainer(), 10, false));
+            steps.add(new Step("m06c-curios-closed", () -> {
+                mc.player.closeContainer();
+                guiScale(mc, FORDIX_SCALE);
+            }, 10, false));
         }
         if (modLoaded("ironchest")) {
             steps.add(new Step("m07-iron-chest", () -> {
