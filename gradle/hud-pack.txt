@@ -30,3 +30,4 @@ maven.modrinth:storagedrawers:53npfO5m   # storage-drawers 1.20.1-12.15.1 (lates
 curse.maven:the-twilight-forest-227639:5468648   # the-twilight-forest (version du test local -PdevMods)
 # Botania (et MythicBotany, LibX) : sa construction de 1.20.1 lit une option avant le chargement des configs, ce que l'environnement de dev
 # refuse (le vrai jeu seulement avertit) : on ne peut pas le lancer ici. Les emplacements de Curios viennent de src/modpack/resources.
+# relance
