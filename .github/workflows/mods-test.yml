@@ -1,8 +1,14 @@
 name: Mods in game
 
 # The in-game test of Fordix next to the mods of the server's list that touch the interface (gradle/hud-pack.txt, fetched from Modrinth
-# by -PmodPack). Heavier than the normal test, so it only runs on demand: Actions > Mods in game > Run workflow.
-on: workflow_dispatch
+# by -PmodPack). Heavier than the normal test: it runs on demand (Actions > Mods in game > Run workflow, once the file is on the
+# default branch) and when this file or the list of mods changes on dev or a session branch.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/mods-test.yml'
+      - 'gradle/hud-pack.txt'
 
 jobs:
   mods:
