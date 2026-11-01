@@ -145,6 +145,16 @@ public final class FordixClient {
         if (DevTest.enabled()) {
             MinecraftForge.EVENT_BUS.register(new DevTest());
         }
+        // Test with the server's mods: a few of them read their client config while the game's resources load, before Forge has loaded
+        // it, which the development environment (not the real game) turns into a crash. Loading the client configs early is harmless.
+        if (DevTest.enabled() && System.getenv("FORDIX_DEVTEST_MODS") != null) {
+            try {
+                net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get().getModEventBus()
+                        .addListener((net.minecraftforge.registries.RegisterEvent event) -> DevTest.loadClientConfigsEarly());
+            } catch (RuntimeException unavailable) {
+                com.omneria.fordix.Fordix.LOGGER.warn("Fordix: could not hook the early client configs of the mods test", unavailable);
+            }
+        }
     }
 
     private FordixClient() {
