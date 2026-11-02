@@ -1052,6 +1052,15 @@ public final class DevTest {
         };
     }
 
+    /** Right-clicks the block at an offset from the player, with the sneak key held or not. */
+    private static void useBlockAt(Minecraft mc, int dx, int dy, int dz, boolean sneak) {
+        net.minecraft.core.BlockPos pos = mc.player.blockPosition().offset(dx, dy, dz);
+        mc.player.input.shiftKeyDown = sneak;
+        mc.gameMode.useItemOn(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                        net.minecraft.core.Direction.UP, pos, false));
+    }
+
     private static boolean modLoaded(String id) {
         return net.minecraftforge.fml.ModList.get().isLoaded(id);
     }
@@ -1145,6 +1154,52 @@ public final class DevTest {
                                 net.minecraft.core.Direction.UP, pos, false));
             }, 60, false));
             steps.add(new Step("m07c-iron-chest-close", () -> mc.player.closeContainer(), 10, false));
+            // The largest chest (12 rows) and the smallest sizes of the mod, to see how the rows fit.
+            steps.add(new Step("m07d-diamond-chest", () -> cmd(mc, "setblock ~ ~ ~2 ironchest:diamond_chest"), 20, false));
+            steps.add(new Step("m07e-diamond-chest-open", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
+            steps.add(new Step("m07f-diamond-chest-close", () -> mc.player.closeContainer(), 10, false));
+            steps.add(new Step("m07g-copper-chest", () -> cmd(mc, "setblock ~ ~ ~2 ironchest:copper_chest"), 20, false));
+            steps.add(new Step("m07h-copper-chest-open", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
+            steps.add(new Step("m07i-copper-chest-close", () -> {
+                mc.player.closeContainer();
+                cmd(mc, "setblock ~ ~ ~2 minecraft:air");
+            }, 10, false));
+        }
+        if (modLoaded("storagedrawers")) {
+            steps.add(new Step("m11-drawers", () -> {
+                cmd(mc, "setblock ~ ~ ~2 storagedrawers:oak_full_drawers_2");
+                cmd(mc, "item replace entity @s hotbar.2 with minecraft:cobblestone 64");
+            }, 20, false));
+            steps.add(new Step("m11b-drawers-world", () -> mc.gui.getChat().clearMessages(true), 30, false));
+            steps.add(new Step("m11c-drawers-gui", () -> useBlockAt(mc, 0, 0, 2, true), 60, false));
+            steps.add(new Step("m11d-drawers-close", () -> {
+                mc.player.input.shiftKeyDown = false;
+                mc.player.closeContainer();
+                cmd(mc, "setblock ~ ~ ~2 minecraft:air");
+            }, 10, false));
+        }
+        if (modLoaded("simplemagnets")) {
+            steps.add(new Step("m12-magnet", () -> {
+                cmd(mc, "item replace entity @s hotbar.3 with simplemagnets:advancedmagnet");
+                mc.player.getInventory().selected = 3;
+            }, 20, false));
+            steps.add(new Step("m12b-magnet-gui", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 60, false));
+            steps.add(new Step("m12c-magnet-close", () -> mc.player.closeContainer(), 10, false));
+            steps.add(new Step("m12d-magnet-sneak", () -> {
+                mc.player.input.shiftKeyDown = true;
+                mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
+            }, 60, false));
+            steps.add(new Step("m12e-magnet-sneak-close", () -> {
+                mc.player.input.shiftKeyDown = false;
+                mc.player.closeContainer();
+            }, 10, false));
+            steps.add(new Step("m12f-coil", () -> cmd(mc, "setblock ~ ~ ~2 simplemagnets:basic_demagnetization_coil"), 20, false));
+            steps.add(new Step("m12g-coil-gui", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
+            steps.add(new Step("m12h-coil-close", () -> {
+                mc.player.closeContainer();
+                cmd(mc, "setblock ~ ~ ~2 minecraft:air");
+                mc.player.getInventory().selected = 0;
+            }, 10, false));
         }
         if (modLoaded("mowziesmobs")) {
             steps.add(new Step("m08-mowzie-boss", () -> cmd(mc, "execute at @s run summon mowziesmobs:ferrous_wroughtnaut ^ ^ ^7"), 120, false));
