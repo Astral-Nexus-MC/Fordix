@@ -34,6 +34,20 @@ public final class HudTokens {
         return Math.max(0, Math.min(20 - Math.max(0, foodLevel), nutrition));
     }
 
+    /** How far the boss bars push what sits under the first one: 19 px for every bar after it, as many bars as the screen's top third holds. */
+    public static int bossStackExtra(int bars, int screenHeight) {
+        int y = 14;
+        int drawn = 0;
+        for (int i = 0; i < bars; i++) {
+            drawn++;
+            y += 19;
+            if (y >= screenHeight / 3) {
+                break;
+            }
+        }
+        return Math.max(0, drawn - 1) * 19;
+    }
+
     public static boolean isLow(float health, float max) {
         return max > 0.0F && health / max <= LOW;
     }

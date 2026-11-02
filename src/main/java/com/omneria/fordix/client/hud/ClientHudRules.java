@@ -13,6 +13,7 @@ public final class ClientHudRules {
     public static void receive(ClientboundHudRulesPayload payload) {
         HudRules.set(payload.required(), payload.forbidden(), payload.proposed());
         HudRules.setTargetRange(payload.targetRange());
+        HudRules.setModPlates(payload.modPlates());
         HudRules.setSituations(payload.situationsTable(), payload.situationsProfiles());
         String code = HudRules.proposed();
         if (!code.isEmpty() && !code.equals(announced)) {

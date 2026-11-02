@@ -37,6 +37,7 @@ public final class FordixServerConfig {
     public static final ForgeConfigSpec.ConfigValue<String> HUD_PROPOSED;
     public static final ForgeConfigSpec.IntValue HUD_TARGET_RANGE;
     public static final ForgeConfigSpec.BooleanValue HUD_DEBUG_REVEAL;
+    public static final ForgeConfigSpec.BooleanValue HUD_MOD_PLATES;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_TABLE;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> HUD_SITUATIONS_PROFILES;
 
@@ -105,6 +106,9 @@ public final class FordixServerConfig {
         HUD_DEBUG_REVEAL = builder.comment("The F3 screen shows the ores of the layer the player is in, the creatures that can spawn in the biome and the slime chunks.",
                         "The server answers these requests only when this is true; false hides those sections for every player.")
                 .define("debugReveal", true);
+        HUD_MOD_PLATES = builder.comment("The HUD of other mods (Botania, Create, Patchouli...) is drawn on the Voidframe glass plate of this server's banner.",
+                        "Imposed on every player: the server decides, there is no option on the client side.")
+                .define("modPlates", true);
         HUD_SITUATIONS_TABLE = builder.comment("The HUD changes with the situation (fighting, mining, riding, facing a boss) for every player, as set here.",
                         "How visible each panel is in each situation, in percent: \"panel | explore | combat | mining | boss | mount\".",
                         "Panels: coordinates, performance, clock, compass, effects. A panel with no line is never dimmed; remove the lines to switch it off.")

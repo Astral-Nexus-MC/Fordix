@@ -154,6 +154,11 @@ HudPlacement.end(guiGraphics, sized);
         }
     }
 
+    /** How many boss bars are on screen. */
+    public static int bossCount(Minecraft minecraft) {
+        return Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events ? events.size() : 0;
+    }
+
     /** Whether a boss bar is on screen. */
     public static boolean bossActive(Minecraft minecraft) {
         return Reflect.get(BOSS_EVENTS, minecraft.gui.getBossOverlay()) instanceof Map<?, ?> events && !events.isEmpty();

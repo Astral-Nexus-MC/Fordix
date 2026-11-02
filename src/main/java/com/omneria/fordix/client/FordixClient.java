@@ -403,6 +403,12 @@ public final class FordixClient {
             ExtraHud.onOverlayPre(event);
         }
 
+        /** Normal priority: after the layout shift of {@link ExtraHud}, the plate goes under what another mod's overlay draws. */
+        @SubscribeEvent
+        static void onModPlates(RenderGuiOverlayEvent.Pre event) {
+            com.omneria.fordix.client.hud.ModPlates.onOverlayPre(event);
+        }
+
         /** Lowest priority, cancelled events included: balances the pose pushed for an overlay that got cancelled. */
         @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
         static void onExtraOverlayPreCancelled(RenderGuiOverlayEvent.Pre event) {

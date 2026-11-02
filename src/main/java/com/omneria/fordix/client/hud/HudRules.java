@@ -16,6 +16,7 @@ public final class HudRules {
     private static volatile String proposed = "";
     private static volatile boolean situationsKnown;
     private static volatile int targetRange = 20;
+    private static volatile boolean modPlates = true;
     private static volatile Map<String, float[]> situationTable = Map.of();
     private static volatile String[] situationProfiles = new String[SituationTable.SITUATIONS.size()];
 
@@ -39,6 +40,15 @@ public final class HudRules {
         String[] codes = new String[SituationTable.SITUATIONS.size()];
         java.util.Arrays.fill(codes, "");
         return codes;
+    }
+
+    /** Whether the HUD of other mods sits on the Voidframe plate: the server decides (true until it says otherwise). */
+    public static boolean modPlates() {
+        return modPlates;
+    }
+
+    public static void setModPlates(boolean on) {
+        modPlates = on;
     }
 
     /** How far a creature is targeted, as the server says (20 before it said anything). */

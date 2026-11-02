@@ -602,6 +602,13 @@ public final class InfoHud {
         }
     }
 
+    /** The boss bars after the first push the target panels down: they sit under the whole stack. */
+    private static int bossExtra(Minecraft minecraft) {
+        return com.omneria.fordix.client.gui.vanilla.HudPlacement.hidden("boss") ? 0
+                : HudTokens.bossStackExtra(com.omneria.fordix.client.gui.vanilla.VoidframeGauges.bossCount(minecraft),
+                        minecraft.getWindow().getGuiScaledHeight());
+    }
+
     /** Centered under the boss bar, but never over the left column of panels on a narrow screen. */
     private static int targetLeft(int width, int boxWidth) {
         int left = Math.max(width / 2 - boxWidth / 2, 4 + LEFT_COLUMN_WIDTH + GAP);
@@ -659,7 +666,7 @@ public final class InfoHud {
         tool = fit(font, tool, boxWidth - 12);
         int boxHeight = TARGET_HEIGHT + (tool.isEmpty() ? 0 : lineH());
         int x = targetLeft(width, boxWidth);
-        int y = 26;
+        int y = 26 + bossExtra(minecraft);
         panel(graphics, x, y, boxWidth, boxHeight);
         ItemStack icon = state.getBlock().getCloneItemStack(minecraft.level, hit.getBlockPos(), state);
         if (icon.isEmpty()) {
@@ -721,7 +728,7 @@ public final class InfoHud {
         }
         int boxHeight = TARGET_HEIGHT + (hint != null ? lineH() : 0);
         int x = targetLeft(width, boxWidth);
-        int y = 26;
+        int y = 26 + bossExtra(minecraft);
         panel(graphics, x, y, boxWidth, boxHeight);
         if (hint != null) {
             graphics.drawString(font, font.plainSubstrByWidth(hint, boxWidth - 12), x + 6, y + 5 + 2 * lineH(), HINT, true);

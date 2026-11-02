@@ -55,4 +55,14 @@ class HudTokensTest {
         org.junit.jupiter.api.Assertions.assertEquals(0, HudTokens.foodGain(10, 0));
         org.junit.jupiter.api.Assertions.assertEquals(20, HudTokens.foodGain(-3, 40));
     }
+
+    @org.junit.jupiter.api.Test
+    void bossBarsPushThePanelsUnderTheWholeStack() {
+        org.junit.jupiter.api.Assertions.assertEquals(0, HudTokens.bossStackExtra(0, 480));
+        org.junit.jupiter.api.Assertions.assertEquals(0, HudTokens.bossStackExtra(1, 480));
+        org.junit.jupiter.api.Assertions.assertEquals(19, HudTokens.bossStackExtra(2, 480));
+        org.junit.jupiter.api.Assertions.assertEquals(38, HudTokens.bossStackExtra(3, 480));
+        // A small screen only holds the bars of its top third.
+        org.junit.jupiter.api.Assertions.assertEquals(19, HudTokens.bossStackExtra(5, 160));
+    }
 }
