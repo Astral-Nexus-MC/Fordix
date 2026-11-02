@@ -42,7 +42,7 @@ public final class ActionBarHud {
 
     /**
      * The messages the game writes itself (the hint to dismount a mount or a boat, the name of the disc being played) sit in private
-     * fields of its HUD class: a Component, then the int of the time left, then the flag of the rainbow color. Found by that shape
+     * fields of its HUD class: a Component, then the int of the time left, then the flag of the rainbow color (whatever their visibility). Found by that shape
      * (the class layout is the same in the development and the production game); when it is not found, the game draws them.
      */
     private static void resolve() {
@@ -59,7 +59,7 @@ public final class ActionBarHud {
             }
             for (int i = 0; i + 2 < fields.size(); i++) {
                 Field a = fields.get(i);
-                if (a.getType() == Component.class && Modifier.isPrivate(a.getModifiers())
+                if (a.getType() == Component.class
                         && fields.get(i + 1).getType() == int.class && fields.get(i + 2).getType() == boolean.class) {
                     gameMessage = a;
                     gameTime = fields.get(i + 1);
@@ -68,7 +68,11 @@ public final class ActionBarHud {
                     return;
                 }
             }
-            Fordix.LOGGER.warn("Fordix: the game's overlay message fields were not found, they stay vanilla");
+            StringBuilder layout = new StringBuilder();
+            for (Field field : fields) {
+                layout.append(field.getType().getSimpleName()).append(' ').append(field.getName()).append(", ");
+            }
+            Fordix.LOGGER.warn("Fordix: the game's overlay message fields were not found, they stay vanilla ({})", layout);
         } catch (RuntimeException e) {
             gameMessage = null;
             Fordix.LOGGER.warn("Fordix: cannot read the game's overlay message fields: {}", e.toString());
