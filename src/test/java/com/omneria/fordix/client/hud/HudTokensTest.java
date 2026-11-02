@@ -63,6 +63,6 @@ class HudTokensTest {
         org.junit.jupiter.api.Assertions.assertEquals(19, HudTokens.bossStackExtra(2, 480));
         org.junit.jupiter.api.Assertions.assertEquals(38, HudTokens.bossStackExtra(3, 480));
         // A small screen only holds the bars of its top third.
-        org.junit.jupiter.api.Assertions.assertEquals(19, HudTokens.bossStackExtra(5, 160));
+        org.junit.jupiter.api.Assertions.assertEquals(19, HudTokens.bossStackExtra(5, 120));
     }
 }
