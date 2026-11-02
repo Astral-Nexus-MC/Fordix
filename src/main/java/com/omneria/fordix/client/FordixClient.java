@@ -531,6 +531,7 @@ public final class FordixClient {
         /** Fordix screens that need more room than the interface has shrink it for as long as they are open. */
         @SubscribeEvent
         static void onScreenInitFit(ScreenEvent.Init.Pre event) {
+            com.omneria.fordix.client.gui.vanilla.QuarkButtons.allow(event.getScreen());
             if (event.getScreen() instanceof com.omneria.fordix.client.gui.FordixScreen screen) {
                 screen.fitInterface(Minecraft.getInstance());
             }
