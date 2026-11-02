@@ -139,6 +139,7 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
         }
         VoidframeDraw.title(g, font, title, titleLabelX, titleLabelY);
         VoidframeDraw.label(g, font, playerInventoryTitle, inventoryLabelX, inventoryLabelY);
-        VoidframeDraw.fillCount(g, font, menu, ownCount, imageWidth, titleLabelY);
+        // Quark's buttons sit at the top right of the slots: the count stops before them.
+        VoidframeDraw.fillCount(g, font, menu, ownCount, imageWidth - 34, titleLabelY);
     }
 }
