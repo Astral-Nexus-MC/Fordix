@@ -63,6 +63,10 @@ public final class VanillaScreens {
         if (mod != null) {
             return mod;
         }
+        Screen chest = ModChestScreen.replacementFor(screen, inventory);
+        if (chest != null) {
+            return chest;
+        }
         if (screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?> container) {
             Screen accessories = VoidframeScreens.accessoryInventory(container, player);
             if (accessories != null) {

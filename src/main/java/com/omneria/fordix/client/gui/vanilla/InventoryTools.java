@@ -75,7 +75,7 @@ public final class InventoryTools {
             return false;
         }
         AbstractContainerMenu menu = container.getMenu();
-        return screen instanceof InventoryScreen || menu instanceof ChestMenu || menu instanceof ShulkerBoxMenu;
+        return screen instanceof InventoryScreen || screen instanceof ModChestScreen || menu instanceof ChestMenu || menu instanceof ShulkerBoxMenu;
     }
 
     /** Whether the inventory search field is being typed in (the guide key must not fire on its letters). */
