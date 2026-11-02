@@ -85,6 +85,10 @@ public final class TextureRecolor {
             new Target(new ResourceLocation("textures/gui/container/creative_inventory/tab_item_search.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 195, 136)),
             // The tab buttons are drawn in glass; only the scroller sprites (x >= 232) stay.
             new Target(new ResourceLocation("textures/gui/container/creative_inventory/tabs.png"), 0, Integer.MAX_VALUE, false, image -> clear(image, 0, 0, 230, 130)),
+            // The screens of Simple Magnets (the demagnetization coils): their grey bodies follow the theme (skipped when the mod is absent).
+            new Target("simplemagnets:textures/demagnetization_coil_screen.png"),
+            new Target("simplemagnets:textures/filtered_demagnetization_coil_screen.png"),
+            new Target("simplemagnets:textures/screen.png"),
             // Only the button rows of widgets.png: the hotbar and its selection frame share the file.
             new Target(new ResourceLocation("textures/gui/widgets.png"), 46, 106));
 

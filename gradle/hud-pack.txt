@@ -44,3 +44,4 @@ maven.modrinth:supermartijn642s-core-lib:7fVdwsOt   # core-lib 1.1.24b
 maven.modrinth:supermartijn642s-config-lib:ZKor79dR   # config-lib 1.1.8
 # relance 20:08 : coffres Iron Chests
 # relance 20:19 : tiroirs et aimant
+# relance 20:27 : textures Simple Magnets
