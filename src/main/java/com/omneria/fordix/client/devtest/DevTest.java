@@ -1167,15 +1167,22 @@ public final class DevTest {
         }
         if (modLoaded("storagedrawers")) {
             steps.add(new Step("m11-drawers", () -> {
-                cmd(mc, "setblock ~ ~ ~2 storagedrawers:oak_full_drawers_2");
+                cmd(mc, "setblock ~ ~1 ~2 minecraft:air");
+                cmd(mc, "setblock ~ ~ ~3 storagedrawers:oak_full_drawers_2 replace");
                 cmd(mc, "item replace entity @s hotbar.2 with minecraft:cobblestone 64");
             }, 20, false));
             steps.add(new Step("m11b-drawers-world", () -> mc.gui.getChat().clearMessages(true), 30, false));
-            steps.add(new Step("m11c-drawers-gui", () -> useBlockAt(mc, 0, 0, 2, true), 60, false));
+            steps.add(new Step("m11c-drawers-sneak", () -> mc.player.input.shiftKeyDown = true, 20, false));
+            steps.add(new Step("m11c2-drawers-gui", () -> {
+                net.minecraft.core.BlockPos pos = mc.player.blockPosition().offset(0, 0, 3);
+                mc.gameMode.useItemOn(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),
+                                net.minecraft.core.Direction.NORTH, pos, false));
+            }, 60, false));
             steps.add(new Step("m11d-drawers-close", () -> {
                 mc.player.input.shiftKeyDown = false;
                 mc.player.closeContainer();
-                cmd(mc, "setblock ~ ~ ~2 minecraft:air");
+                cmd(mc, "setblock ~ ~ ~3 minecraft:air");
             }, 10, false));
         }
         if (modLoaded("simplemagnets")) {
@@ -1185,11 +1192,9 @@ public final class DevTest {
             }, 20, false));
             steps.add(new Step("m12b-magnet-gui", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 60, false));
             steps.add(new Step("m12c-magnet-close", () -> mc.player.closeContainer(), 10, false));
-            steps.add(new Step("m12d-magnet-sneak", () -> {
-                mc.player.input.shiftKeyDown = true;
-                mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND);
-            }, 60, false));
-            steps.add(new Step("m12e-magnet-sneak-close", () -> {
+            steps.add(new Step("m12d-magnet-sneak-hold", () -> mc.player.input.shiftKeyDown = true, 20, false));
+            steps.add(new Step("m12e-magnet-sneak", () -> mc.gameMode.useItem(mc.player, net.minecraft.world.InteractionHand.MAIN_HAND), 60, false));
+            steps.add(new Step("m12e2-magnet-sneak-close", () -> {
                 mc.player.input.shiftKeyDown = false;
                 mc.player.closeContainer();
             }, 10, false));
