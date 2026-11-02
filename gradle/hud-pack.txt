@@ -36,3 +36,4 @@ maven.modrinth:small-ships:58DKgNnY   # small-ships-fabric-forge 2.0.0-b1.4 (exa
 # relance : discussion effacee, inventaire a l'echelle 1
 # relance : apercu de nourriture
 # relance 08:04 : plaques des mods
+# relance 10:57 : message de monture
