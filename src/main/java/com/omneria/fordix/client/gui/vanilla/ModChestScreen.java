@@ -4,12 +4,17 @@ import com.omneria.fordix.FordixConfig;
 import com.omneria.fordix.Tr;
 import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.Glass;
+import com.omneria.fordix.client.gui.widget.FordixButton;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Voidframe version of the chests of Iron Chests (copper to crystal, whose size and number of columns change from one chest to
@@ -27,7 +32,19 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
     private final int rows;
     private final int originalWidth;
     private final int originalHeight;
+    private static final int STRIP = 22;
+    private static final int STRIP_COMPACT = 20;
+    private static final int MARGIN = 8;
+    private static final int ABOVE = GRID_Y;
+    private static final int BELOW = 10 + 168;
+
+    private final List<Slot> own = new ArrayList<>();
+    private final int[] originalX;
+    private final int[] originalY;
     private boolean wide;
+    private boolean paged;
+    private int shownRows;
+    private int page;
 
     private ModChestScreen(AbstractContainerScreen<?> original, Inventory inventory) {
         super(castMenu(original), inventory, original.getTitle());
@@ -50,8 +67,18 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
             count++;
         }
         ownCount = count;
+        originalX = new int[menu.slots.size()];
+        originalY = new int[menu.slots.size()];
+        for (Slot slot : menu.slots) {
+            originalX[slot.index] = slot.x;
+            originalY[slot.index] = slot.y;
+            if (!(slot.container instanceof Inventory)) {
+                own.add(slot);
+            }
+        }
         columns = Math.max(1, inFirstRow);
         rows = Math.max(1, (count + columns - 1) / columns);
+        shownRows = rows;
     }
 
     private static AbstractContainerMenu castMenu(AbstractContainerScreen<?> original) {
@@ -78,7 +105,7 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
     }
 
     private int divider() {
-        return GRID_Y + ContainerLayout.PITCH * rows + 10;
+        return GRID_Y + ContainerLayout.PITCH * shownRows + 10 + (paged ? STRIP : 0);
     }
 
     private int panelHeight() {
@@ -97,17 +124,93 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
 
     @Override
     protected void init() {
-        wide = ContainerLayout.fits(this, panelWidth(), panelHeight()) && ContainerLayout.ready(menu);
+        ContainerLayout.restore(menu);
+        boolean ready = ContainerLayout.ready(menu);
+        wide = false;
+        paged = false;
+        shownRows = rows;
+        if (ready && width >= panelWidth() + 2 * MARGIN) {
+            int fit = ChestPaging.wideRows(height, MARGIN, rows, ContainerLayout.PITCH, ABOVE, BELOW, STRIP);
+            if (fit > 0) {
+                wide = true;
+                shownRows = fit;
+                paged = fit < rows;
+            }
+        }
+        if (!wide && ready) {
+            shownRows = ChestPaging.compactRows(height, MARGIN, originalHeight, rows, 18, STRIP_COMPACT);
+            paged = shownRows < rows;
+        }
+        int pages = ChestPaging.pages(rows, shownRows);
+        page = Math.max(0, Math.min(page, pages - 1));
         imageWidth = wide ? panelWidth() : originalWidth;
-        imageHeight = wide ? panelHeight() : originalHeight;
+        imageHeight = wide ? panelHeight() : originalHeight - compactCut();
         inventoryLabelY = imageHeight - 94;
         super.init();
-        if (!wide) {
-            ContainerLayout.restore(menu);
+        if (!wide && !paged) {
             return;
         }
-        ContainerLayout.grid(menu, ownCount, columns, (panelWidth() - columns * ContainerLayout.PITCH) / 2 + 1, GRID_Y);
-        ContainerLayout.playerBlock(menu, (panelWidth() - 9 * ContainerLayout.PITCH) / 2 + 1, divider() + 26, divider() + 26 + 76);
+        placeSlots();
+        if (paged) {
+            int stripY = wide ? GRID_Y + ContainerLayout.PITCH * shownRows + 2 : originalY[own.get(0).index] + shownRows * 18 + 1;
+            int center = imageWidth / 2;
+            addRenderableWidget(new FordixButton(leftPos + center - 52, topPos + stripY, 20, 18, Component.literal("<"), () -> turn(-1)));
+            addRenderableWidget(new FordixButton(leftPos + center + 32, topPos + stripY, 20, 18, Component.literal(">"), () -> turn(1)));
+        }
+    }
+
+    /** What the compact panel loses when it is paged: the hidden rows, less the strip of the page buttons. */
+    private int compactCut() {
+        return paged ? (rows - shownRows) * 18 - STRIP_COMPACT : 0;
+    }
+
+    private void turn(int by) {
+        int pages = ChestPaging.pages(rows, shownRows);
+        page = Math.max(0, Math.min(pages - 1, page + by));
+        placeSlots();
+    }
+
+    /** The slots of the page shown go to the grid; the others go out of the screen (they stay in the menu, the server knows nothing of it). */
+    private void placeSlots() {
+        if (wide) {
+            int gridX = (panelWidth() - columns * ContainerLayout.PITCH) / 2 + 1;
+            for (int i = 0; i < own.size(); i++) {
+                int row = i / columns;
+                if (row / shownRows == page) {
+                    ContainerLayout.put(own.get(i), gridX + i % columns * ContainerLayout.PITCH,
+                            GRID_Y + row % shownRows * ContainerLayout.PITCH, ContainerLayout.BOX);
+                } else {
+                    ContainerLayout.put(own.get(i), -10000, -10000, ContainerLayout.BOX);
+                }
+            }
+            ContainerLayout.playerBlock(menu, (panelWidth() - 9 * ContainerLayout.PITCH) / 2 + 1, divider() + 26, divider() + 26 + 76);
+            return;
+        }
+        for (int i = 0; i < own.size(); i++) {
+            int row = i / columns;
+            int index = own.get(i).index;
+            if (row / shownRows == page) {
+                int first = (row % shownRows) * columns + i % columns;
+                ContainerLayout.put(own.get(i), originalX[index], originalY[own.get(first).index], 16);
+            } else {
+                ContainerLayout.put(own.get(i), -10000, -10000, 16);
+            }
+        }
+        int shift = compactCut();
+        for (Slot slot : menu.slots) {
+            if (slot.container instanceof Inventory) {
+                ContainerLayout.put(slot, originalX[slot.index], originalY[slot.index] - shift, 16);
+            }
+        }
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (paged && mouseX >= leftPos && mouseX < leftPos + imageWidth && mouseY >= topPos && mouseY < topPos + imageHeight) {
+            turn(delta > 0 ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     @Override
@@ -123,10 +226,15 @@ public final class ModChestScreen extends AbstractContainerScreen<AbstractContai
             VoidframeDraw.wideBackground(g, menu, this, leftPos, topPos, panelWidth(), panelHeight());
             Glass.rule(g, leftPos + 10, topPos + divider(), panelWidth() - 20);
             g.drawString(font, Tr.s("container.hint"), leftPos + 12, topPos + divider() + 26 + 76 + 38, Glass.dim(), false);
-            return;
+        } else {
+            VoidframeDraw.containerBackground(g, menu, leftPos, topPos, imageWidth, imageHeight);
+            VoidframeDraw.titleBand(g, leftPos, topPos, imageWidth);
         }
-        VoidframeDraw.containerBackground(g, menu, leftPos, topPos, imageWidth, imageHeight);
-        VoidframeDraw.titleBand(g, leftPos, topPos, imageWidth);
+        if (paged) {
+            int stripY = wide ? GRID_Y + ContainerLayout.PITCH * shownRows + 2 : originalY[own.get(0).index] + shownRows * 18 + 1;
+            String label = (page + 1) + " / " + ChestPaging.pages(rows, shownRows);
+            g.drawString(font, label, leftPos + imageWidth / 2 - font.width(label) / 2, topPos + stripY + 5, Glass.dim(), false);
+        }
     }
 
     @Override

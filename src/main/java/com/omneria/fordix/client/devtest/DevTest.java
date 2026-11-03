@@ -1157,6 +1157,11 @@ public final class DevTest {
             // The largest chest (12 rows) and the smallest sizes of the mod, to see how the rows fit.
             steps.add(new Step("m07d-diamond-chest", () -> cmd(mc, "setblock ~ ~ ~2 ironchest:diamond_chest"), 20, false));
             steps.add(new Step("m07e-diamond-chest-open", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
+            steps.add(new Step("m07e2-diamond-chest-page2", () -> {
+                if (mc.screen != null) {
+                    mc.screen.mouseScrolled(mc.getWindow().getGuiScaledWidth() / 2.0, mc.getWindow().getGuiScaledHeight() / 2.0, -1.0);
+                }
+            }, 10, false));
             steps.add(new Step("m07f-diamond-chest-close", () -> mc.player.closeContainer(), 10, false));
             steps.add(new Step("m07g-copper-chest", () -> cmd(mc, "setblock ~ ~ ~2 ironchest:copper_chest"), 20, false));
             steps.add(new Step("m07h-copper-chest-open", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
