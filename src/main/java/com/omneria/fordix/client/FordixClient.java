@@ -9,6 +9,7 @@ import com.omneria.fordix.client.gui.Theme;
 import com.omneria.fordix.client.devtest.DevTest;
 import com.omneria.fordix.client.gui.FordixDemoScreen;
 import com.omneria.fordix.client.gui.FordixSettingsScreen;
+import com.omneria.fordix.client.gui.vanilla.GenericScreenSkin;
 import com.omneria.fordix.client.gui.vanilla.RarityFrames;
 import com.omneria.fordix.client.gui.vanilla.TextureRecolor;
 import com.omneria.fordix.client.gui.vanilla.VanillaScreens;
@@ -596,11 +597,13 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onContainerBackground(ContainerScreenEvent.Render.Background event) {
+            Safe.run("GenericScreenSkin.onContainerBackground", GenericScreenSkin::onContainerBackground, event);
             Safe.run("RarityFrames.onContainerBackground", RarityFrames::onContainerBackground, event);
         }
 
         @SubscribeEvent
         static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
+            Safe.run("GenericScreenSkin.onContainerForeground", GenericScreenSkin::onContainerForeground, event);
             Safe.run("RarityFrames.onContainerForeground", RarityFrames::onContainerForeground, event);
             Safe.run("VoidframeChrome.onContainerForeground", VoidframeChrome::onContainerForeground, event);
         }

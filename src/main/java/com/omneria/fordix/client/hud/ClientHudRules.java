@@ -14,6 +14,7 @@ public final class ClientHudRules {
         HudRules.set(payload.required(), payload.forbidden(), payload.proposed());
         HudRules.setTargetRange(payload.targetRange());
         HudRules.setModPlates(payload.modPlates());
+        HudRules.setModScreens(payload.modScreens());
         HudRules.setSituations(payload.situationsTable(), payload.situationsProfiles());
         String code = HudRules.proposed();
         if (!code.isEmpty() && !code.equals(announced)) {

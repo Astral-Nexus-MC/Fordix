@@ -36,7 +36,8 @@ public final class VoidframeButtons {
     /** Screens of the game itself (menus, options, pause): their plain buttons take the glass look; other mods' screens keep theirs. */
     private static boolean isGameScreen(net.minecraft.client.gui.screens.Screen screen) {
         String name = screen.getClass().getName();
-        return name.startsWith("net.minecraft.client.gui.screens.") || name.startsWith("net.minecraftforge.client.gui.");
+        return name.startsWith("net.minecraft.client.gui.screens.") || name.startsWith("net.minecraftforge.client.gui.")
+                || GenericScreenSkin.applies(screen);
     }
 
     /** The main action of a screen (done, back to game, respawn, play) gets the accent button, destructive ones the red edge. */

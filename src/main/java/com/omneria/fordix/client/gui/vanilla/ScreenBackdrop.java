@@ -22,7 +22,8 @@ public final class ScreenBackdrop {
             return;
         }
         String name = screen.getClass().getName();
-        if (!name.startsWith("net.minecraft.client.gui.screens.") && !name.startsWith("net.minecraftforge.client.gui.")) {
+        if (!name.startsWith("net.minecraft.client.gui.screens.") && !name.startsWith("net.minecraftforge.client.gui.")
+                && !GenericScreenSkin.applies(screen)) {
             return;
         }
         GuiGraphics g = event.getGuiGraphics();

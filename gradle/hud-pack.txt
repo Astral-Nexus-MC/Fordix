@@ -47,3 +47,4 @@ maven.modrinth:supermartijn642s-config-lib:ZKor79dR   # config-lib 1.1.8
 # relance 20:27 : textures Simple Magnets
 # relance 20:49 : boutons Quark sur les ecrans Fordix
 # relance 06:26 : pages des coffres
+# relance 09:44 : habillage generique, phases 2 et 3

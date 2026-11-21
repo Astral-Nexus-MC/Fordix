@@ -17,6 +17,7 @@ public final class HudRules {
     private static volatile boolean situationsKnown;
     private static volatile int targetRange = 20;
     private static volatile boolean modPlates = true;
+    private static volatile List<String> modScreens = List.of();
     private static volatile Map<String, float[]> situationTable = Map.of();
     private static volatile String[] situationProfiles = new String[SituationTable.SITUATIONS.size()];
 
@@ -51,6 +52,19 @@ public final class HudRules {
         modPlates = on;
     }
 
+    /** Whether the server gives this screen class (of another mod) the Voidframe look. */
+    public static boolean skinsScreen(String className) {
+        return com.omneria.fordix.hud.ScreenRule.matches(className, modScreens);
+    }
+
+    public static boolean anyModScreens() {
+        return !modScreens.isEmpty();
+    }
+
+    public static void setModScreens(List<String> prefixes) {
+        modScreens = List.copyOf(prefixes);
+    }
+
     /** How far a creature is targeted, as the server says (20 before it said anything). */
     public static int targetRange() {
         return targetRange;
@@ -81,6 +95,7 @@ public final class HudRules {
         set(Set.of(), Set.of(), "");
         situationsKnown = false;
         targetRange = 20;
+        modScreens = List.of();
         situationTable = Map.of();
         situationProfiles = emptyCodes();
     }

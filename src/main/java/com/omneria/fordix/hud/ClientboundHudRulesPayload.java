@@ -9,7 +9,8 @@ import java.util.List;
  * always hidden, and {@code proposed} is a share code of a layout the server suggests (empty: none).
  */
 public record ClientboundHudRulesPayload(List<String> required, List<String> forbidden, String proposed,
-                                         List<String> situationsTable, List<String> situationsProfiles, int targetRange, boolean modPlates) {
+                                         List<String> situationsTable, List<String> situationsProfiles, int targetRange, boolean modPlates,
+                                         List<String> modScreens) {
     public static final int MAX_IDS = 64;
     public static final int MAX_CODE = 30_000;
 
@@ -21,6 +22,7 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         buf.writeCollection(payload.situationsProfiles(), (b, line) -> b.writeUtf(line, MAX_CODE + 64));
         buf.writeVarInt(payload.targetRange());
         buf.writeBoolean(payload.modPlates());
+        buf.writeCollection(payload.modScreens(), (b, line) -> b.writeUtf(line, 200));
     }
 
     public static ClientboundHudRulesPayload decode(FriendlyByteBuf buf) {
@@ -29,8 +31,10 @@ public record ClientboundHudRulesPayload(List<String> required, List<String> for
         String proposed = buf.readUtf(MAX_CODE);
         List<String> table = buf.readList(b -> b.readUtf(256));
         List<String> profiles = buf.readList(b -> b.readUtf(MAX_CODE + 64));
-        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, cap(table), cap(profiles),
-                Math.max(4, Math.min(64, buf.readVarInt())), buf.readBoolean());
+        int range = Math.max(4, Math.min(64, buf.readVarInt()));
+        boolean plates = buf.readBoolean();
+        List<String> screens = buf.readList(b -> b.readUtf(200));
+        return new ClientboundHudRulesPayload(cap(required), cap(forbidden), proposed, cap(table), cap(profiles), range, plates, cap(screens));
     }
 
     private static List<String> cap(List<String> ids) {

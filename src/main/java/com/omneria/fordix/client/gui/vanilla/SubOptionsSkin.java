@@ -119,7 +119,10 @@ public final class SubOptionsSkin {
             h += y - top;
             y = top;
         }
-        blankTitle(screen);
+        // The disconnection screen writes its own title in the middle: the panel gets no second one.
+        if (!(screen instanceof DisconnectedScreen)) {
+            blankTitle(screen);
+        }
         laidOut = screen;
     }
 

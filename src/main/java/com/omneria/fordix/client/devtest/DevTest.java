@@ -1215,9 +1215,11 @@ public final class DevTest {
                 mc.player.input.shiftKeyDown = false;
                 mc.player.closeContainer();
             }, 10, false));
+            steps.add(new Step("m12f0-mod-screens-rule", () -> com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of("com.supermartijn642.core.gui")), 3, false));
             steps.add(new Step("m12f-coil", () -> cmd(mc, "setblock ~ ~ ~2 simplemagnets:basic_demagnetization_coil"), 20, false));
             steps.add(new Step("m12g-coil-gui", () -> useBlockAt(mc, 0, 0, 2, false), 60, false));
             steps.add(new Step("m12h-coil-close", () -> {
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of());
                 mc.player.closeContainer();
                 cmd(mc, "setblock ~ ~ ~2 minecraft:air");
                 mc.player.getInventory().selected = 0;
