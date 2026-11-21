@@ -277,6 +277,7 @@ public final class FordixClient {
             ContainerMemory.clear();
             com.omneria.fordix.client.hud.ClientHudRules.clear();
             com.omneria.fordix.client.hud.HudContextTicker.reset();
+            com.omneria.fordix.client.hud.FarTarget.reset();
         }
 
         @SubscribeEvent

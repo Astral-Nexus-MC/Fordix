@@ -152,6 +152,26 @@ public final class InventoryTools {
         return stack.getHoverName().getString() + " " + key.getPath().replace('_', ' ') + " " + ModNames.of(key.getNamespace());
     }
 
+    /** Whether items without a tag match the search: the text of an item is worked out once for a search, not on every frame. */
+    private static final java.util.Map<net.minecraft.world.item.Item, Boolean> MATCHES = new java.util.HashMap<>();
+    private static String matchesFor = "";
+
+    private static boolean matches(ItemStack stack) {
+        if (stack.hasTag()) {
+            return ChatSearch.matches(textOf(stack), query);
+        }
+        if (!query.equals(matchesFor)) {
+            MATCHES.clear();
+            matchesFor = query;
+        }
+        Boolean known = MATCHES.get(stack.getItem());
+        if (known == null) {
+            known = ChatSearch.matches(textOf(stack), query);
+            MATCHES.put(stack.getItem(), known);
+        }
+        return known;
+    }
+
     /** Over the slots, before tooltips: stacks that don't match are dimmed, the ones that do get an accent frame. */
     public static void onForeground(ContainerScreenEvent.Render.Foreground event) {
         if (!active(event.getContainerScreen()) || query.isBlank()) {
@@ -165,7 +185,7 @@ public final class InventoryTools {
             if (!slot.hasItem()) {
                 continue;
             }
-            if (ChatSearch.matches(textOf(slot.getItem()), query)) {
+            if (matches(slot.getItem())) {
                 graphics.fill(slot.x - 1, slot.y - 1, slot.x + 17, slot.y, accent);
                 graphics.fill(slot.x - 1, slot.y + 16, slot.x + 17, slot.y + 17, accent);
                 graphics.fill(slot.x - 1, slot.y, slot.x, slot.y + 16, accent);

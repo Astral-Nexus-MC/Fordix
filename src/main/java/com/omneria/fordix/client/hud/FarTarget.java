@@ -30,6 +30,36 @@ public final class FarTarget {
         if (viewer == null || minecraft.level == null || range <= 4) {
             return null;
         }
+        // The panels ask on every frame, for the block and for the creature: the search (every creature on the line, then a ray to
+        // it) is done once per game tick.
+        long tick = minecraft.level.getGameTime();
+        if (cachedLevel == minecraft.level && cachedViewer == viewer && cachedTick == tick && cachedRange == range) {
+            return cached;
+        }
+        EntityHitResult found = search(minecraft, viewer, range);
+        cachedLevel = minecraft.level;
+        cachedViewer = viewer;
+        cachedTick = tick;
+        cachedRange = range;
+        cached = found;
+        return found;
+    }
+
+    private static Object cachedLevel;
+    private static Object cachedViewer;
+    private static long cachedTick = Long.MIN_VALUE;
+    private static int cachedRange;
+    private static EntityHitResult cached;
+
+    /** Leaving a world: nothing of it stays referenced. */
+    public static void reset() {
+        cachedLevel = null;
+        cachedViewer = null;
+        cached = null;
+        cachedTick = Long.MIN_VALUE;
+    }
+
+    private static EntityHitResult search(Minecraft minecraft, Entity viewer, int range) {
         Vec3 eye = viewer.getEyePosition(1.0F);
         Vec3 look = viewer.getViewVector(1.0F);
         Vec3 end = eye.add(look.scale(range));

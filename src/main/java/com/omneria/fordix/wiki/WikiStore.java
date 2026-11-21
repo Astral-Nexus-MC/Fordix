@@ -211,6 +211,7 @@ public final class WikiStore {
     public synchronized List<WikiSearch.Hit> search(String wiki, String query, int limit) {
         load();
         List<WikiSearch.Hit> hits = new ArrayList<>();
+        String[] words = WikiSearch.queryWords(query);
         for (Map.Entry<String, Map<String, WikiPage>> entry : pages.entrySet()) {
             if (!wiki.isEmpty() && !entry.getKey().equals(wiki)) {
                 continue;
@@ -219,7 +220,7 @@ public final class WikiStore {
                 if (page.redirectTo != null && !page.redirectTo.isEmpty()) {
                     continue;
                 }
-                int score = WikiSearch.score(page.title, page.body, query);
+                int score = WikiSearch.scoreLower(page.lowerTitle(), page.lowerBody(), words);
                 if (score > 0) {
                     hits.add(new WikiSearch.Hit(entry.getKey(), page.slug, page.title, WikiSearch.snippet(page.body, query), score));
                 }

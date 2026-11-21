@@ -329,14 +329,32 @@ public final class InfoHud {
     }
 
     private static String number(double value) {
-        return String.format(Locale.ROOT, "%.1f", value);
+        return HudFormat.oneDecimal(value);
     }
+
+    private static final java.util.Map<net.minecraft.resources.ResourceLocation, String> BIOMES = new java.util.HashMap<>();
+    private static String biomesLanguage = "";
 
     private static String biome(Minecraft minecraft, BlockPos pos) {
         var key = minecraft.level.getBiome(pos).unwrapKey().map(ResourceKey::location).orElse(null);
         if (key == null) {
             return "?";
         }
+        // The name of a biome is looked up (and capitalised) once per language, not on every frame.
+        String language = minecraft.getLanguageManager().getSelected();
+        if (!language.equals(biomesLanguage)) {
+            BIOMES.clear();
+            biomesLanguage = language;
+        }
+        String known = BIOMES.get(key);
+        if (known == null) {
+            known = biomeName(key);
+            BIOMES.put(key, known);
+        }
+        return known;
+    }
+
+    private static String biomeName(net.minecraft.resources.ResourceLocation key) {
         String translation = "biome." + key.getNamespace() + "." + key.getPath().replace('/', '.');
         if (I18n.exists(translation)) {
             return I18n.get(translation);

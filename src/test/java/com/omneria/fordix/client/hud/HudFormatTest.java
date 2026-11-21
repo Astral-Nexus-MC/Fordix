@@ -49,4 +49,13 @@ class HudFormatTest {
         // Turned to the west (yaw 90) the west target is ahead.
         assertEquals(0, HudFormat.arrowIndex(90, -10, 0));
     }
+
+    @org.junit.jupiter.api.Test
+    void oneDecimalAgreesWithTheFormatter() {
+        double[] values = {0, 0.04, -0.04, 0.05, 12.34, -12.36, 100.0, -100.5, 1234.5678, -0.0, 31.25, -59.94999, 4096.05};
+        for (double value : values) {
+            org.junit.jupiter.api.Assertions.assertEquals(String.format(java.util.Locale.ROOT, "%.1f", value).replace("-0.0", "0.0"),
+                    HudFormat.oneDecimal(value).replace("-0.0", "0.0"), "value " + value);
+        }
+    }
 }

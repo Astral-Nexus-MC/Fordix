@@ -106,31 +106,31 @@ public final class WikiService {
     private static void answer(ServerPlayer player, ServerboundWikiPayload request) {
         WikiStore wikis = store();
         switch (request.kind()) {
-            case LIST -> sendList(player);
-            case INDEX -> {
+            case LIST -> WORKER.execute(() -> sendList(player));
+            case INDEX -> WORKER.execute(() -> {
                 StringBuilder out = new StringBuilder();
                 for (WikiStore.Entry entry : wikis.index(request.wiki())) {
                     out.append(clean(entry.slug())).append('\t').append(clean(entry.title())).append('\t')
                             .append(clean(categoryOf(request.wiki(), entry))).append('\n');
                 }
                 reply(player, request, out.toString().getBytes(StandardCharsets.UTF_8));
-            }
-            case PAGE -> {
+            });
+            case PAGE -> WORKER.execute(() -> {
                 WikiPage page = wikis.resolve(request.wiki(), request.key());
                 WikiInfo info = wikis.info(request.wiki());
                 byte[] data = page == null ? new byte[0]
                         : (clean(page.title) + "\n" + clean(page.source) + "\n" + clean(info == null ? "" : info.credit()) + "\n---\n"
                         + PageCleaner.clean(page.body, info != null && info.javaOnly) + related(wikis, request.wiki(), page)).getBytes(StandardCharsets.UTF_8);
                 reply(player, request, data);
-            }
-            case SEARCH -> {
+            });
+            case SEARCH -> WORKER.execute(() -> {
                 StringBuilder out = new StringBuilder();
                 for (WikiSearch.Hit hit : wikis.search(request.wiki(), request.key(), SEARCH_LIMIT)) {
                     out.append(clean(hit.wiki())).append('\t').append(clean(hit.slug())).append('\t').append(clean(hit.title()))
                             .append('\t').append(clean(hit.snippet())).append('\n');
                 }
                 reply(player, request, out.toString().getBytes(StandardCharsets.UTF_8));
-            }
+            });
             case LOOT -> reply(player, request, loot(player, request.key()).getBytes(StandardCharsets.UTF_8));
             case IMAGE -> WORKER.execute(() -> {
                 byte[] png = images().png(request.key());

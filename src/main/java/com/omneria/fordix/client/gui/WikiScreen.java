@@ -178,10 +178,33 @@ public class WikiScreen extends FordixScreen {
 
     // ---- the list on the left
 
+    private List<Row> rowsCache;
+    private int rowsVersion = -1;
+    private boolean rowsPending;
+    private String rowsKey = "";
+    private List<String> categoriesCache;
+    private int categoriesVersion = -1;
+    private String categoriesKey = "";
+
+    /** The rows of the list, worked out again only when an answer arrived or the wiki, the category or the search changed. */
     private List<Row> rows() {
+        String key = wikiId + "\n" + category + "\n" + activeQuery.strip();
+        int version = ClientWiki.version();
+        // While an answer is awaited the list is asked for on every frame, as before: that is what asks again when a request is lost.
+        if (rowsCache == null || rowsPending || rowsVersion != version || !rowsKey.equals(key)) {
+            rowsPending = false;
+            rowsCache = buildRows();
+            rowsVersion = version;
+            rowsKey = key;
+        }
+        return rowsCache;
+    }
+
+    private List<Row> buildRows() {
         List<Row> rows = new ArrayList<>();
         if (!activeQuery.isBlank()) {
             List<WikiAnswers.Hit> hits = ClientWiki.search("", activeQuery.strip());
+            rowsPending = hits == null;
             if (hits != null) {
                 boolean several = ClientWiki.wikis().size() > 1;
                 for (WikiAnswers.Hit hit : hits) {
@@ -192,6 +215,7 @@ public class WikiScreen extends FordixScreen {
             return rows;
         }
         List<WikiAnswers.Entry> index = ClientWiki.index(wikiId);
+        rowsPending = index == null;
         if (index != null) {
             List<WikiAnswers.Entry> kept = new ArrayList<>();
             for (WikiAnswers.Entry entry : index) {
@@ -226,6 +250,16 @@ public class WikiScreen extends FordixScreen {
 
     /** The categories the open wiki's pages are in, the usual ones first; empty when the server doesn't say. */
     private List<String> categories() {
+        int version = ClientWiki.version();
+        if (categoriesCache == null || ClientWiki.index(wikiId) == null || categoriesVersion != version || !categoriesKey.equals(wikiId)) {
+            categoriesCache = buildCategories();
+            categoriesVersion = version;
+            categoriesKey = wikiId;
+        }
+        return categoriesCache;
+    }
+
+    private List<String> buildCategories() {
         List<WikiAnswers.Entry> index = ClientWiki.index(wikiId);
         Map<String, Integer> counts = new LinkedHashMap<>();
         if (index != null) {

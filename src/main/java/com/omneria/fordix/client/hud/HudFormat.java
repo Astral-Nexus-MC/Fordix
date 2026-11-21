@@ -7,6 +7,12 @@ public final class HudFormat {
     private HudFormat() {
     }
 
+    /** One decimal, as "%.1f" writes it in the root locale, without the formatter (three coordinates are written on every frame). */
+    public static String oneDecimal(double value) {
+        long tenths = Math.round(Math.abs(value) * 10.0D);
+        return (value < 0 && tenths != 0 ? "-" : "") + tenths / 10 + "." + tenths % 10;
+    }
+
     /** The game clock "HH:MM" for a day time in ticks: tick 0 is 06:00, a day lasts 24000 ticks. */
     public static String gameClock(long dayTime) {
         long tick = Math.floorMod(dayTime, 24000L);

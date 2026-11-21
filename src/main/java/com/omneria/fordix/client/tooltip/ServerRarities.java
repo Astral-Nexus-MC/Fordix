@@ -24,11 +24,13 @@ public final class ServerRarities {
     public static void set(List<String> lines) {
         rules = RarityRules.parse(lines.isEmpty() ? RarityRules.DEFAULT_LINES : RarityRules.withBuiltins(lines));
         CACHE.clear();
+        ItemRarity.invalidate();
     }
 
     public static void clear() {
         rules = RarityRules.parse(RarityRules.DEFAULT_LINES);
         CACHE.clear();
+        ItemRarity.invalidate();
     }
 
     /** The tier the rules give this item, if any rule matches. */

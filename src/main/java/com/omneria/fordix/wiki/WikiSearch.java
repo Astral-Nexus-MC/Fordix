@@ -15,12 +15,19 @@ public final class WikiSearch {
 
     /** The score of a page for a query, 0 when a word is missing. */
     public static int score(String title, String body, String query) {
-        String[] words = words(query);
+        return scoreLower(title.toLowerCase(Locale.ROOT), body.toLowerCase(Locale.ROOT), words(query));
+    }
+
+    /** The words of a query, lower case, as {@link #scoreLower} wants them (worked out once for all the pages). */
+    public static String[] queryWords(String query) {
+        return words(query);
+    }
+
+    /** The score for a title and a text already in lower case, and the words of the query. */
+    public static int scoreLower(String lowerTitle, String lowerBody, String[] words) {
         if (words.length == 0) {
             return 0;
         }
-        String lowerTitle = title.toLowerCase(Locale.ROOT);
-        String lowerBody = body.toLowerCase(Locale.ROOT);
         int score = 0;
         for (String word : words) {
             boolean inTitle = lowerTitle.contains(word);

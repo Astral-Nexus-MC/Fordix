@@ -35,8 +35,8 @@ public final class ModPlates {
     private static final int ALPHA_THRESHOLD = 16;
     /** The size of a cell of the grouping grid, in GUI pixels. */
     private static final int CELL = 6;
-    private static final long EVERY_MS = 250L;
-    private static final long STALE_MS = 900L;
+    private static final long EVERY_MS = 500L;
+    private static final long STALE_MS = 1500L;
     private static final int PAD = 4;
     private static final int MAX_GROUPS = 6;
 
@@ -139,12 +139,13 @@ public final class ModPlates {
         int columns = (guiWidth + CELL - 1) / CELL;
         int rows = (guiHeight + CELL - 1) / CELL;
         boolean[] used = new boolean[columns * rows];
-        int[] pixels = image.makePixelArray();
-        for (int row = 0; row < h; row++) {
+        // Every second pixel of every second row is enough for cells of several GUI pixels, and reading them one by one spares the
+        // array of the whole picture (half a million integers) that this used to allocate each time.
+        for (int row = 0; row < h; row += 2) {
             int top = h - 1 - row; // GL reads the texture bottom to top
             int cellRow = Math.min(rows - 1, (int) (top / scale) / CELL);
-            for (int column = 0; column < w; column++) {
-                if ((pixels[row * w + column] >>> 24) > ALPHA_THRESHOLD) {
+            for (int column = 0; column < w; column += 2) {
+                if ((image.getPixelRGBA(column, row) >>> 24) > ALPHA_THRESHOLD) {
                     used[cellRow * columns + Math.min(columns - 1, (int) (column / scale) / CELL)] = true;
                 }
             }

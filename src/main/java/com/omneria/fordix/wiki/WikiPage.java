@@ -17,6 +17,28 @@ public final class WikiPage {
     /** What kind of page this is for the list of a wiki ("buildings" for a site imported by folder); empty when not known. */
     public String category = "";
 
+    private transient String lowerSource;
+    private transient String lowerText = "";
+    private transient String lowerTitleSource;
+    private transient String lowerTitleText = "";
+
+    /** The text in lower case, worked out once for the searches (and again if the text is replaced). */
+    public String lowerBody() {
+        if (lowerSource != body) {
+            lowerText = body.toLowerCase(java.util.Locale.ROOT);
+            lowerSource = body;
+        }
+        return lowerText;
+    }
+
+    public String lowerTitle() {
+        if (lowerTitleSource != title) {
+            lowerTitleText = title.toLowerCase(java.util.Locale.ROOT);
+            lowerTitleSource = title;
+        }
+        return lowerTitleText;
+    }
+
     public WikiPage() {
     }
 

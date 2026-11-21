@@ -24,7 +24,21 @@ public final class ItemRarity {
     private ItemRarity() {
     }
 
-    private record Resolved(String label, int color, boolean notable, int rank) {
+    /** What a stack's rarity comes to; the name is turned into the game language only when somebody asks for it. */
+    private record Resolved(String name, int color, boolean notable, int rank) {
+        String label() {
+            return labelOf(name);
+        }
+    }
+
+    /**
+     * The result for a stack with no tag, which depends only on its item (the slots of every container ask for it on each frame).
+     * Dropped when the server's rarity rules change; stacks with a tag (enchanted, renamed) are worked out each time.
+     */
+    private static final Map<net.minecraft.world.item.Item, Resolved> CACHE = new java.util.HashMap<>();
+
+    public static void invalidate() {
+        CACHE.clear();
     }
 
     /** Opaque ARGB color of the stack's rarity. */
@@ -59,10 +73,23 @@ public final class ItemRarity {
     }
 
     private static Resolved resolve(ItemStack stack) {
+        if (stack.hasTag()) {
+            return compute(stack);
+        }
+        net.minecraft.world.item.Item item = stack.getItem();
+        Resolved known = CACHE.get(item);
+        if (known == null) {
+            known = compute(stack);
+            CACHE.put(item, known);
+        }
+        return known;
+    }
+
+    private static Resolved compute(ItemStack stack) {
         Optional<RarityTier> ruled = ServerRarities.tierOf(stack.getItem());
         if (ruled.isPresent() && !(stack.getItem() instanceof EnchantedBookItem)) {
             RarityTier tier = ruled.get().bump(EnchantPower.tiersAdded(EnchantPower.score(enchantmentsOf(stack))));
-            return new Resolved(labelOf(tier.name()), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON, tier.ordinal());
+            return new Resolved(tier.name(), RarityPalette.colorOf(tier.name()), tier != RarityTier.COMMON, tier.ordinal());
         }
         Rarity rarity = stack.getRarity();
         Integer color = RarityPalette.colorOf(rarity.name());
@@ -73,7 +100,7 @@ public final class ItemRarity {
         RarityTier known = RarityTier.fromName(rarity.name());
         int rank = known != null ? known.ordinal() : rarity.name().toUpperCase(java.util.Locale.ROOT).contains("LEGEND") ? 4
                 : "COMMON".equals(rarity.name()) ? 0 : 2;
-        return new Resolved(labelOf(rarity.name()), color, !"COMMON".equals(rarity.name()), rank);
+        return new Resolved(rarity.name(), color, !"COMMON".equals(rarity.name()), rank);
     }
 
     private static List<EnchantPower.Entry> enchantmentsOf(ItemStack stack) {

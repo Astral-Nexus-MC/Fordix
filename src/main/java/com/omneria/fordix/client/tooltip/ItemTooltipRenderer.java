@@ -77,6 +77,40 @@ public final class ItemTooltipRenderer {
     private ItemTooltipRenderer() {
     }
 
+    /** What a tooltip shows that does not depend on the frame: worked out for the stack, kept for a quarter of a second. */
+    private record Prepared(List<Chip> chips, List<Section> sections, GearCompare.Verdict verdict, String subLine, String verdictLine) {
+    }
+
+    private static final long KEEP_MS = 250L;
+    private static ItemStack preparedFor = ItemStack.EMPTY;
+    private static boolean preparedCompact;
+    private static long preparedAt;
+    private static Prepared prepared;
+
+    /**
+     * The chips, the attribute sections, the verdict and the lines of the header for a stack. They were rebuilt on every frame of a
+     * hover (attribute modifiers, enchantments, translations, strings); the worn items they are compared with change rarely, hence
+     * the short time they are kept.
+     */
+    private static Prepared prepared(ItemStack stack, boolean compact) {
+        long now = net.minecraft.Util.getMillis();
+        if (prepared != null && compact == preparedCompact && now - preparedAt < KEEP_MS && ItemStack.isSameItemSameTags(preparedFor, stack)) {
+            return prepared;
+        }
+        List<Chip> chips = compact ? List.of() : chipsOf(stack);
+        List<GearCompare.Diff> diffs = new ArrayList<>();
+        String[] comparedWith = new String[1];
+        List<Section> sections = sections(stack, diffs, comparedWith);
+        GearCompare.Verdict verdict = diffs.isEmpty() ? null : GearCompare.verdict(diffs);
+        String subLine = (typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack)).toUpperCase(java.util.Locale.ROOT);
+        String verdictLine = verdict == null ? null : Tr.s("tooltip.compare." + verdict.name().toLowerCase(java.util.Locale.ROOT), comparedWith[0]);
+        prepared = new Prepared(chips, sections, verdict, subLine, verdictLine);
+        preparedFor = stack.copy();
+        preparedCompact = compact;
+        preparedAt = now;
+        return prepared;
+    }
+
     public static void onPre(RenderTooltipEvent.Pre event) {
         ItemStack stack = event.getItemStack();
         if (stack.isEmpty() || event.getComponents().isEmpty()) {
@@ -85,17 +119,15 @@ public final class ItemTooltipRenderer {
         boolean compact = compact();
         int headerHeight = compact ? COMPACT_HEADER_HEIGHT : HEADER_HEIGHT;
         int sectionHeight = compact ? 0 : SECTION_HEIGHT;
-        List<Chip> chips = compact ? List.of() : chipsOf(stack);
+        Prepared prepared = prepared(stack, compact);
+        List<Chip> chips = prepared.chips();
         Font font = event.getFont();
         List<ClientTooltipComponent> components = event.getComponents();
         ClientTooltipComponent title = components.get(0);
         List<ClientTooltipComponent> rest = components.subList(1, components.size());
-        List<GearCompare.Diff> diffs = new ArrayList<>();
-        String[] comparedWith = new String[1];
-        List<Section> sections = sections(stack, diffs, comparedWith);
-        GearCompare.Verdict verdict = diffs.isEmpty() ? null : GearCompare.verdict(diffs);
-
-        String subLine = (typeOf(stack) + " · " + ItemRarity.label(stack) + " · " + modName(stack)).toUpperCase(java.util.Locale.ROOT);
+        List<Section> sections = prepared.sections();
+        GearCompare.Verdict verdict = prepared.verdict();
+        String subLine = prepared.subLine();
         int width = Math.max(title.getWidth(font) + 30, compact ? 0 : font.width(subLine) + 30);
         for (Chip chip : chips) {
             width = Math.max(width, chip.width(font) + 8 + font.width(chip.effect()));
@@ -111,7 +143,7 @@ public final class ItemTooltipRenderer {
         for (Section section : sections) {
             height += sectionHeight + section.rows().size() * ROW_HEIGHT + 4;
         }
-        String verdictLine = verdict == null ? null : Tr.s("tooltip.compare." + verdict.name().toLowerCase(java.util.Locale.ROOT), comparedWith[0]);
+        String verdictLine = prepared.verdictLine();
         if (verdictLine != null) {
             height += ROW_HEIGHT + 4;
             width = Math.max(width, font.width(verdictLine) + 12);

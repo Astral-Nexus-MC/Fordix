@@ -27,7 +27,8 @@ public final class RarityFrames {
     private static final int SPARK = 0xFFF4C8;
     /** The first moment each slot of the open screen was seen holding what it holds, to flash new arrivals (not the first view). */
     private static final Map<Integer, Long> ARRIVED = new HashMap<>();
-    private static final Map<Integer, ItemStack> LAST = new HashMap<>();
+    /** What each slot held on the last frame (its item only: a copy of the stack on every frame would cost far more). */
+    private static final Map<Integer, net.minecraft.world.item.Item> LAST = new HashMap<>();
     private static final Map<Integer, Long> HOVERED = new HashMap<>();
     private static Object watching;
     private static int hoveredIndex = -1;
@@ -85,11 +86,11 @@ public final class RarityFrames {
                 continue;
             }
             ItemStack stack = slot.getItem();
-            ItemStack before = LAST.get(slot.index);
-            if (before != null && !stack.isEmpty() && (before.isEmpty() || before.getItem() != stack.getItem())) {
+            net.minecraft.world.item.Item before = LAST.get(slot.index);
+            if (before != null && !stack.isEmpty() && (before == net.minecraft.world.item.Items.AIR || before != stack.getItem())) {
                 ARRIVED.put(slot.index, now);
             }
-            LAST.put(slot.index, stack.copy());
+            LAST.put(slot.index, stack.isEmpty() ? net.minecraft.world.item.Items.AIR : stack.getItem());
             if (!ItemRarity.isNotable(stack)) {
                 continue;
             }
