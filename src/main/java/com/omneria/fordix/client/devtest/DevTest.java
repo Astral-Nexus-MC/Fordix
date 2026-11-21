@@ -1217,6 +1217,23 @@ public final class DevTest {
                 cmd(mc, "setblock ~ ~ ~3 minecraft:air");
             }, 10, false));
         }
+        if (modLoaded("waystones")) {
+            steps.add(new Step("m13-waystone", () -> {
+                cmd(mc, "setblock ~ ~ ~3 minecraft:air");
+                cmd(mc, "setblock ~ ~ ~3 waystones:waystone");
+            }, 30, false));
+            steps.add(new Step("m13b-waystone-before", () -> useBlockAt(mc, 0, 0, 3, false), 60, false));
+            steps.add(new Step("m13c-waystone-close", () -> {
+                mc.player.closeContainer();
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of("net.blay09.mods.waystones.client.gui.screen"));
+            }, 10, false));
+            steps.add(new Step("m13d-waystone-skinned", () -> useBlockAt(mc, 0, 0, 3, false), 60, false));
+            steps.add(new Step("m13e-waystone-close", () -> {
+                mc.player.closeContainer();
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of());
+                cmd(mc, "setblock ~ ~ ~3 minecraft:air");
+            }, 10, false));
+        }
         if (modLoaded("simplemagnets")) {
             steps.add(new Step("m12-magnet", () -> {
                 cmd(mc, "item replace entity @s hotbar.3 with simplemagnets:advancedmagnet");
