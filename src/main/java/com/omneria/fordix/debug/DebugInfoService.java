@@ -47,6 +47,11 @@ public final class DebugInfoService {
     private static final long SLIME_SALT = 987234911L;
     private static final Map<UUID, Long> LAST_ANSWER = new HashMap<>();
 
+    /** A player who left is not remembered. */
+    public static void forget(UUID player) {
+        LAST_ANSWER.remove(player);
+    }
+
     private DebugInfoService() {
     }
 

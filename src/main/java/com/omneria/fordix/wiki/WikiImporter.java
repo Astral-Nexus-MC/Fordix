@@ -43,7 +43,7 @@ public final class WikiImporter {
         return thread;
     });
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15))
-            .followRedirects(HttpClient.Redirect.NORMAL).build();
+            .followRedirects(HttpClient.Redirect.NEVER).build();
 
     private final WikiStore store;
     private final ImageStore images;
@@ -470,16 +470,36 @@ public final class WikiImporter {
     static byte[] bytes(String url, int limit) throws IOException {
         for (int attempt = 0; ; attempt++) {
             try {
-                HttpRequest request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(25))
-                        .header("User-Agent", AGENT).GET().build();
-                HttpResponse<InputStream> response = HTTP.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                // Redirects are followed by hand, up to five times, each hop checked: a page cannot send the server to its own network.
+                String current = url;
+                HttpResponse<InputStream> response = null;
+                for (int hop = 0; hop < 6; hop++) {
+                    URI uri = URI.create(current);
+                    HostGuard.check(uri);
+                    HttpRequest request = HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(25))
+                            .header("User-Agent", AGENT).GET().build();
+                    response = HTTP.send(request, HttpResponse.BodyHandlers.ofInputStream());
+                    int status = response.statusCode();
+                    if (status == 301 || status == 302 || status == 303 || status == 307 || status == 308) {
+                        String location = response.headers().firstValue("location").orElse("");
+                        response.body().close();
+                        if (location.isEmpty() || hop == 5) {
+                            throw new IOException("bad redirect from " + current);
+                        }
+                        current = uri.resolve(location).toString();
+                        continue;
+                    }
+                    break;
+                }
                 if (response.statusCode() == 429 || response.statusCode() >= 500) {
+                    response.body().close();
                     if (attempt == 0) {
                         pause();
                         continue;
                     }
                 }
                 if (response.statusCode() != 200) {
+                    response.body().close();
                     throw new IOException("HTTP " + response.statusCode());
                 }
                 try (InputStream in = response.body()) {

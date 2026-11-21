@@ -128,6 +128,7 @@ public final class ModPlates {
         } catch (RuntimeException | LinkageError e) {
             Fordix.LOGGER.warn("Fordix: mod plates are off, an overlay could not be measured: {}", e.toString());
             failed = true;
+            close();
             return null;
         } finally {
             minecraft.getMainRenderTarget().bindWrite(true);

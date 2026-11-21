@@ -33,6 +33,11 @@ public final class FordixConsoles {
     private FordixConsoles() {
     }
 
+    /** A player who left is not remembered. */
+    public static void forget(UUID player) {
+        LAST_ACTION.remove(player);
+    }
+
     public static void register(String kind, BiFunction<ServerPlayer, CompoundTag, CompoundTag> onAction) {
         HANDLERS.put(kind, onAction);
     }

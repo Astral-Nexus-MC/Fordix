@@ -58,5 +58,7 @@ public class Fordix {
     private void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         PanelRegistry.forgetPlayer(event.getEntity().getUUID());
         com.omneria.fordix.wiki.WikiService.forget(event.getEntity().getUUID());
+        com.omneria.fordix.console.FordixConsoles.forget(event.getEntity().getUUID());
+        com.omneria.fordix.debug.DebugInfoService.forget(event.getEntity().getUUID());
     }
 }

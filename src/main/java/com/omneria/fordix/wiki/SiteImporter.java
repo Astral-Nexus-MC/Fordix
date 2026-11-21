@@ -116,13 +116,15 @@ public final class SiteImporter {
         String current = url;
         for (int hop = 0; hop < 5; hop++) {
             try {
+                HostGuard.check(URI.create(current));
                 java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder(URI.create(current))
                         .timeout(java.time.Duration.ofSeconds(30)).header("User-Agent", "Fordix-wiki-import/1.0 (Minecraft server mod; in-game copy of a page)")
                         .GET().build();
-                java.net.http.HttpResponse<byte[]> response = HTTP.send(request, java.net.http.HttpResponse.BodyHandlers.ofByteArray());
+                java.net.http.HttpResponse<java.io.InputStream> response = HTTP.send(request, java.net.http.HttpResponse.BodyHandlers.ofInputStream());
                 int status = response.statusCode();
                 if (status == 301 || status == 302 || status == 303 || status == 307 || status == 308) {
                     String location = response.headers().firstValue("location").orElse("");
+                    response.body().close();
                     if (location.isEmpty()) {
                         throw new IOException("HTTP " + status);
                     }
@@ -138,12 +140,16 @@ public final class SiteImporter {
                     continue;
                 }
                 if (status != 200) {
+                    response.body().close();
                     throw new IOException("HTTP " + status);
                 }
-                if (response.body().length > 12_000_000) {
-                    throw new IOException("answer too big");
+                try (java.io.InputStream in = response.body()) {
+                    byte[] data = in.readNBytes(12_000_001);
+                    if (data.length > 12_000_000) {
+                        throw new IOException("answer too big");
+                    }
+                    return new String(data, java.nio.charset.StandardCharsets.UTF_8);
                 }
-                return new String(response.body(), java.nio.charset.StandardCharsets.UTF_8);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException("interrupted");

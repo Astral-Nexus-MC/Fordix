@@ -31,10 +31,14 @@ public final class ClientWiki {
     private static final long RETRY_MS = 8000L;
     private static volatile List<WikiAnswers.Info> wikis = List.of();
     private static final Map<String, List<WikiAnswers.Entry>> INDEXES = new HashMap<>();
-    private static final Map<String, WikiAnswers.Page> PAGES = new HashMap<>();
-    private static final Map<String, List<WikiAnswers.Hit>> SEARCHES = new HashMap<>();
-    private static final Map<String, List<WikiAnswers.Drop>> LOOTS = new HashMap<>();
-    private static final Map<String, Picture> PICTURES = new HashMap<>();
+    private static final Map<String, WikiAnswers.Page> PAGES = new LruMap<>(200);
+    private static final Map<String, List<WikiAnswers.Hit>> SEARCHES = new LruMap<>(100);
+    private static final Map<String, List<WikiAnswers.Drop>> LOOTS = new LruMap<>(100);
+    private static final Map<String, Picture> PICTURES = new LruMap<>(64, (name, picture) -> {
+        if (picture.location() != null) {
+            Minecraft.getInstance().getTextureManager().release(picture.location());
+        }
+    });
     private static final Map<String, WikiChunks.Assembly> ASSEMBLIES = new HashMap<>();
     private static final Map<String, Long> ASKED = new HashMap<>();
     private static final WikiAnswers.Page MISSING_PAGE = new WikiAnswers.Page("", "", "", "");

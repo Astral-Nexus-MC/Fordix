@@ -229,6 +229,10 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onClientTick(TickEvent.ClientTickEvent event) {
+            Safe.run("FordixClient.clientTick", ForgeBusEvents::clientTick, event);
+        }
+
+        private static void clientTick(TickEvent.ClientTickEvent event) {
             BorderlessFullscreen.onClientTick(event);
             if (event.phase != TickEvent.Phase.END) {
                 return;
@@ -276,108 +280,108 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onScreenOpening(ScreenEvent.Opening event) {
-            VanillaScreens.onScreenOpening(event);
-            com.omneria.fordix.client.gui.options.OptionsScreens.onOpening(event);
-            ContainerMemory.onScreenOpening(event);
+            Safe.run("VanillaScreens.onScreenOpening", VanillaScreens::onScreenOpening, event);
+            Safe.run("OptionsScreens.onOpening", com.omneria.fordix.client.gui.options.OptionsScreens::onOpening, event);
+            Safe.run("ContainerMemory.onScreenOpening", ContainerMemory::onScreenOpening, event);
         }
 
         @SubscribeEvent
         static void onScreenClosing(ScreenEvent.Closing event) {
-            ContainerMemory.onScreenClosing(event);
+            Safe.run("ContainerMemory.onScreenClosing", ContainerMemory::onScreenClosing, event);
         }
 
         @SubscribeEvent
         static void onInventoryRender(ScreenEvent.Render.Post event) {
-            InventoryTools.onScreenRenderPost(event);
+            Safe.run("InventoryTools.onScreenRenderPost", InventoryTools::onScreenRenderPost, event);
         }
 
         @SubscribeEvent
         static void onInventoryForeground(ContainerScreenEvent.Render.Foreground event) {
-            InventoryTools.onForeground(event);
+            Safe.run("InventoryTools.onForeground", InventoryTools::onForeground, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGH)
         static void onInventoryMouse(ScreenEvent.MouseButtonPressed.Pre event) {
-            InventoryTools.onMousePressed(event);
+            Safe.run("InventoryTools.onMousePressed", InventoryTools::onMousePressed, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGH)
         static void onInventoryKey(ScreenEvent.KeyPressed.Pre event) {
-            InventoryTools.onKeyPressed(event);
+            Safe.run("InventoryTools.onKeyPressed", InventoryTools::onKeyPressed, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGH)
         static void onInventoryChar(ScreenEvent.CharacterTyped.Pre event) {
-            InventoryTools.onCharTyped(event);
+            Safe.run("InventoryTools.onCharTyped", InventoryTools::onCharTyped, event);
         }
 
         @SubscribeEvent
         static void onInventoryTick(TickEvent.ClientTickEvent event) {
-            InventoryTools.onClientTick(event);
+            Safe.run("InventoryTools.onClientTick", InventoryTools::onClientTick, event);
         }
 
         @SubscribeEvent
         static void onRenderLevel(RenderLevelStageEvent event) {
-            DamageNumbers.onRenderLevel(event);
+            Safe.run("DamageNumbers.onRenderLevel", DamageNumbers::onRenderLevel, event);
         }
 
         /** The effects list takes the place of vanilla's potion icons. */
         @SubscribeEvent
         static void onEffectsOverlayPre(RenderGuiOverlayEvent.Pre event) {
-            InfoHud.onOverlayPre(event);
-            PlayerListHud.onOverlayPre(event);
-            com.omneria.fordix.client.hud.ScoreboardHud.onOverlayPre(event);
-            com.omneria.fordix.client.hud.TitleHud.onOverlayPre(event);
-            com.omneria.fordix.client.hud.SubtitleHud.onOverlayPre(event);
-            com.omneria.fordix.client.hud.DebugHud.onOverlayPre(event);
-            com.omneria.fordix.client.hud.ActionBarHud.onOverlayPre(event);
+            Safe.run("InfoHud.onOverlayPre", InfoHud::onOverlayPre, event);
+            Safe.run("PlayerListHud.onOverlayPre", PlayerListHud::onOverlayPre, event);
+            Safe.run("ScoreboardHud.onOverlayPre", com.omneria.fordix.client.hud.ScoreboardHud::onOverlayPre, event);
+            Safe.run("TitleHud.onOverlayPre", com.omneria.fordix.client.hud.TitleHud::onOverlayPre, event);
+            Safe.run("SubtitleHud.onOverlayPre", com.omneria.fordix.client.hud.SubtitleHud::onOverlayPre, event);
+            Safe.run("DebugHud.onOverlayPre", com.omneria.fordix.client.hud.DebugHud::onOverlayPre, event);
+            Safe.run("ActionBarHud.onOverlayPre", com.omneria.fordix.client.hud.ActionBarHud::onOverlayPre, event);
         }
 
         @SubscribeEvent
         static void onPlaySound(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
-            MusicToast.onPlaySound(event);
+            Safe.run("MusicToast.onPlaySound", MusicToast::onPlaySound, event);
         }
 
         @SubscribeEvent
         static void onScreenInit(ScreenEvent.Init.Post event) {
-            InventoryTools.onScreenInit(event);
-            GuideTabs.onScreenInit(event);
+            Safe.run("InventoryTools.onScreenInit", InventoryTools::onScreenInit, event);
+            Safe.run("GuideTabs.onScreenInit", GuideTabs::onScreenInit, event);
         }
 
         /** After every other handler has added or moved its widgets (the pause menu, the guide tabs): lay out and skin them. */
         @SubscribeEvent(priority = EventPriority.LOW)
         static void onScreenInitSkin(ScreenEvent.Init.Post event) {
             com.omneria.fordix.client.gui.vanilla.RowButtons.clear();
-            PauseSkin.onScreenInit(event);
-            com.omneria.fordix.client.gui.vanilla.OptionsSkin.onScreenInit(event);
-            com.omneria.fordix.client.gui.vanilla.SubOptionsSkin.onScreenInit(event);
-            VoidframeButtons.onScreenInit(event);
+            Safe.run("PauseSkin.onScreenInit", PauseSkin::onScreenInit, event);
+            Safe.run("OptionsSkin.onScreenInit", com.omneria.fordix.client.gui.vanilla.OptionsSkin::onScreenInit, event);
+            Safe.run("SubOptionsSkin.onScreenInit", com.omneria.fordix.client.gui.vanilla.SubOptionsSkin::onScreenInit, event);
+            Safe.run("VoidframeButtons.onScreenInit", VoidframeButtons::onScreenInit, event);
         }
 
         @SubscribeEvent
         static void onBackgroundRendered(ScreenEvent.BackgroundRendered event) {
-            com.omneria.fordix.client.gui.vanilla.ScreenBackdrop.onBackgroundRendered(event);
-            PauseSkin.onBackgroundRendered(event);
-            com.omneria.fordix.client.gui.vanilla.OptionsSkin.onBackgroundRendered(event);
-            com.omneria.fordix.client.gui.vanilla.SubOptionsSkin.onBackgroundRendered(event);
-            VoidframeChrome.onBackgroundRendered(event);
+            Safe.run("ScreenBackdrop.onBackgroundRendered", com.omneria.fordix.client.gui.vanilla.ScreenBackdrop::onBackgroundRendered, event);
+            Safe.run("PauseSkin.onBackgroundRendered", PauseSkin::onBackgroundRendered, event);
+            Safe.run("OptionsSkin.onBackgroundRendered", com.omneria.fordix.client.gui.vanilla.OptionsSkin::onBackgroundRendered, event);
+            Safe.run("SubOptionsSkin.onBackgroundRendered", com.omneria.fordix.client.gui.vanilla.SubOptionsSkin::onBackgroundRendered, event);
+            Safe.run("VoidframeChrome.onBackgroundRendered", VoidframeChrome::onBackgroundRendered, event);
         }
 
         /** Highest priority: the opening "pop" scale must be undone before anything else draws after the screen. */
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onScreenRenderPost(ScreenEvent.Render.Post event) {
-            VoidframeChrome.onRenderPost(event);
+            Safe.run("VoidframeChrome.onRenderPost", VoidframeChrome::onRenderPost, event);
         }
 
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onScreenRenderPostNotifications(ScreenEvent.Render.Post event) {
-            NotificationOverlay.onScreenRenderPost(event);
+            Safe.run("NotificationOverlay.onScreenRenderPost", NotificationOverlay::onScreenRenderPost, event);
         }
 
         /** Lowest priority: notifications go over every other HUD overlay, JourneyMap's minimap included. */
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onRenderGui(RenderGuiEvent.Post event) {
-            NotificationOverlay.onRenderGui(event);
+            Safe.run("NotificationOverlay.onRenderGui", NotificationOverlay::onRenderGui, event);
         }
 
         /** End of the frame: make sure the attack indicator setting was given back. */
@@ -388,67 +392,67 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onOverlayPost(RenderGuiOverlayEvent.Post event) {
-            RarityFrames.onOverlayPost(event);
-            VoidframeGauges.onOverlayPost(event);
+            Safe.run("RarityFrames.onOverlayPost", RarityFrames::onOverlayPost, event);
+            Safe.run("VoidframeGauges.onOverlayPost", VoidframeGauges::onOverlayPost, event);
         }
 
         @SubscribeEvent
         static void onOverlayPre(RenderGuiOverlayEvent.Pre event) {
-            VoidframeHud.onOverlayPre(event);
+            Safe.run("VoidframeHud.onOverlayPre", VoidframeHud::onOverlayPre, event);
         }
 
         /** Highest priority: pushes the pose before any other listener can cancel the overlay (the Post event pops it). */
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onExtraOverlayPre(RenderGuiOverlayEvent.Pre event) {
-            ExtraHud.onOverlayPre(event);
+            Safe.run("ExtraHud.onOverlayPre", ExtraHud::onOverlayPre, event);
         }
 
         /** Normal priority: after the layout shift of {@link ExtraHud}, the plate goes under what another mod's overlay draws. */
         @SubscribeEvent
         static void onModPlates(RenderGuiOverlayEvent.Pre event) {
-            com.omneria.fordix.client.hud.ModPlates.onOverlayPre(event);
+            Safe.run("ModPlates.onOverlayPre", com.omneria.fordix.client.hud.ModPlates::onOverlayPre, event);
         }
 
         /** Lowest priority, cancelled events included: balances the pose pushed for an overlay that got cancelled. */
         @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
         static void onExtraOverlayPreCancelled(RenderGuiOverlayEvent.Pre event) {
-            ExtraHud.onOverlayPreCancelled(event);
+            Safe.run("ExtraHud.onOverlayPreCancelled", ExtraHud::onOverlayPreCancelled, event);
         }
 
         /** Normal priority: after the layout shift, replaces vanilla's chat overlay with the Voidframe chat. */
         @SubscribeEvent
         static void onChatOverlayPre(RenderGuiOverlayEvent.Pre event) {
-            ChatPanel.onOverlayPre(event);
+            Safe.run("ChatPanel.onOverlayPre", ChatPanel::onOverlayPre, event);
         }
 
         @SubscribeEvent
         static void onChatScreenRenderPre(ScreenEvent.Render.Pre event) {
-            ChatPanel.onScreenRenderPre(event);
+            Safe.run("ChatPanel.onScreenRenderPre", ChatPanel::onScreenRenderPre, event);
         }
 
         @SubscribeEvent
         static void onChatScreenInit(ScreenEvent.Init.Post event) {
-            ChatPanel.onScreenInit(event);
+            Safe.run("ChatPanel.onScreenInit", ChatPanel::onScreenInit, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatScreenMouse(ScreenEvent.MouseButtonPressed.Pre event) {
-            ChatPanel.onMousePressed(event);
+            Safe.run("ChatPanel.onMousePressed", ChatPanel::onMousePressed, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatScreenScroll(ScreenEvent.MouseScrolled.Pre event) {
-            ChatPanel.onMouseScrolled(event);
+            Safe.run("ChatPanel.onMouseScrolled", ChatPanel::onMouseScrolled, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatScreenChar(ScreenEvent.CharacterTyped.Pre event) {
-            ChatPanel.onCharTyped(event);
+            Safe.run("ChatPanel.onCharTyped", ChatPanel::onCharTyped, event);
         }
 
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatScreenKey(ScreenEvent.KeyPressed.Pre event) {
-            ChatPanel.onKeyPressed(event);
+            Safe.run("ChatPanel.onKeyPressed", ChatPanel::onKeyPressed, event);
         }
 
         @SubscribeEvent
@@ -461,71 +465,71 @@ public final class FordixClient {
         @SubscribeEvent
         static void onChatLogout(ClientPlayerNetworkEvent.LoggingOut event) {
             ChatLog.clear();
-            InfoHud.onLoggingOut(event);
+            Safe.run("InfoHud.onLoggingOut", InfoHud::onLoggingOut, event);
         }
 
         @SubscribeEvent
         static void onInfoHudLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-            InfoHud.onLoggingIn(event);
+            Safe.run("InfoHud.onLoggingIn", InfoHud::onLoggingIn, event);
         }
 
         /** Highest priority: the chat screen is shifted before anything else draws on it. */
         @SubscribeEvent(priority = EventPriority.HIGHEST)
         static void onChatInputRenderPre(ScreenEvent.Render.Pre event) {
-            ExtraHud.onChatRenderPre(event);
+            Safe.run("ExtraHud.onChatRenderPre", ExtraHud::onChatRenderPre, event);
         }
 
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onChatInputRenderPost(ScreenEvent.Render.Post event) {
-            ExtraHud.onChatRenderPost(event);
+            Safe.run("ExtraHud.onChatRenderPost", ExtraHud::onChatRenderPost, event);
         }
 
         @SubscribeEvent
         static void onHeldItemTick(TickEvent.ClientTickEvent event) {
-            HeldItemHud.onClientTick(event);
+            Safe.run("HeldItemHud.onClientTick", HeldItemHud::onClientTick, event);
         }
 
         /** Normal priority, so it runs before the lowest-priority pop: the model moves with the held item's name line. */
         @SubscribeEvent
         static void onHeldItemOverlayPost(RenderGuiOverlayEvent.Post event) {
-            HeldItemHud.onOverlayPost(event);
+            Safe.run("HeldItemHud.onOverlayPost", HeldItemHud::onOverlayPost, event);
         }
 
         /** Lowest priority: the rarity frames drawn after the hotbar follow it when it was moved. */
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onExtraOverlayPost(RenderGuiOverlayEvent.Post event) {
-            ExtraHud.onOverlayPost(event);
+            Safe.run("ExtraHud.onOverlayPost", ExtraHud::onOverlayPost, event);
         }
 
         @SubscribeEvent
         static void onScreenRenderPre(ScreenEvent.Render.Pre event) {
-            VoidframeHud.onScreenRenderPre(event);
+            Safe.run("VoidframeHud.onScreenRenderPre", VoidframeHud::onScreenRenderPre, event);
         }
 
         @SubscribeEvent
         static void onScreenRenderPostChat(ScreenEvent.Render.Post event) {
-            VoidframeHud.onScreenRenderPost(event);
+            Safe.run("VoidframeHud.onScreenRenderPost", VoidframeHud::onScreenRenderPost, event);
         }
 
         @SubscribeEvent
         static void onTooltipPre(RenderTooltipEvent.Pre event) {
-            ItemTooltipRenderer.onPre(event);
+            Safe.run("ItemTooltipRenderer.onPre", ItemTooltipRenderer::onPre, event);
         }
 
         @SubscribeEvent
         static void onSystemChat(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
-            com.omneria.fordix.client.hud.ActionBarHud.onChat(event);
+            Safe.run("ActionBarHud.onChat", com.omneria.fordix.client.hud.ActionBarHud::onChat, event);
         }
 
         @SubscribeEvent
         static void onItemTooltip(ItemTooltipEvent event) {
-            TooltipStyle.onItemTooltip(event);
+            Safe.run("TooltipStyle.onItemTooltip", TooltipStyle::onItemTooltip, event);
         }
 
         /** After everything else, so the guide line ends the tooltip. */
         @SubscribeEvent(priority = EventPriority.LOWEST)
         static void onItemTooltipGuideHint(ItemTooltipEvent event) {
-            GuideHints.onItemTooltip(event);
+            Safe.run("GuideHints.onItemTooltip", GuideHints::onItemTooltip, event);
         }
 
         /** Fordix screens that need more room than the interface has shrink it for as long as they are open. */
@@ -580,28 +584,28 @@ public final class FordixClient {
 
         @SubscribeEvent
         static void onGuideKey(ScreenEvent.KeyPressed.Pre event) {
-            GuideHints.onKeyPressed(event);
+            Safe.run("GuideHints.onKeyPressed", GuideHints::onKeyPressed, event);
         }
 
         @SubscribeEvent
         static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
-            AnalysisCommand.onRegister(event);
+            Safe.run("AnalysisCommand.onRegister", AnalysisCommand::onRegister, event);
         }
 
         @SubscribeEvent
         static void onContainerBackground(ContainerScreenEvent.Render.Background event) {
-            RarityFrames.onContainerBackground(event);
+            Safe.run("RarityFrames.onContainerBackground", RarityFrames::onContainerBackground, event);
         }
 
         @SubscribeEvent
         static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
-            RarityFrames.onContainerForeground(event);
-            VoidframeChrome.onContainerForeground(event);
+            Safe.run("RarityFrames.onContainerForeground", RarityFrames::onContainerForeground, event);
+            Safe.run("VoidframeChrome.onContainerForeground", VoidframeChrome::onContainerForeground, event);
         }
 
         @SubscribeEvent
         static void onTooltipColor(RenderTooltipEvent.Color event) {
-            VoidframeChrome.onTooltipColor(event);
+            Safe.run("VoidframeChrome.onTooltipColor", VoidframeChrome::onTooltipColor, event);
         }
     }
 
