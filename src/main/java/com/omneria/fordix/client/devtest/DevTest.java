@@ -1202,6 +1202,21 @@ public final class DevTest {
                 cmd(mc, "setblock ~ ~ ~3 minecraft:air");
             }, 10, false));
         }
+        if (modLoaded("storagedrawers")) {
+            // The framing table is an ordinary container screen: the server's rule gives it the Voidframe look.
+            steps.add(new Step("m11e-framing-table", () -> cmd(mc, "setblock ~ ~ ~3 storagedrawers:framing_table replace"), 20, false));
+            steps.add(new Step("m11f-framing-before", () -> useBlockAt(mc, 0, 0, 3, false), 50, false));
+            steps.add(new Step("m11g-framing-close", () -> {
+                mc.player.closeContainer();
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of("com.jaquadro.minecraft.storagedrawers.inventory"));
+            }, 10, false));
+            steps.add(new Step("m11h-framing-skinned", () -> useBlockAt(mc, 0, 0, 3, false), 50, false));
+            steps.add(new Step("m11i-framing-close", () -> {
+                mc.player.closeContainer();
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of());
+                cmd(mc, "setblock ~ ~ ~3 minecraft:air");
+            }, 10, false));
+        }
         if (modLoaded("simplemagnets")) {
             steps.add(new Step("m12-magnet", () -> {
                 cmd(mc, "item replace entity @s hotbar.3 with simplemagnets:advancedmagnet");

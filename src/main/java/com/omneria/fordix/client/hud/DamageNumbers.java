@@ -52,6 +52,9 @@ public final class DamageNumbers {
     }
 
     /** Every client tick. */
+    /** Reused on every tick: the ids of the creatures seen this tick. */
+    private static final Set<Integer> ALIVE = new HashSet<>();
+
     public static void tick(Minecraft minecraft) {
         tick++;
         if (minecraft.level == null || minecraft.player == null || !enabled()) {
@@ -62,7 +65,8 @@ public final class DamageNumbers {
             return;
         }
         Vec3 camera = minecraft.gameRenderer.getMainCamera().getPosition();
-        Set<Integer> alive = new HashSet<>();
+        Set<Integer> alive = ALIVE;
+        alive.clear();
         for (Entity entity : minecraft.level.entitiesForRendering()) {
             if (!(entity instanceof LivingEntity living) || entity instanceof ArmorStand || entity.position().distanceToSqr(camera) > RANGE * RANGE) {
                 continue;

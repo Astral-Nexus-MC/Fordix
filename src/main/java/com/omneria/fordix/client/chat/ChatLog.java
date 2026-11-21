@@ -233,10 +233,26 @@ public final class ChatLog {
         return filtered(tab, "");
     }
 
-    /** The lines a tab lists that also contain every word of the search. */
+    private static ChatTab cachedTab;
+    private static String cachedQuery = "";
+    private static int cachedSize = -1;
+    private static Entry cachedFirst;
+    private static Entry cachedLast;
+    private static List<Entry> cachedResult = List.of();
+
+    /**
+     * The lines a tab lists that also contain every word of the search. The open chat asks on every frame: the answer is kept
+     * while the tab, the search and the log (its size and its two ends) are the same.
+     */
     public static List<Entry> filtered(ChatTab tab, String query) {
         if (tab == ChatTab.ALL && (query == null || query.isBlank())) {
             return ENTRIES;
+        }
+        String wanted = query == null ? "" : query;
+        Entry first = ENTRIES.isEmpty() ? null : ENTRIES.get(0);
+        Entry last = ENTRIES.isEmpty() ? null : ENTRIES.get(ENTRIES.size() - 1);
+        if (tab == cachedTab && wanted.equals(cachedQuery) && ENTRIES.size() == cachedSize && first == cachedFirst && last == cachedLast) {
+            return cachedResult;
         }
         List<Entry> result = new ArrayList<>();
         for (Entry entry : ENTRIES) {
@@ -244,6 +260,12 @@ public final class ChatLog {
                 result.add(entry);
             }
         }
+        cachedTab = tab;
+        cachedQuery = wanted;
+        cachedSize = ENTRIES.size();
+        cachedFirst = first;
+        cachedLast = last;
+        cachedResult = result;
         return result;
     }
 

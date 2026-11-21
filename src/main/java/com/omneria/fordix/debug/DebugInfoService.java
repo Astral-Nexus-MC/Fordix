@@ -172,25 +172,45 @@ public final class DebugInfoService {
         }
     }
 
-    /** The lowest and highest height a height range can give: the anchors of its provider, or a sample when it has another shape. */
-    private static int[] bounds(HeightRangePlacement range, WorldGenerationContext context) throws ReflectiveOperationException {
-        HeightProvider provider = null;
+    /** The reflection is done once: the field of a height range that holds its provider, and the anchor fields of each provider class. */
+    private static final Field PROVIDER_FIELD = findProviderField();
+    private static final java.util.Map<Class<?>, List<Field>> ANCHOR_FIELDS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static Field findProviderField() {
         for (Field field : HeightRangePlacement.class.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers()) && field.getType() == HeightProvider.class) {
                 field.setAccessible(true);
-                provider = (HeightProvider) field.get(range);
-                break;
+                return field;
             }
         }
+        return null;
+    }
+
+    private static List<Field> anchorFields(Class<?> type) {
+        return ANCHOR_FIELDS.computeIfAbsent(type, key -> {
+            List<Field> found = new ArrayList<>();
+            for (Field field : key.getDeclaredFields()) {
+                if (!Modifier.isStatic(field.getModifiers()) && field.getType() == VerticalAnchor.class) {
+                    field.setAccessible(true);
+                    found.add(field);
+                }
+            }
+            return found;
+        });
+    }
+
+    /** The lowest and highest height a height range can give: the anchors of its provider, or a sample when it has another shape. */
+    private static int[] bounds(HeightRangePlacement range, WorldGenerationContext context) throws ReflectiveOperationException {
+        if (PROVIDER_FIELD == null) {
+            return null;
+        }
+        HeightProvider provider = (HeightProvider) PROVIDER_FIELD.get(range);
         if (provider == null) {
             return null;
         }
         List<Integer> anchors = new ArrayList<>();
-        for (Field field : provider.getClass().getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers()) && field.getType() == VerticalAnchor.class) {
-                field.setAccessible(true);
-                anchors.add(((VerticalAnchor) field.get(provider)).resolveY(context));
-            }
+        for (Field field : anchorFields(provider.getClass())) {
+            anchors.add(((VerticalAnchor) field.get(provider)).resolveY(context));
         }
         if (anchors.size() == 2) {
             return new int[] {Math.min(anchors.get(0), anchors.get(1)), Math.max(anchors.get(0), anchors.get(1))};
