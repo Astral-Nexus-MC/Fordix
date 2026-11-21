@@ -8,6 +8,9 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.AccessibilityOptionsScreen;
+import net.minecraft.client.gui.screens.AlertScreen;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.ChatOptionsScreen;
 import net.minecraft.client.gui.screens.LanguageSelectScreen;
 import net.minecraft.client.gui.screens.MouseSettingsScreen;
@@ -34,7 +37,10 @@ import java.util.WeakHashMap;
 public final class SubOptionsSkin {
     private static final Set<Class<?>> SCREENS = Set.of(VideoSettingsScreen.class, SoundOptionsScreen.class, MouseSettingsScreen.class,
             ChatOptionsScreen.class, AccessibilityOptionsScreen.class, SkinCustomizationScreen.class, ControlsScreen.class,
-            KeyBindsScreen.class, LanguageSelectScreen.class, StatsScreen.class);
+            KeyBindsScreen.class, LanguageSelectScreen.class, StatsScreen.class, ConfirmScreen.class, AlertScreen.class,
+            DisconnectedScreen.class);
+    /** The screens that write a message above their buttons: the panel starts higher, to hold the title and the lines. */
+    private static final Set<Class<?>> MESSAGE_SCREENS = Set.of(ConfirmScreen.class, AlertScreen.class, DisconnectedScreen.class);
     private static final Field TITLE = Reflect.uniqueField(Screen.class, Component.class);
     /** The title each screen had before it was blanked, so a second layout (window resized) still knows it. */
     private static final Map<Screen, String> TITLES = new WeakHashMap<>();
@@ -108,6 +114,11 @@ public final class SubOptionsSkin {
         y = panel[1];
         w = panel[2];
         h = panel[3];
+        if (MESSAGE_SCREENS.contains(screen.getClass())) {
+            int top = Math.max(4, Math.min(y, 54));
+            h += y - top;
+            y = top;
+        }
         blankTitle(screen);
         laidOut = screen;
     }

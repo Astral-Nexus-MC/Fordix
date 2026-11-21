@@ -846,6 +846,18 @@ public final class DevTest {
         if (System.getenv("FORDIX_DEVTEST_MODS") != null) {
             addModSteps(mc);
         }
+        steps.add(new Step("26f-confirm", () -> mc.setScreen(new net.minecraft.client.gui.screens.ConfirmScreen(accepted -> {
+        }, Component.literal("Leave the server?"), Component.literal("Your progress is saved. You can come back at any time."))), 30, false));
+        steps.add(new Step("26g-alert", () -> mc.setScreen(new net.minecraft.client.gui.screens.AlertScreen(() -> {
+        }, Component.literal("Something went wrong"), Component.literal("The server did not answer in time."))), 30, false));
+        steps.add(new Step("26h-disconnected", () -> mc.setScreen(new net.minecraft.client.gui.screens.DisconnectedScreen(null,
+                Component.literal("Disconnected"), Component.literal("The server is restarting."))), 30, false));
+        steps.add(new Step("26i-toast", () -> {
+            mc.setScreen(null);
+            net.minecraft.client.gui.components.toasts.SystemToast.addOrUpdate(mc.getToasts(),
+                    net.minecraft.client.gui.components.toasts.SystemToast.SystemToastIds.PERIODIC_NOTIFICATION,
+                    Component.literal("Saved"), Component.literal("Your world was saved."));
+        }, 40, false));
         steps.add(new Step("27-create-world", () -> net.minecraft.client.gui.screens.worldselection.CreateWorldScreen.openFresh(mc, null), 40, false));
         steps.add(new Step("99-done", () -> {
             Fordix.LOGGER.info("[devtest] finished, shots in {}", outDir);

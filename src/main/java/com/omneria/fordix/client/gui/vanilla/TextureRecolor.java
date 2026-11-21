@@ -89,6 +89,8 @@ public final class TextureRecolor {
             new Target("simplemagnets:textures/demagnetization_coil_screen.png"),
             new Target("simplemagnets:textures/filtered_demagnetization_coil_screen.png"),
             new Target("simplemagnets:textures/screen.png"),
+            // The toasts (advancements, recipes, system messages): their backgrounds follow the theme.
+            new Target("textures/gui/toasts.png"),
             // Only the button rows of widgets.png: the hotbar and its selection frame share the file.
             new Target(new ResourceLocation("textures/gui/widgets.png"), 46, 106));
 
