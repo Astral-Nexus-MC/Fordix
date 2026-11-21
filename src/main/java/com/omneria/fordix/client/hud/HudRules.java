@@ -57,6 +57,10 @@ public final class HudRules {
         return com.omneria.fordix.hud.ScreenRule.matches(className, modScreens);
     }
 
+    public static com.omneria.fordix.hud.ScreenRule.Mode screenMode(String className) {
+        return com.omneria.fordix.hud.ScreenRule.modeOf(className, modScreens);
+    }
+
     public static boolean anyModScreens() {
         return !modScreens.isEmpty();
     }

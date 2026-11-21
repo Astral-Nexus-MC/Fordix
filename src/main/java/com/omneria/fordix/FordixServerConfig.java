@@ -112,7 +112,8 @@ public final class FordixServerConfig {
                 .define("modPlates", true);
         HUD_MOD_SCREENS = builder.comment("Screens of other mods that get the Voidframe look: a glass panel over their background, glass boxes under their slots,",
                         "their buttons and the dim behind them. One entry per screen class or package (a prefix), for example",
-                        "\"com.jaquadro.minecraft.storagedrawers.inventory\". Empty: no screen of another mod is changed.",
+                        "\"com.jaquadro.minecraft.storagedrawers.inventory\". Written \"light:<class or package>\", a screen only gets the dim behind it and",
+                        "the glass buttons (for a screen that is not laid out as a container). Empty: no screen of another mod is changed.",
                         "Imposed on every player. A screen that draws gauges or tabs in its background may be hidden by the panel: try it first.")
                 .defineListAllowEmpty("modScreens", List.of(), entry -> entry instanceof String text && text.length() <= 200);
         HUD_SITUATIONS_TABLE = builder.comment("The HUD changes with the situation (fighting, mining, riding, facing a boss) for every player, as set here.",

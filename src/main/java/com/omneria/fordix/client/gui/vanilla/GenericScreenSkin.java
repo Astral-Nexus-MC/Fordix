@@ -38,6 +38,11 @@ public final class GenericScreenSkin {
                 && HudRules.skinsScreen(screen.getClass().getName());
     }
 
+    /** Whether the screen also gets the panel and the boxes (the entries of the list that are not written "light:"). */
+    public static boolean full(Screen screen) {
+        return applies(screen) && HudRules.screenMode(screen.getClass().getName()) == com.omneria.fordix.hud.ScreenRule.Mode.FULL;
+    }
+
     private static void resolve() {
         if (resolved) {
             return;
@@ -63,7 +68,7 @@ public final class GenericScreenSkin {
     /** After the mod drew its background, before the items: the panel and the boxes. */
     public static void onContainerBackground(ContainerScreenEvent.Render.Background event) {
         AbstractContainerScreen<?> screen = event.getContainerScreen();
-        if (!applies(screen)) {
+        if (!full(screen)) {
             return;
         }
         GuiGraphics g = event.getGuiGraphics();
@@ -80,7 +85,7 @@ public final class GenericScreenSkin {
     /** After the labels, in the panel's own coordinates: the dark text of the mod is covered and written again in the accent. */
     public static void onContainerForeground(ContainerScreenEvent.Render.Foreground event) {
         AbstractContainerScreen<?> screen = event.getContainerScreen();
-        if (!applies(screen)) {
+        if (!full(screen)) {
             return;
         }
         resolve();

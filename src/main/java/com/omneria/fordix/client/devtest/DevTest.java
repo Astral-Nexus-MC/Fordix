@@ -1225,7 +1225,7 @@ public final class DevTest {
             steps.add(new Step("m13b-waystone-before", () -> useBlockAt(mc, 0, 0, 3, false), 60, false));
             steps.add(new Step("m13c-waystone-close", () -> {
                 mc.player.closeContainer();
-                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of("net.blay09.mods.waystones.client.gui.screen"));
+                com.omneria.fordix.client.hud.HudRules.setModScreens(java.util.List.of("light:net.blay09.mods.waystones.client.gui.screen"));
             }, 10, false));
             steps.add(new Step("m13d-waystone-skinned", () -> useBlockAt(mc, 0, 0, 3, false), 60, false));
             steps.add(new Step("m13e-waystone-close", () -> {

@@ -38,4 +38,19 @@ class ScreenRuleTest {
         assertFalse(ScreenRule.matches("com.jaquadro.minecraft.storagedrawers.inventory.DrawerScreen", List.of()));
         assertFalse(ScreenRule.matches("x.Y", List.of("", "  ")));
     }
+
+    @Test
+    void aLightEntryOnlyGivesTheLightLook() {
+        List<String> rules = List.of("light:net.blay09.mods.waystones.client.gui.screen");
+        org.junit.jupiter.api.Assertions.assertEquals(ScreenRule.Mode.LIGHT,
+                ScreenRule.modeOf("net.blay09.mods.waystones.client.gui.screen.WaystoneSelectionScreen", rules));
+        org.junit.jupiter.api.Assertions.assertEquals(ScreenRule.Mode.NONE, ScreenRule.modeOf("other.Screen", rules));
+    }
+
+    @Test
+    void aFullEntryWinsOverALightOne() {
+        List<String> rules = List.of("light:a.b", "a.b.C");
+        org.junit.jupiter.api.Assertions.assertEquals(ScreenRule.Mode.FULL, ScreenRule.modeOf("a.b.C", rules));
+        org.junit.jupiter.api.Assertions.assertEquals(ScreenRule.Mode.LIGHT, ScreenRule.modeOf("a.b.D", rules));
+    }
 }
