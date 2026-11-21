@@ -1,7 +1,6 @@
 package com.omneria.fordix.client.gui.vanilla;
 
 import com.omneria.fordix.FordixConfig;
-import com.omneria.fordix.client.gui.FordixPalette;
 import com.omneria.fordix.client.gui.widget.Panel;
 import com.omneria.fordix.client.hud.HudRules;
 import net.minecraft.client.Minecraft;
@@ -90,10 +89,10 @@ public final class GenericScreenSkin {
         try {
             int tx = titleX == null ? 8 : titleX.getInt(screen);
             int ty = titleY == null ? 6 : titleY.getInt(screen);
-            relabel(g, font, screen.getTitle(), tx, ty, true);
+            relabel(g, font, screen, screen.getTitle(), tx, ty, true);
             // The "Inventory" label is only there on a screen that shows the player's bag.
             if (inventoryTitle != null && showsPlayerBag(screen) && inventoryTitle.get(screen) instanceof Component text) {
-                relabel(g, font, text, inventoryX.getInt(screen), inventoryY.getInt(screen), false);
+                relabel(g, font, screen, text, inventoryX.getInt(screen), inventoryY.getInt(screen), false);
             }
         } catch (IllegalAccessException | RuntimeException e) {
             titleX = null;
@@ -109,13 +108,18 @@ public final class GenericScreenSkin {
         return false;
     }
 
-    private static void relabel(GuiGraphics g, Font font, Component text, int x, int y, boolean title) {
+    private static void relabel(GuiGraphics g, Font font, AbstractContainerScreen<?> screen, Component text, int x, int y, boolean title) {
         if (text.getString().isEmpty()) {
             return;
         }
-        int width = font.width(text) + 2;
-        // The panel is a plain dark glass: a patch of its fill hides the label the mod wrote, wide enough for the capitals that follow.
-        g.fill(x - 1, y - 1, x + Math.max(width, font.width(text.getString().toUpperCase(java.util.Locale.ROOT)) + 2), y + 9, FordixPalette.PANEL_FILL | 0xFF000000);
+        int width = Math.max(font.width(text), font.width(text.getString().toUpperCase(java.util.Locale.ROOT))) + 2;
+        // The panel is drawn again inside the rectangle of the old label, so the patch has the panel's own gradient and no edge.
+        // (In this version of the game a scissor is given in screen coordinates, not in those of the translated pose.)
+        int left = screen.getGuiLeft();
+        int top = screen.getGuiTop();
+        g.enableScissor(left + x - 1, top + y - 1, left + x + width, top + y + 9);
+        Panel.draw(g, 0, 0, screen.getXSize(), screen.getYSize());
+        g.disableScissor();
         if (title) {
             VoidframeDraw.title(g, font, text, x, y);
         } else {
