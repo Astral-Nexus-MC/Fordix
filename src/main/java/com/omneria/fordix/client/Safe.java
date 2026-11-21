@@ -1,10 +1,8 @@
 package com.omneria.fordix.client;
 
-import com.mojang.logging.LogUtils;
-import org.slf4j.Logger;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -16,39 +14,32 @@ public final class Safe {
     /** Failures a handler is allowed before it is switched off. */
     static final int LIMIT = 3;
 
-    private static final Logger LOG = LogUtils.getLogger();
+    /** Where failures are written: the mod's logger once the game is up (a plain stream in the tests, which have no game). */
+    public static volatile BiConsumer<String, Throwable> reporter = (message, error) -> System.err.println(message + ": " + error);
+
     private static final Map<String, Integer> FAILURES = new ConcurrentHashMap<>();
 
     private Safe() {
     }
 
     public static <E> void run(String name, Consumer<? super E> handler, E event) {
-        Integer failed = FAILURES.get(name);
-        if (failed != null && failed >= LIMIT) {
+        if (off(name)) {
             return;
         }
         try {
             handler.accept(event);
         } catch (RuntimeException | LinkageError e) {
-            int count = fail(name);
-            if (count >= LIMIT) {
-                LOG.error("Fordix: {} failed {} times, it is switched off until the game restarts", name, count, e);
-            } else {
-                LOG.error("Fordix: {} failed ({}/{})", name, count, LIMIT, e);
-            }
+            int count = FAILURES.merge(name, 1, Integer::sum);
+            String tail = count >= LIMIT ? " times, it is switched off until the game restarts" : " time(s)";
+            reporter.accept("Fordix: " + name + " failed " + count + tail, e);
         }
-    }
-
-    /** Counts a failure of a handler and returns how many it has had. */
-    static int fail(String name) {
-        return FAILURES.merge(name, 1, Integer::sum);
     }
 
     static boolean off(String name) {
         return FAILURES.getOrDefault(name, 0) >= LIMIT;
     }
 
-    /** Gives every handler its chance back (the tests, and a new world). */
+    /** Gives every handler its chance back (the tests). */
     public static void reset() {
         FAILURES.clear();
     }

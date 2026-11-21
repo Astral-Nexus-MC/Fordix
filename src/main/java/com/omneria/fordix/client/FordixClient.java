@@ -197,6 +197,7 @@ public final class FordixClient {
         /** The "Config" button of the Mods list opens Fordix's settings screen. */
         @SubscribeEvent
         static void onClientSetup(FMLClientSetupEvent event) {
+            Safe.reporter = (message, error) -> Fordix.LOGGER.error(message, error);
             com.omneria.fordix.client.tooltip.AttributeMath.separator = () ->
                     Minecraft.getInstance().getLanguageManager().getSelected().startsWith("fr") ? ',' : '.';
             event.enqueueWork(() -> BorderlessFullscreen.install(Minecraft.getInstance()));
