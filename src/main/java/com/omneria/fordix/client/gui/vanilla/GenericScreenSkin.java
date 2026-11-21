@@ -91,7 +91,8 @@ public final class GenericScreenSkin {
             int tx = titleX == null ? 8 : titleX.getInt(screen);
             int ty = titleY == null ? 6 : titleY.getInt(screen);
             relabel(g, font, screen.getTitle(), tx, ty, true);
-            if (inventoryTitle != null && inventoryTitle.get(screen) instanceof Component text) {
+            // The "Inventory" label is only there on a screen that shows the player's bag.
+            if (inventoryTitle != null && showsPlayerBag(screen) && inventoryTitle.get(screen) instanceof Component text) {
                 relabel(g, font, text, inventoryX.getInt(screen), inventoryY.getInt(screen), false);
             }
         } catch (IllegalAccessException | RuntimeException e) {
@@ -99,7 +100,19 @@ public final class GenericScreenSkin {
         }
     }
 
+    private static boolean showsPlayerBag(AbstractContainerScreen<?> screen) {
+        for (Slot slot : screen.getMenu().slots) {
+            if (slot.container instanceof net.minecraft.world.entity.player.Inventory) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void relabel(GuiGraphics g, Font font, Component text, int x, int y, boolean title) {
+        if (text.getString().isEmpty()) {
+            return;
+        }
         int width = font.width(text) + 2;
         // The panel is a plain dark glass: a patch of its fill hides the label the mod wrote, wide enough for the capitals that follow.
         g.fill(x - 1, y - 1, x + Math.max(width, font.width(text.getString().toUpperCase(java.util.Locale.ROOT)) + 2), y + 9, FordixPalette.PANEL_FILL | 0xFF000000);
